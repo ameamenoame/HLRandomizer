@@ -10,12 +10,22 @@ import random
 
 
 JSON_DIR = "jsons"
-GRAPH_JSON =    path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_graph.json"))  # "jsons\\out_graph.json"
-DOOR_JSON =     path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_door.json"))  # "jsons\\out_door.json"
-CONNECT_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect.json"))  # "jsons\\out_connect.json"
-CONNECT2_JSON = path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect2.json"))  # "jsons\\out_connect2.json"
-MANUAL_JSON =   path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual.json"))  # "jsons\\out_manual.json"
-MANUAL2_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual2.json"))  # "jsons\\out_manual2.json"
+# GRAPH_JSON =    path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_graph.json"))  # "jsons\\out_graph.json"
+# DOOR_JSON =     path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_door.json"))  # "jsons\\out_door.json"
+# CONNECT_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect.json"))  # "jsons\\out_connect.json"
+# CONNECT2_JSON = path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect2.json"))  # "jsons\\out_connect2.json"
+# MANUAL_JSON =   path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual.json"))  # "jsons\\out_manual.json"
+# MANUAL2_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual2.json"))  # "jsons\\out_manual2.json"
+
+
+# Temporarily don't use the packed path
+GRAPH_JSON =    os.path.join(JSON_DIR, "out_graph.json")  # "jsons\\out_graph.json"
+DOOR_JSON =     os.path.join(JSON_DIR, "out_door.json")  # "jsons\\out_door.json"
+CONNECT_JSON =  os.path.join(JSON_DIR, "out_connect.json")  # "jsons\\out_connect.json"
+CONNECT2_JSON = os.path.join(JSON_DIR, "out_connect2.json")  # "jsons\\out_connect2.json"
+MANUAL_JSON =   os.path.join(JSON_DIR, "out_manual.json")  # "jsons\\out_manual.json"
+MANUAL2_JSON =  os.path.join(JSON_DIR, "out_manual2.json")  # "jsons\\out_manual2.json"
+
 OUTPUT_PATH = "game_files"
 BACKUP_FOLDER_NAME = "backup"
 ITEMLESS_FOLDER_NAME = "itemless"
