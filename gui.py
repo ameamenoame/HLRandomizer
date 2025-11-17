@@ -139,8 +139,6 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
 
         success = False
 
-        if self.random_seed.get() == "":
-            self.random_seed.set(str(randrange(1, 10000000)))
 
         if not self.random_shops.get():
             _append_if_missing(PATH_TO_MANUAL, self.SHOP_RANDO_MANUAL_CHANGE)
@@ -149,8 +147,14 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
 
         generate_all_jsons()
 
+        using_preset_seed = self.random_seed.get()
+
+        bound = 1000000000000
         while True:
             try:
+                if not using_preset_seed:
+                    self.random_seed.set(str(randrange(-bound, bound)))
+
                 main(
                     random_doors=self.random_doors.get(),
                     random_enemies=self.random_enemies.get(),
@@ -161,7 +165,7 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
                 success = True
                 break
             except IndexError as e:
-                if self.random_doors.get() and not self.random_seed.get():
+                if self.random_doors.get() and not using_preset_seed:
                     print("Retrying!")
                     Inventory.reset()
                 else:
@@ -169,7 +173,7 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
                     self.random_seed.set("")
                     break
 
-        if success: messagebox.showinfo(message=f"Randomization successful! Close this dialog and press 'Push to HLD' to save the randomized levels to Hyper Light Drifter.\n\nSeed: " + self.random_seed.get(), title="Success")
+        if success: messagebox.showinfo(message=f"Randomization successful! Close this dialog and press 'Push to HLD' to save the randomized levels to Hyper Light Drifter.\n\nSeed: " + str(self.random_seed.get()), title="Success")
 
     def do_del(self):
         """
