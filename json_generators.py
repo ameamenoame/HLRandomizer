@@ -193,7 +193,7 @@ def get_json_from_manual12(path: str, out: str):
     list_of_objects = []
     with open(path, "r") as f:
         for line in f:
-            if line[0] == "#":
+            if line[0] == "#" or line =="\n":
                 continue
             split_line = comma_split(line)
             match split_line[0]:
