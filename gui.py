@@ -165,7 +165,7 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
                 success = True
                 break
             except IndexError as e:
-                if self.random_doors.get() and not using_preset_seed:
+                if not using_preset_seed:
                     print("Retrying!")
                     Inventory.reset()
                 else:

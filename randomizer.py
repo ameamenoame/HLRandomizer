@@ -99,7 +99,7 @@ class Inventory:
 
     full = {
         "keys": 16,
-        "lasers": 2,
+        "lasers": 3,
         "north_modules": 8,
         "east_modules": 8,
         "west_modules": 8,
@@ -681,7 +681,7 @@ def randomize_enemies(levels: LevelHolder):
 def place_all_items(levels: LevelHolder):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [21, 23]
+    lasers = [1, 21, 23] # Order of the pistol matters here. The railguns get popped first so the normal laser requirement checks pass first.
     shotguns = [2, 41, 43]
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
     capes = [2, 3, 4, 5, 6, 7, 9, 11, 12]; random.shuffle(capes)
@@ -751,7 +751,7 @@ def place_all_items(levels: LevelHolder):
     place_important("lasers", _place_laser)
     place_unimportant(3, _place_shotgun)
     place_unimportant(9, _place_outfit)
-    place_unimportant(165, _place_gearbit)
+    place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
 def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out"):
