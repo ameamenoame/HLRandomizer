@@ -90,6 +90,38 @@ obj,UpgradeSpecial,4153,144,144,3,-999999,++,
 obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC_seanguin_idleThink,301=spr_NPC_seanguin_idleAnim,302=spr_none,310=spr_NPC_seanguin_idleThink,xs=-1,bi=0,tr=0,tg=1,
 """
 
+    PISTOL_RANDO_MANUAL_CHANGE = """
+Room,Intro,rm_IN_01_brokenshallows,
+obj,Map,9001,273,270,0,-999999,++,,
+obj,PlayerHasMapCheck,9002,0,0,0,-999999,++,c=9,
+obj,RecessingScenery,9008,321,454,0,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9009,305,454,0,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9010,289,454,1,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9005,321,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9006,305,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9007,289,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,Teleporter,9008,241,351,0,-999999,++,r=rm_C_DrifterWorkshop,d=9009,t=1,i=0,
+Room,Central,rm_C_DrifterWorkshop,
+obj,Teleporter,9009,220,160,0,-999999,++,r=rm_IN_01_brokenshallows,d=9008,t=1,i=0,
+"""
+    NO_PISTOL_RANDO_MANUAL_CHANGE = """
+Room,Intro,rm_IN_01_brokenshallows,
+obj,Map,9001,273,270,0,-999999,++,,
+obj,PlayerHasMapCheck,9002,0,0,0,-999999,++,c=9,
+obj,DrifterBones_Weapon,9003,268,245,0,-999999,++,spr=spr_DrifterBones,i=31,f=0,k=0,w=1,g=0,c=0,s=0,
+obj,Spawner,9004,150,446,18,-999999,++,-1=ToggleSwitch,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,a=-999999,1=0,
+obj,RecessingScenery,9008,321,454,0,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9009,305,454,0,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9010,289,454,0,1,9002,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9005,321,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9006,305,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,RecessingScenery,9007,289,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
+obj,Scenery,9011,147,463,18,-999999,++,0=spr_WRockBlock16,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=1,l=0,
+obj,Region,9012,0,0,0,-999999,++,0=400,1=460,p2=0,
+obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
+"""
+
+
     def do_install(self, *args):
         """
         Makes a backup of HLD levels and makes itemless and doorless copies of levels
@@ -139,6 +171,14 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
 
         success = False
 
+
+
+        _delete_if_exists(PATH_TO_MANUAL, self.NO_PISTOL_RANDO_MANUAL_CHANGE)
+        _delete_if_exists(PATH_TO_MANUAL, self.PISTOL_RANDO_MANUAL_CHANGE)
+        if not self.random_pistol.get():
+            _append_if_missing(PATH_TO_MANUAL, self.NO_PISTOL_RANDO_MANUAL_CHANGE)
+        else:
+            _append_if_missing(PATH_TO_MANUAL, self.PISTOL_RANDO_MANUAL_CHANGE)
 
         if not self.random_shops.get():
             _append_if_missing(PATH_TO_MANUAL, self.SHOP_RANDO_MANUAL_CHANGE)
@@ -249,6 +289,11 @@ obj,NPCGeneric,155,160,144,3,-999999,++,wlb=1,wl=-999999,32=spr_none,300=spr_NPC
         ttk.Checkbutton(mainframe, text='Randomize shops (if unset, shops will stay in town)', 
 	    variable=self.random_shops,
 	    onvalue=True, offvalue= False).grid(column=1, row=4, sticky=W)
+
+        self.random_pistol = BooleanVar(value=False)
+        ttk.Checkbutton(mainframe, text='Randomize pistol for NG', 
+	    variable=self.random_pistol,
+	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
 
         ttk.Button(mainframe, text="Randomize", command=self.do_gen).grid(column=3, row=6, sticky=E)
         ttk.Button(mainframe, text="Push to HLD", command=self.do_push).grid(column=4, row=6, sticky=E)

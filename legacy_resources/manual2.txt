@@ -27,13 +27,13 @@ Room,Intro,rm_IN_01_brokenshallows,
 obj,Teleporter,9008,241,351,0,-999999,++,r=rm_C_Central,d=9009,t=1,i=0,
 
 Room,Central,rm_C_DrifterWorkshop,
-obj,Teleporter,9008,220,160,0,-999999,++,r=rm_C_Central,d=9009,t=1,i=0,
+obj,Teleporter,9008,220,160,0,-999999,++,r=rm_C_Central,d=9011,t=1,i=0,
 
 Room,Central,rm_C_Central,
 obj,Televator,7699,735,750,0,1,1079,caseScript,3,1,-999999,0,++,rm=rm_A_PreDownward,dr=2479,ed=0,m=0,v=0,a=0,trn=4,
 obj,Teleporter,9009,211,336,0,-999999,++,r=rm_IN_01_brokenshallows,d=9008,t=1,i=0,
 
-obj,Teleporter,9009,301,292,0,-999999,++,r=rm_C_DrifterWorkshop,d=9008,t=1,i=0,
+obj,Teleporter,9011,301,292,0,-999999,++,r=rm_C_DrifterWorkshop,d=9008,t=1,i=0,
 
 obj,Teleporter,9010,800,336,0,-999999,++,r=rm_C_Ven_Dash,d=9011,t=1,i=0,
 

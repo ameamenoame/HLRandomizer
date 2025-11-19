@@ -21,7 +21,10 @@ def get_json_from_graph(path: str, out: str):
         to_export = []
         temp_room = FakeLevel("rm_PLACEHOLDER", "no")
         for line in graph_file:
+            if line[0] == "#" or line =="\n":
+                continue
             split_line = comma_split(line)
+            if len(split_line) == 0: continue
             match split_line[0]:
                 case "Room":
                     to_export.append(temp_room)
@@ -196,6 +199,7 @@ def get_json_from_manual12(path: str, out: str):
             if line[0] == "#" or line =="\n":
                 continue
             split_line = comma_split(line)
+            if len(split_line) == 0: continue
             match split_line[0]:
                 case "Room":
                     changes.append({
