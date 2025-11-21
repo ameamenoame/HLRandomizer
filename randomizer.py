@@ -99,7 +99,7 @@ class Inventory:
 
     full = {
         "keys": 16,
-        "lasers": 3,
+        "lasers": 2,
         "north_modules": 8,
         "east_modules": 8,
         "west_modules": 8,
@@ -296,13 +296,26 @@ class FakeObject:
             return to_return
 
         def _get_outfit(obj: FakeObject):
+            outfit_sprite_map = {
+                11: 0, # Purple
+                9: 36, # Black 
+                6: 37,
+                4: 35,
+                3: 33, # Fuchsia
+                2: 31, # Blue
+                5: 32,
+                7: 38,
+                8: 34, # Pink drifter's,
+                12: 0, # Black
+                13:0, # Sky blue
+            }
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_OUTFIT,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": outfit_sprite_map[obj.extra_info["cape_id"]],
                     "f": 0,
                     "k": 0,
                     "w": -999999,
@@ -317,13 +330,14 @@ class FakeObject:
             return to_return
 
         def _get_key(obj: FakeObject):
+            key_sprite_index_list = [5, 17, 28, 26, 15, 24, 3, 18, 8]
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_KEY,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": random.choice(key_sprite_index_list),
                     "f": 0,
                     "k": 1,
                     "w": -999999,
@@ -338,13 +352,22 @@ class FakeObject:
             return to_return
 
         def _get_weapon(obj: FakeObject):
+            weapon_sprite_index_map = {
+                1: 1,
+                2: 75,
+                8: 22,
+                21: 12,
+                23: 0,
+                41: 6,
+                43: 20,
+            }
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_WEAPON,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": weapon_sprite_index_map[obj.extra_info["weapon_id"]],
                     "f": 0,
                     "k": 0,
                     "w": obj.extra_info["weapon_id"],
@@ -681,12 +704,12 @@ def randomize_enemies(levels: LevelHolder):
 def place_all_items(levels: LevelHolder):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [1, 21, 23] # Order of the pistol matters here. The railguns get popped first so the normal laser requirement checks pass first.
-    shotguns = [2, 41, 43]
+    lasers = [21, 23]
+    shotguns = [2, 41, 43, 1]
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
-    capes = [2, 3, 4, 5, 6, 7, 9, 11, 12]; random.shuffle(capes)
-    swords = [2, 3, 4, 5, 6, 7, 9, 11, 12]; random.shuffle(swords)
-    companions = [2, 3, 4, 5, 6, 7, 9, 11, 13]; random.shuffle(companions)
+    capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
+    swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
+    companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
     def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x: True):
         while Inventory.current[inventory_key] > 0:
@@ -749,7 +772,7 @@ def place_all_items(levels: LevelHolder):
     place_important("keys", _place_key)
     place_important("dash_shops", _place_dash_shop)
     place_important("lasers", _place_laser)
-    place_unimportant(3, _place_shotgun)
+    place_unimportant(4, _place_shotgun)
     place_unimportant(9, _place_outfit)
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
