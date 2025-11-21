@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory
+from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES
 from random import randrange
 import shutil
 import os
@@ -195,12 +195,24 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 if not using_preset_seed:
                     self.random_seed.set(str(randrange(-bound, bound)))
 
+                    
+                final_enemy_list = []
+                for e in self.enemy_data:
+                    if not e["enabled"]: continue
+                    final_enemy_list.append(e["name"])
+                final_enemy_weights = []
+                for e in self.enemy_data:
+                    if not e["enabled"]: continue
+                    final_enemy_weights.append(e["weight"])
+
                 main(
                     random_doors=self.random_doors.get(),
                     random_enemies=self.random_enemies.get(),
                     output=output,
                     output_folder_name=output_folder_name if output_folder_name else self.OUT_FOLDER_NAME,
-                    random_seed=self.random_seed.get() if self.random_seed.get() else None
+                    random_seed=self.random_seed.get() if self.random_seed.get() else None,
+                    list_of_enemies=final_enemy_list,
+                    enemy_weights=final_enemy_weights
                 )
                 success = True
                 break
@@ -257,6 +269,47 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             print(f"Done in {end_time-start_time:.2f} s")
             messagebox.showinfo(message="Reverted Hyper Light Drifter to normal")
 
+            
+    def disable_enemy(self):
+        current_index = self.enemy_list.curselection()
+        if current_index != (): 
+            i = current_index[0]
+            if self.enemy_data[i]["enabled"]:
+                self.enemy_choices[i] = "(DISABLED) " +  self.enemy_data[i]["name"] 
+            self.enemy_data[i]["enabled"] = False
+            self.enemy_choicesvar.set(self.enemy_choices)
+            return
+
+    def enable_enemy(self):
+        current_index = self.enemy_list.curselection()
+        if current_index != (): 
+            i = current_index[0]
+            if not self.enemy_data[i]["enabled"]:
+                self.enemy_choices[i] = self.enemy_data[i]["name"]
+            self.enemy_data[i]["enabled"] = True
+            self.enemy_choicesvar.set(self.enemy_choices)
+            return
+
+    def onenemyselect(self, _b):
+        current_index = self.enemy_list.curselection()
+        if current_index != (): 
+            i = current_index[0]
+            self.current_weightvar.set(str(self.enemy_data[i]["weight"]))
+        return
+
+    def onspinboxchanged(self):
+        current_index = self.enemy_list.curselection()
+        if current_index != (): 
+            i = current_index[0]
+            weightnum = float(self.current_weightvar.get())
+            self.enemy_data[i]["weight"] = weightnum
+        return
+
+    def onspinboxreturn(self, _a):
+        self.current_weightvar.set(self.spinbox.get()) 
+        self.onspinboxchanged()
+        self.enemy_list.focus()
+
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
         self.PATH_TO_HLD = path
@@ -295,12 +348,42 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 	    variable=self.random_pistol,
 	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
 
-        ttk.Button(mainframe, text="Randomize", command=self.do_gen).grid(column=3, row=6, sticky=E)
-        ttk.Button(mainframe, text="Push to HLD", command=self.do_push).grid(column=4, row=6, sticky=E)
+        
+        # Enemy list
+        self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()
+        self.enemy_choicesvar = StringVar(value=self.enemy_choices)
+
+        self.enemy_data = [{
+           "name": e,
+           "weight": 1.0,
+           "enabled": True 
+        } for e in self.enemy_choices]
+        
+        Label(mainframe, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=3, row=3, sticky=NE)
+        self.enemy_list = Listbox(mainframe, listvariable=self.enemy_choicesvar, )
+        self.enemy_list.configure(exportselection=False)
+        self.enemy_list.grid(column=4, row=3, sticky=W, columnspan=1, rowspan=2)
+        self.enemy_list.bind('<<ListboxSelect>>', self.onenemyselect)
+
+        s = Scrollbar(mainframe, orient=VERTICAL, command=self.enemy_list.yview)
+        self.enemy_list.configure(yscrollcommand=s.set)
+        s.grid(column=4, row=3, sticky=(N, S, E), rowspan=2)
+
+        Label(mainframe, text="Weight").grid(column=5, row=4, sticky=NE)
+        self.current_weightvar= StringVar()
+        self.spinbox = Spinbox(mainframe, from_=0.0, to=100.0, textvariable=self.current_weightvar, width=5, command=self.onspinboxchanged, increment=.1)
+        self.spinbox.grid(column=6, row=4, sticky=NW)
+        self.spinbox.bind("<Return>", self.onspinboxreturn)
+
+        ttk.Button(mainframe, text="Enable", command=self.enable_enemy).grid(column=5, row=3, sticky=NW)
+        ttk.Button(mainframe, text="Disable", command=self.disable_enemy).grid(column=6, row=3, sticky=NW)
+
+        ttk.Button(mainframe, text="Randomize", command=self.do_gen).grid(column=4, row=6, sticky=E)
+        ttk.Button(mainframe, text="Push to HLD", command=self.do_push).grid(column=5, row=6, sticky=E)
 
         # ttk.Button(mainframe, text="Delete generated files", command=self.do_del).grid(column=5, row=6, sticky=E)
-        ttk.Button(mainframe, text="Revert to normal", command=self.do_revert).grid(column=5, row=6, sticky=E)
-        ttk.Button(mainframe, text="Close", command=root.destroy).grid(column=6, row=6, sticky=E)
+        ttk.Button(mainframe, text="Revert to normal", command=self.do_revert).grid(column=6, row=6, sticky=E)
+        ttk.Button(mainframe, text="Close", command=root.destroy).grid(column=7, row=6, sticky=E)
 
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
