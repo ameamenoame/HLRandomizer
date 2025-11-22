@@ -1,0 +1,194 @@
+
+Scythe room pope
+//obj,Spawner,2077,416,504,5,1,1442,++,-1=JerkPope,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,WayPoint,1442,416,504,5,4,5293,7356,9100,3055,++,
+//obj,WayPoint,7356,530,374,5,3,3055,9100,5293,++,
+//obj,WayPoint,3055,250,454,5,3,5293,7356,9100,++,
+//obj,WayPoint,5293,250,534,5,3,3055,9100,7356,++,
+//obj,WayPoint,9100,530,534,5,3,7356,5293,3055,++,
+
+
+Scythe room archer
+//obj,Spawner,3676,416,504,2,1,1442,++,-1=BennyArrow,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,WayPoint,1442,416,504,5,4,5293,7356,9100,3055,++,
+//obj,WayPoint,7356,530,374,5,3,3055,9100,5293,++,
+//obj,WayPoint,3055,250,454,5,3,5293,7356,9100,++,
+//obj,WayPoint,5293,250,534,5,3,3055,9100,7356,++,
+//obj,WayPoint,9100,530,534,5,3,7356,5293,3055,++,
+
+
+Scyth room judgement
+	 //obj,Spawner,1670,416,504,1,2,5655,1698,++,-1=HalBoss,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	 //obj,WayPoint,5655,416,504,1,-999999,++,,
+	 //obj,WayPoint,2148,530,374,1,1,2215,++,,
+	 //obj,WayPoint,2215,350,454,1,1,4770,++,,
+	 //obj,WayPoint,7602,350,534,1,1,2148,++,,
+	 //obj,WayPoint,4770,530,534,1,1,7602,++,,
+	 //obj,EmptyObject,6242,416,504,0,1,1670,caseScript,4,0,-999999,0,++,mn=--,a=-1,
+	 //obj,EmptyObject,932,416,504,0,2,6242,5968,caseScript,3,1,-999999,0,++,mn=--,a=-1,
+	 //obj,Region,1698,416,504,12,-999999,caseScript,2,1,char,0,++,0=464,1=207.5,
+	 //obj,Region,5344,256,560,11,-999999,caseScript,2,1,char,0,++,0=176,1=40,
+	 //obj,Region,1314,296,1584,0,-999999,caseScript,2,1,char,0,++,0=96,1=48,
+	 //obj,Region,6912,96,304,10,-999999,caseScript,2,1,char,0,++,0=496,1=80,
+	 //obj,Region,350,96,400,10,-999999,caseScript,2,1,char,0,++,0=496,1=176,
+	 //obj,Region,1258,97,360,3,-999999,caseScript,2,1,char,0,++,0=504.58,1=97.2,
+	 //obj,BloodSprayer,2162,468,176,0,-999999,++,01=37.85,
+	 //obj,BloodSprayer,2628,412,183,0,-999999,++,01=159.18,
+	 //obj,BloodSprayer,688,418,229,0,-999999,++,01=219.02,
+	 //obj,Spawner,5968,80,344,0,-999999,++,-1=DiamondDoor,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	 //obj,Region,1258,416,504,3,-999999,caseScript,2,1,char,0,++,0=504.58,1=97.2,
+	 //obj,OneTimeTrue,1692,416,504,10,1,1258,caseScript,3,1,-999999,0,++,,
+	 //obj,SpecialWayPoint,5343,416,504,3,-999999,++,,
+
+Mimic scythe room
+	 //obj,AlucardModuleSocket,5197,416,504,3,-999999,++,,
+	 //obj,EmptyObject,6873,416,504,3,-999999,caseScript,1,1,CountAlucard,0,++,mn=BossDead,a=-1,
+
+Frog scythe room
+	 //obj,Spawner,4322,416,504,6,-999999,++,-1=Cleaner,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+
+Scythe room West
+//obj,Spawner,2705,416,504,1,-999999,++,-1=OldGeneral,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	 //obj,TanukiCrystal,5284,530,374,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,3891,250,404,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,1525,250,384,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,7196,530,534,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,5679,270,534,0,-999999,++,0=spr_TanukiCrystal,
+
+
+Baker scythe room
+//obj,Spawner,6390,416,504,4,1,5232,++,-1=BulletBaker,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,EmptyObject,5232,168,416,2,-999999,++,mn=When Boss at Half Hp,a=-1,
+//obj,OneTimeTrue,6289,120,416,2,1,5232,caseScript,3,1,-999999,0,++,,
+
+
+
+
+
+
+
+// Jerkpope room
+
+archer pope room
+//obj,Spawner,1093,296,552,2,1,1442,++,-1=BennyArrow,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+
+mimic pope rooom
+	 //obj,AlucardModuleSocket,1093,296,552,3,-999999,++,,
+
+frog pope room
+	 //obj,Spawner,1093,296,552,6,-999999,++,-1=Cleaner,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+
+scythe guy pope room
+	 //obj,Spawner,1093,296,552,5,-999999,++,-1=MarkScythe,-2=-999999,-4=1,-5=1,-6=-1,-7=0,-8=0,
+
+west pope room
+//obj,Spawner,1093,296,552,1,-999999,++,-1=OldGeneral,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	 //obj,TanukiCrystal,5284,96,688,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,3891,96,464,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,1525,480,464,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,7196,480,688,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,5679,105,444,0,-999999,++,0=spr_TanukiCrystal,
+
+baker pope room 
+//obj,Spawner,1093,296,552,4,1,5232,++,-1=BulletBaker,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,EmptyObject,5232,168,416,2,-999999,++,mn=When Boss at Half Hp,a=-1,
+//obj,OneTimeTrue,6289,120,416,2,1,5232,caseScript,3,1,-999999,0,++,,
+
+
+
+
+// West
+
+
+archer west room
+	//obj,Spawner,2705,416,480,2,1,1442,++,-1=BennyArrow,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	//obj,WayPoint,1442,416,480,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,350,430,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,500,450,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,490,610,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,300,590,5,3,7356,5293,3055,++,
+
+
+pope west room
+	//obj,Spawner,2705,416,480,5,1,1442,++,-1=JerkPope,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	//obj,WayPoint,1442,416,480,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,350,430,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,500,450,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,490,610,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,300,590,5,3,7356,5293,3055,++,
+
+
+mimic  west room(bugged)
+	 //obj,AlucardModuleSocket,2705,416,480,3,-999999,++,,
+	//obj,WayPoint,1442,416,480,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,350,430,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,500,450,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,490,610,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,300,590,5,3,7356,5293,3055,++,
+
+
+scythe guy west room (NEED WAY POINTS FOR REASONS)
+	//obj,Spawner,2705,416,480,5,-999999,++,-1=MarkScythe,-2=-999999,-4=1,-5=1,-6=-1,-7=0,-8=0,
+	//obj,WayPoint,1442,416,480,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,350,430,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,500,450,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,490,610,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,300,590,5,3,7356,5293,3055,++,
+
+baker west room 
+//obj,Spawner,2705,416,480,4,1,5232,++,-1=BulletBaker,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,EmptyObject,5232,168,416,2,-999999,++,mn=When Boss at Half Hp,a=-1,
+//obj,OneTimeTrue,6289,120,416,2,1,5232,caseScript,3,1,-999999,0,++,,
+	//obj,WayPoint,1442,416,480,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,350,430,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,500,450,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,490,610,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,300,590,5,3,7356,5293,3055,++,
+
+
+frog west froom
+	 //obj,Spawner,2705,416,480,6,-999999,++,-1=Cleaner,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+
+
+
+
+// EAST
+
+pope east room (top right corner seems bugged)
+	//obj,Spawner,4322,800,458,6,1,1442,++,-1=JerkPope,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	//obj,WayPoint,1442,800,488,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,640,458,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,980,580,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,640,580,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,980,580,5,3,7356,5293,3055,++,
+
+archer east room
+	//obj,Spawner,4322,800,448,2,1,1442,++,-1=BennyArrow,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	//obj,WayPoint,1442,800,488,5,4,5293,7356,9100,3055,++,
+	//obj,WayPoint,7356,640,458,5,3,3055,9100,5293,++,
+	//obj,WayPoint,3055,980,458,5,3,5293,7356,9100,++,
+	//obj,WayPoint,5293,640,580,5,3,3055,9100,7356,++,
+	//obj,WayPoint,9100,980,580,5,3,7356,5293,3055,++,
+
+scythe guy east room
+	 //obj,Spawner,4322,800,448,5,-999999,++,-1=MarkScythe,-2=-999999,-4=1,-5=1,-6=-1,-7=0,-8=0,
+
+mimic  east room
+	 //obj,AlucardModuleSocket,4322,800,480,3,-999999,++,,
+
+baker east room 
+//obj,Spawner,4322,800,448,4,1,5232,++,-1=BulletBaker,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+//obj,EmptyObject,5232,168,416,2,-999999,++,mn=When Boss at Half Hp,a=-1,
+//obj,OneTimeTrue,6289,120,416,2,1,5232,caseScript,3,1,-999999,0,++,,
+
+west east room
+//obj,Spawner,4322,800,448,1,-999999,++,-1=OldGeneral,-2=-999999,-4=1,-5=0,-6=-1,-7=0,-8=0,
+	 //obj,TanukiCrystal,5284,640,458,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,3891,640,580,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,1525,980,458,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,7196,980,580,0,-999999,++,0=spr_TanukiCrystal,
+	 //obj,TanukiCrystal,5679,630,469,0,-999999,++,0=spr_TanukiCrystal,
+
+
+// Archer
+
