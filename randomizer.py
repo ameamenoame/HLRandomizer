@@ -698,7 +698,7 @@ def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: 
     for level in levels:
         for obj in level.object_list:
             if obj.type == HLDType.SPAWNER:
-                if obj.attrs["-1"] in list_of_enemies and obj.attrs["-1"] != "Birdman":
+                if obj.attrs["-1"] in BASE_LIST_OF_ENEMIES and obj.attrs["-1"] != "Birdman":
                     obj.attrs["-1"] = random.choices(list_of_enemies, weights)[0]
                     obj.attrs["-2"] = 0
                     obj.attrs["-4"] = 1
