@@ -303,6 +303,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             i = current_index[0]
             weightnum = float(self.current_weightvar.get())
             self.enemy_data[i]["weight"] = weightnum
+            self.enemy_choices[i] = "(%s) %s" % (weightnum, self.enemy_data[i]["name"])
+            self.enemy_choicesvar.set(self.enemy_choices)
         return
 
     def onspinboxreturn(self, _a):
@@ -360,7 +362,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         } for e in self.enemy_choices]
         
         Label(mainframe, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=3, row=3, sticky=NE)
-        self.enemy_list = Listbox(mainframe, listvariable=self.enemy_choicesvar, )
+        self.enemy_list = Listbox(mainframe, listvariable=self.enemy_choicesvar, width=27)
         self.enemy_list.configure(exportselection=False)
         self.enemy_list.grid(column=4, row=3, sticky=W, columnspan=1, rowspan=2)
         self.enemy_list.bind('<<ListboxSelect>>', self.onenemyselect)
