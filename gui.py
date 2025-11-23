@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL
+from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ModulePlacementType
 from random import randrange
 import shutil
 import os
@@ -213,7 +213,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     random_seed=self.random_seed.get() if self.random_seed.get() else None,
                     list_of_enemies=final_enemy_list,
                     enemy_weights=final_enemy_weights,
-                    protect_list=self.enemy_protect_pool
+                    protect_list=self.enemy_protect_pool,
+                    module_placement=self.module_optionsvar.get(),
+                    limit_one_module_per_room=self.limit_one_module_per_room.get()
                 )
                 success = True
                 break
@@ -346,7 +348,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         seed_entry = ttk.Entry(mainframe, textvariable=self.random_seed, width=30)
         seed_entry.grid(column=1, row=3, sticky=EW, columnspan=2)
         
-        self.random_doors = BooleanVar(value=True)
+        self.random_doors = BooleanVar(value=False)
         ttk.Checkbutton(mainframe, text='Randomize rooms', 
 	    variable=self.random_doors,
 	    onvalue=True, offvalue= False).grid(column=0, row=4, sticky=W)
@@ -367,6 +369,19 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
 
         
+        # Module placement settings
+        ttk.Label(mainframe, text="Module placement").grid(column=0, row=6, sticky=E)
+        module_options = [e.value for e in ModulePlacementType]
+        self.module_optionsvar = StringVar(value=ModulePlacementType.FREE)
+        module_settings_list = ttk.Combobox(mainframe, textvariable=self.module_optionsvar, values=module_options)
+        module_settings_list.grid(column=1, row=6, sticky=W)
+        module_settings_list.state(["readonly"])
+
+        self.limit_one_module_per_room = BooleanVar(value=True)
+        ttk.Checkbutton(mainframe, text='Limit 1 module per room', 
+	    variable=self.limit_one_module_per_room,
+	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
+
         # Enemy pool listbox
         self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()
         self.enemy_choicesvar = StringVar(value=self.enemy_choices)

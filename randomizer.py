@@ -45,6 +45,15 @@ BASE_ENEMY_WEIGHTS = [
     1.0 for i in range(len(BASE_LIST_OF_ENEMIES))
 ]
 
+class ModulePlacementType(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize" # Module placements unchanged
+    FREE = "Free" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons, tablets
+    # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
+    
+
 class RandomizerType(str, Enum):
     def __str__(self):
         return self.value
@@ -518,6 +527,8 @@ class Connection:
 
 
 class LevelHolder(list[HLDLevel | FakeLevel]):
+    is_randomized = False
+
     def dump_all(self, path: str):
         for level in self:
             level.dump_level(os.path.join(path, level.dir_))
@@ -535,6 +546,13 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
                 return level
         else:
             return None
+
+    def find_all_by_partial_name(self, name: str) -> list[HLDLevel | FakeLevel]:
+        to_return = []
+        for level in self:
+            if level.name.startswith(name):
+                to_return.append(level)
+        return to_return
 
     def connect_levels_from_list(self, list_: list):
         for connect_info in list_:
@@ -569,7 +587,7 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
             for check in level.fake_object_list:
                 check.passed = False
 
-        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check)]
+        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check, check.extra_info["parent_room_name_real"])]
         random_check: FakeObject = random.choice(filtered_checks)
 
         Inventory.reset_reached_checks()
@@ -711,7 +729,7 @@ def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: 
                     obj.attrs["-8"] = 0
 
 
-def place_all_items(levels: LevelHolder):
+def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room: bool = True):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     lasers = [21, 23]
@@ -721,14 +739,15 @@ def place_all_items(levels: LevelHolder):
     swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
     companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
-    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x: True):
+    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x, _: True):
         while Inventory.current[inventory_key] > 0:
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
-            empty_check = levels.get_empty_object(lambda_filter)
+
+            empty_check =  levels.get_empty_object(lambda_filter)
             place_func(empty_check)
 
-    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x: True):
+    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _: True):
         for _ in range(i):
             Inventory.reset_temporary()
             empty_check = levels.get_empty_object(lambda_filter)
@@ -772,13 +791,39 @@ def place_all_items(levels: LevelHolder):
     # THESE ARE PLACED BY RESTRICTIVENESS OF THEIR PLACEMENT
     # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
     # AND IMPORTANT FIRST UNIMPORTANT LAST
-    place_important("north_modules", _place_module, lambda x: x.dir_ == Direction.NORTH and not x.enemy_id)
-    place_important("east_modules", _place_module, lambda x: x.dir_ == Direction.EAST and not x.enemy_id)
-    place_important("west_modules", _place_module, lambda x: x.dir_ == Direction.WEST and not x.enemy_id)
-    place_important("south_modules", _place_module, lambda x: x.dir_ == Direction.SOUTH and not x.enemy_id)
-    place_important("dash_shops", _place_dash_shop, lambda x: not x.enemy_id)
-    place_unimportant(16, _place_tablet, lambda x: not x.enemy_id)
-    place_unimportant(4, _place_generic_shop, lambda x: not x.enemy_id)
+
+    def _get_place_module_requirements(empty_check, parent_room, dir):
+        nonlocal limit_one_module_per_room
+        if not (empty_check.dir_ == dir and not empty_check.enemy_id): return False
+
+
+        # Instead of doing this, would rather have the randomized check be the randomized level -> check flow instead of check -> level
+        if module_option == ModulePlacementType.KEY_ITEMS:
+            # Limit to one module per room if not using room randomization
+            if not levels.is_randomized and limit_one_module_per_room:
+                current_room_fake_levels = levels.find_all_by_partial_name(parent_room)
+                for level in current_room_fake_levels:
+                    for obj in level.fake_object_list:
+                        if obj.type == RandomizerType.MODULE:
+                            return False
+
+            return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
+        elif module_option == ModulePlacementType.NONE:
+            return empty_check.original_type == "MODULE"
+        elif module_option == ModulePlacementType.FREE:
+            return True
+        return False
+
+        
+
+    place_important("north_modules", _place_module,  lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.NORTH))
+    place_important("east_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.EAST))
+    place_important("west_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.WEST))
+    place_important("south_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.SOUTH))
+
+    place_important("dash_shops", _place_dash_shop, lambda x, _: not x.enemy_id)
+    place_unimportant(16, _place_tablet, lambda x, _: not x.enemy_id)
+    place_unimportant(4, _place_generic_shop, lambda x, _: not x.enemy_id)
     place_important("keys", _place_key)
     place_important("dash_shops", _place_dash_shop)
     place_important("lasers", _place_laser)
@@ -787,17 +832,23 @@ def place_all_items(levels: LevelHolder):
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL):
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True):
 
     random.seed(random_seed)
 
     fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
 
+    for level in fake_levels:
+        for o in level.fake_object_list:
+            o.extra_info["parent_room_name_real"] = level.name.split("/")[0]
+            o.extra_info["parent_room_name_fake"] = level.name 
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
+        fake_levels.is_randomized = True
         prepare_and_merge_randomized_doors(fake_levels, intermediary_door_levels)
     else:
+        fake_levels.is_randomized = False
         fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT2_JSON))
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[0].type = RandomizerType.PYLON
@@ -805,7 +856,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     fake_levels.find_by_name("rm_WA_TowerEnter").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
-    place_all_items(fake_levels)
+    place_all_items(fake_levels, module_placement, limit_one_module_per_room)
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
 
