@@ -40,6 +40,7 @@ BASE_LIST_OF_ENEMIES = [
     "NinjaStarFrog", "TanukiGun", "CultBird", "missiledirk", "TanukiSword",
     "Melty", "GhostBeamBird", "Leaper", "Dirkommander", "BlaDirk", "CrystalBaby"
 ]
+BASE_ENEMY_PROTECT_POOL = ["Birdman"]
 BASE_ENEMY_WEIGHTS = [
     1.0 for i in range(len(BASE_LIST_OF_ENEMIES))
 ]
@@ -690,15 +691,17 @@ def prepare_and_merge_randomized_doors(graph_levels: LevelHolder, door_levels: l
     graph_levels.connect_levels_from_list(connection_list)
 
 
-def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: list[float]):
+def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: list[float], protect_list: list[str]):
     print("Enemy list")
     print(list_of_enemies)
     print("Enemy weights")
     print(weights)
+    print("Enemy protect list")
+    print(protect_list)
     for level in levels:
         for obj in level.object_list:
             if obj.type == HLDType.SPAWNER:
-                if obj.attrs["-1"] in BASE_LIST_OF_ENEMIES and obj.attrs["-1"] != "Birdman":
+                if obj.attrs["-1"] in BASE_LIST_OF_ENEMIES and obj.attrs["-1"] not in protect_list:
                     obj.attrs["-1"] = random.choices(list_of_enemies, weights)[0]
                     obj.attrs["-2"] = 0
                     obj.attrs["-4"] = 1
@@ -784,7 +787,7 @@ def place_all_items(levels: LevelHolder):
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS):
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL):
 
     random.seed(random_seed)
 
@@ -821,7 +824,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
             real_levels.find_by_name(level["name"]).object_list += level["object_list"]
 
     if random_enemies:
-        randomize_enemies(real_levels, list_of_enemies, enemy_weights)
+        randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
     Inventory.reset()
 

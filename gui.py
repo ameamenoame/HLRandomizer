@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES
+from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL
 from random import randrange
 import shutil
 import os
@@ -212,7 +212,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     output_folder_name=output_folder_name if output_folder_name else self.OUT_FOLDER_NAME,
                     random_seed=self.random_seed.get() if self.random_seed.get() else None,
                     list_of_enemies=final_enemy_list,
-                    enemy_weights=final_enemy_weights
+                    enemy_weights=final_enemy_weights,
+                    protect_list=self.enemy_protect_pool
                 )
                 success = True
                 break
@@ -290,6 +291,18 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.enemy_choicesvar.set(self.enemy_choices)
             return
 
+    def protect_enemy(self):
+        current_index = self.enemy_list.curselection()
+        if current_index != (): 
+            i = current_index[0]
+            self.enemy_data[i]["protected"] = not self.enemy_data[i]["protected"]
+            if not self.enemy_data[i]["protected"]:
+                self.enemy_protect_pool.remove(self.enemy_data[i]["name"])
+            else:
+                self.enemy_protect_pool.append(self.enemy_data[i]["name"])
+            self.enemy_protect_poolvar.set(self.enemy_protect_pool)
+            return
+
     def onenemyselect(self, _b):
         current_index = self.enemy_list.curselection()
         if current_index != (): 
@@ -316,12 +329,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.title("Hyper Light Drifter Randomizer")
         self.PATH_TO_HLD = path
 
-        mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
-        mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-        ttk.Button(mainframe, text="Set up Randomizer", command=self.do_install).grid(column=2, row=0, sticky=W)
-        ttk.Label(mainframe, text="(Do this once if you haven't)").grid(column=3, row=0, sticky=W)
+        setup_frame = ttk.Frame(root)
+        setup_frame.grid(column=0, row=0, sticky=NE)
+        ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
+        ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
 
-        ttk.Separator(mainframe, orient='horizontal').grid(column=0, row=1, sticky=EW, columnspan=8)
+        mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
+        mainframe.grid(column=0, row=1, sticky=NSEW)
+
+        ttk.Separator(mainframe, orient='horizontal').grid(column=0, row=0, sticky=EW, columnspan=8)
 
         ttk.Label(mainframe, text="Settings", justify=CENTER, font=("TkHeadingFont", 20)).grid(column=0, row=2, sticky=N)
 
@@ -351,46 +367,83 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
 
         
-        # Enemy list
+        # Enemy pool listbox
         self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()
         self.enemy_choicesvar = StringVar(value=self.enemy_choices)
 
         self.enemy_data = [{
            "name": e,
            "weight": 1.0,
-           "enabled": True 
+           "enabled": True,
+           "protected": False
         } for e in self.enemy_choices]
+        for e in self.enemy_data:
+            if e["name"] == "Birdman": e["protected"] = True
         
-        Label(mainframe, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=3, row=3, sticky=NE)
-        self.enemy_list = Listbox(mainframe, listvariable=self.enemy_choicesvar, width=27)
+        enemy_pool_frame = ttk.Frame(root, height=90)
+        enemy_pool_frame.grid(column=0, row=2, sticky=NSEW)
+        ttk.Label(enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=0, row=0, sticky=NE)
+        self.enemy_list = Listbox(enemy_pool_frame, listvariable=self.enemy_choicesvar, width=27)
         self.enemy_list.configure(exportselection=False)
-        self.enemy_list.grid(column=4, row=3, sticky=W, columnspan=1, rowspan=2)
+        self.enemy_list.grid(column=1, row=0, sticky=W, rowspan=2)
         self.enemy_list.bind('<<ListboxSelect>>', self.onenemyselect)
 
-        s = Scrollbar(mainframe, orient=VERTICAL, command=self.enemy_list.yview)
+        s = ttk.Scrollbar(enemy_pool_frame, orient=VERTICAL, command=self.enemy_list.yview)
         self.enemy_list.configure(yscrollcommand=s.set)
-        s.grid(column=4, row=3, sticky=(N, S, E), rowspan=2)
+        s.grid(column=1, row=0, sticky=(N, S, E), rowspan=2)
 
-        Label(mainframe, text="Weight").grid(column=5, row=4, sticky=NE)
+
+        # Weight spinbox
+        weight_frame = ttk.Frame(enemy_pool_frame)
+        weight_frame.grid(column=2, row=0)
+        ttk.Label(weight_frame, text="Weight").grid(column=0, row=0, sticky=NW)
         self.current_weightvar= StringVar()
-        self.spinbox = Spinbox(mainframe, from_=0.0, to=100.0, textvariable=self.current_weightvar, width=5, command=self.onspinboxchanged, increment=.1)
-        self.spinbox.grid(column=6, row=4, sticky=NW)
+        self.spinbox = ttk.Spinbox(weight_frame, from_=0.0, to=100.0, textvariable=self.current_weightvar, width=5, command=self.onspinboxchanged, increment=.1)
+        self.spinbox.grid(column=1, row=0, sticky=NW, padx=5)
         self.spinbox.bind("<Return>", self.onspinboxreturn)
 
-        ttk.Button(mainframe, text="Enable", command=self.enable_enemy).grid(column=5, row=3, sticky=NW)
-        ttk.Button(mainframe, text="Disable", command=self.disable_enemy).grid(column=6, row=3, sticky=NW)
 
-        ttk.Button(mainframe, text="Randomize", command=self.do_gen).grid(column=4, row=6, sticky=E)
-        ttk.Button(mainframe, text="Push to HLD", command=self.do_push).grid(column=5, row=6, sticky=E)
+        # Pool edit buttons
+        buttons_frame = ttk.Frame(enemy_pool_frame)
+        buttons_frame.grid(column=0, row=3, columnspan=2)
+        ttk.Button(buttons_frame, text="Enable", command=self.enable_enemy).grid(column=0,row=0,)
+        ttk.Button(buttons_frame, text="Disable", command=self.disable_enemy).grid(column=1,row=0, padx=5)
+        ttk.Button(buttons_frame, text="Toggle rando protection", command=self.protect_enemy).grid(column=2,row=0, padx=5)
 
-        # ttk.Button(mainframe, text="Delete generated files", command=self.do_del).grid(column=5, row=6, sticky=E)
-        ttk.Button(mainframe, text="Revert to normal", command=self.do_revert).grid(column=6, row=6, sticky=E)
-        ttk.Button(mainframe, text="Close", command=root.destroy).grid(column=7, row=6, sticky=E)
 
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
-        mainframe.columnconfigure(2, weight=1)
+        # Protect pool
+        protect_pool_frame = ttk.Frame(enemy_pool_frame)
+        protect_pool_frame.grid(column=2, row=1, sticky=NW)
+        ttk.Label(protect_pool_frame,text="Protect pool").grid(column=0, row=0, sticky=NW)
+
+        self.enemy_protect_pool = BASE_ENEMY_PROTECT_POOL.copy()
+        self.enemy_protect_poolvar = StringVar(value=self.enemy_protect_pool)
+        self.protect_list = Listbox(protect_pool_frame, listvariable=self.enemy_protect_poolvar)
+        self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
+
+
+        ttk.Separator(root, orient='horizontal').grid(column=0, row=4, sticky=EW, columnspan=8)
+
+        # Bottom buttons
+        bottom_frame = Frame(root)
+        bottom_frame.grid(column=0, row=5, sticky=NE)
+
+
+        ttk.Button(bottom_frame, text="Randomize", command=self.do_gen).grid(column=0, row=0)
+        ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=1,row=0)
+        ttk.Button(bottom_frame, text="Revert to normal", command=self.do_revert).grid(column=2, row=0)
+        ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=3, row=0)
+
+
+        root.grid_columnconfigure(0, weight=1)
+        root.grid_columnconfigure(1, weight=1)
+        root.grid_rowconfigure(1, weight=1)
+        root.grid_rowconfigure(2, weight=1)
         for child in mainframe.winfo_children(): 
+            child.grid_configure(padx=5, pady=5)
+        for child in enemy_pool_frame.winfo_children(): 
+            child.grid_configure(padx=5, pady=5)
+        for child in bottom_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
 
 root = Tk()

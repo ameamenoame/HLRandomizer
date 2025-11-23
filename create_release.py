@@ -9,7 +9,7 @@ def main():
     #     "console.py", "-F", "--add-data", "jsons;jsons", "-n", f"hlr-release{datetime.now().strftime('-%Y-%m-%d-%H-%M-%S')}"
     # ])
     PyInstaller.__main__.run([
-        "gui.py", "--icon", "icon.ico", "-F", "-n", f"hlr-release-gui-{datetime.now().strftime('-%Y-%m-%d-%H-%M-%S')}"
+        "gui.py", "--icon", "icon.ico", "-F", "--noconsole", "-n", f"hlr-release-gui-{datetime.now().strftime('-%Y-%m-%d-%H-%M-%S')}"
     ])
 
 if __name__ == "__main__":
