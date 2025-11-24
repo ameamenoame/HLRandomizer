@@ -342,15 +342,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.title("Hyper Light Drifter Randomizer")
         self.PATH_TO_HLD = path
 
-        setup_frame = ttk.Frame(root)
-        setup_frame.grid(column=0, row=0, sticky=NE)
-        ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
-        ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
+        if not os.path.isdir('game_files'):
+            setup_frame = ttk.Frame(root)
+            setup_frame.grid(column=0, row=0, sticky=NE)
+            ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
+            ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
 
         mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
         mainframe.grid(column=0, row=1, sticky=NSEW)
-
-        ttk.Separator(mainframe, orient='horizontal').grid(column=0, row=0, sticky=EW, columnspan=8)
 
         ttk.Label(mainframe, text="Settings", justify=CENTER, font=("TkHeadingFont", 20)).grid(column=0, row=2, sticky=N)
 
