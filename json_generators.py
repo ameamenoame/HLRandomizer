@@ -8,6 +8,7 @@ PATH_TO_GRAPH = "legacy_resources\\graph.txt"
 PATH_TO_DOOR = "legacy_resources\\doors.txt"
 PATH_TO_CONNECT = "legacy_resources\\connect.txt"
 PATH_TO_CONNECT2 = "legacy_resources\\connect2.txt"
+PATH_TO_CONNECT_MODULE_DOORS_DISABLED = "legacy_resources\\connect_mod_door_disabled.txt" # Module doors disabled
 PATH_TO_MANUAL = "legacy_resources\\manual.txt"
 PATH_TO_MANUAL2 = "legacy_resources\\manual2.txt"
 
@@ -224,6 +225,7 @@ def generate_all_jsons():
     get_json_from_door(PATH_TO_DOOR, os.path.join(JSON_DIR, "out_door.json"))
     get_json_from_connect(PATH_TO_CONNECT, os.path.join(JSON_DIR, "out_connect.json"))
     get_json_from_connect(PATH_TO_CONNECT2, os.path.join(JSON_DIR, "out_connect2.json"))
+    get_json_from_connect(PATH_TO_CONNECT_MODULE_DOORS_DISABLED, os.path.join(JSON_DIR, "out_connect_mod_door_disabled.json"))
     get_json_from_manual12(PATH_TO_MANUAL2, os.path.join(JSON_DIR, "out_manual2.json"))
     get_json_from_manual12(PATH_TO_MANUAL, os.path.join(JSON_DIR, "out_manual.json"))
 

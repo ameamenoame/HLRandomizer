@@ -215,7 +215,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     enemy_weights=final_enemy_weights,
                     protect_list=self.enemy_protect_pool,
                     module_placement=self.module_optionsvar.get(),
-                    limit_one_module_per_room=self.limit_one_module_per_room.get()
+                    limit_one_module_per_room=self.limit_one_module_per_room.get(),
+                    disable_module_doors=self.disable_module_doors.get()
                 )
                 success = True
                 break
@@ -381,6 +382,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         ttk.Checkbutton(mainframe, text='Limit 1 module per room', 
 	    variable=self.limit_one_module_per_room,
 	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
+
+        self.disable_module_doors = BooleanVar(value=False)
+        ttk.Checkbutton(mainframe, text='Disable module doors', 
+	    variable=self.disable_module_doors,
+	    onvalue=True, offvalue= False).grid(column=1, row=8, sticky=W)
 
         # Enemy pool listbox
         self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()

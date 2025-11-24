@@ -23,6 +23,7 @@ GRAPH_JSON =    os.path.join(JSON_DIR, "out_graph.json")  # "jsons\\out_graph.js
 DOOR_JSON =     os.path.join(JSON_DIR, "out_door.json")  # "jsons\\out_door.json"
 CONNECT_JSON =  os.path.join(JSON_DIR, "out_connect.json")  # "jsons\\out_connect.json"
 CONNECT2_JSON = os.path.join(JSON_DIR, "out_connect2.json")  # "jsons\\out_connect2.json"
+CONNECT_MODULE_DOOR_DISABLED_JSON = os.path.join(JSON_DIR, "out_connect_mod_door_disabled.json")  
 MANUAL_JSON =   os.path.join(JSON_DIR, "out_manual.json")  # "jsons\\out_manual.json"
 MANUAL2_JSON =  os.path.join(JSON_DIR, "out_manual2.json")  # "jsons\\out_manual2.json"
 
@@ -832,8 +833,7 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True):
-
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, disable_module_doors: bool = False):
     random.seed(random_seed)
 
     fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
@@ -849,7 +849,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
         prepare_and_merge_randomized_doors(fake_levels, intermediary_door_levels)
     else:
         fake_levels.is_randomized = False
-        fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT2_JSON))
+        fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT2_JSON if not disable_module_doors else CONNECT_MODULE_DOOR_DISABLED_JSON))
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_EC_TempleIshVault").fake_object_list[0].type = RandomizerType.PYLON
@@ -877,7 +877,31 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if random_enemies:
         randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
+    if disable_module_doors:
+        _manual_disable_module_doors(real_levels)
+
     Inventory.reset()
 
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
+
+
+def _manual_disable_module_doors(real_levels: LevelHolder):
+    def _remove_mod_door_in_level(level_name: str):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == "ModuleDoor":
+                to_remove.append(obj)
+        for o in to_remove:
+            obj_list.remove(o)
+
+    _remove_mod_door_in_level(HLDLevel.Names.RM_WA_ENTSWITCH)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_WA_VALE)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_EC_THEPLAZA)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_EC_EASTLOOP)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH)
