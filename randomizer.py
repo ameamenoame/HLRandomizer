@@ -894,6 +894,14 @@ def _manual_disable_module_doors(real_levels: LevelHolder):
         for obj in obj_list:
             if obj.type == "ModuleDoor":
                 to_remove.append(obj)
+
+            # East manual changes in Plaza
+            if level_name == HLDLevel.Names.RM_EC_THEPLAZA:
+                special_remove_ids = [
+                    3548, 4248, 1682, # Remove the blocks to PlazaToLoop
+                    5404, 7128, 7095, 1702, 95, 5193, 93, 7830]  # Remove the blocks below the warp pad
+                if obj.uid in special_remove_ids:
+                    to_remove.append(obj)
         for o in to_remove:
             obj_list.remove(o)
 
@@ -905,3 +913,4 @@ def _manual_disable_module_doors(real_levels: LevelHolder):
     _remove_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION)
     _remove_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER)
     _remove_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH)
+
