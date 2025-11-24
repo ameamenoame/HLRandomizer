@@ -468,7 +468,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             child.grid_configure(padx=5, pady=5)
 
 root = Tk()
-
+root.iconbitmap("icon.ico")
 
 try:
     PATH_TO_HLD = HLDBasics.find_path()
