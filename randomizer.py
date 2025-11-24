@@ -53,7 +53,12 @@ class ModulePlacementType(str, Enum):
     FREE = "Free" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
     KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons, tablets
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
-    
+
+class ModuleCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 16
+    ALL = 32
 
 class RandomizerType(str, Enum):
     def __str__(self):
@@ -503,6 +508,7 @@ class FakeObject:
             RandomizerType.DOOR: _get_door,
             RandomizerType.TELEPORTER: _get_teleporter,
             RandomizerType.TELEVATOR: _get_televator,
+            "check": lambda _: [], # For empty checks, return nothing
         }
 
         real_object = type_map[self.type](self)
@@ -833,8 +839,21 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, disable_module_doors: bool = False):
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, disable_module_doors: bool = False, module_count: ModuleCount = ModuleCount.ALL):
     random.seed(random_seed)
+
+    if module_count == ModuleCount.MINIMUM:
+        Inventory.full["north_modules"] = 4
+        Inventory.full["east_modules"] = 4
+        Inventory.full["west_modules"] = 4
+        Inventory.full["south_modules"] = 4
+        Inventory.current = dict(Inventory.full)
+    else:
+        Inventory.full["north_modules"] = 8
+        Inventory.full["east_modules"] = 8
+        Inventory.full["west_modules"] = 8
+        Inventory.full["south_modules"] = 8
+        Inventory.current = dict(Inventory.full)
 
     fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
