@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ModulePlacementType, ModuleCount
+from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ModulePlacementType, ModuleCount, ModuleDoorOptions
 from random import randrange
 import shutil
 import os
@@ -216,7 +216,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     protect_list=self.enemy_protect_pool,
                     module_placement=self.module_optionsvar.get(),
                     limit_one_module_per_room=self.limit_one_module_per_room.get(),
-                    disable_module_doors=self.disable_module_doors.get(),
+                    module_door_option=self.module_door_optionsvar.get(),
                     module_count=int(self.module_count_optionsvar.get())
                 )
                 success = True
@@ -329,14 +329,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.onspinboxchanged()
         self.enemy_list.focus()
 
-    def on_disable_module_change(self, index, value, op):
-        if self.disable_module_doors.get():
-            self.module_count_label.grid(column=0, row =9, sticky=E, padx=5, pady=5)
-            self.module_count_list.grid(column=1, row=9, sticky=W, padx=5, pady=5)
-        else:
-            self.module_count_label.grid_remove()
-            self.module_count_list.grid_remove()
-            self.module_count_optionsvar.set(ModuleCount.ALL)
 
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
@@ -392,17 +384,22 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 	    variable=self.limit_one_module_per_room,
 	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
 
-        self.disable_module_doors = BooleanVar(value=False)
-        ttk.Checkbutton(mainframe, text='Disable module doors', 
-	    variable=self.disable_module_doors,
-	    onvalue=True, offvalue= False).grid(column=1, row=8, sticky=W)
-        self.disable_module_doors.trace('w', self.on_disable_module_change)
+        self.module_door_label = ttk.Label(mainframe, text="Module door")
+        module_door_options = [e.value for e in ModuleDoorOptions]
+        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.NONE)
+        self.module_door_list = ttk.Combobox(mainframe, textvariable=self.module_door_optionsvar, values=module_door_options)
+        self.module_door_list.state(["readonly"])
+        self.module_door_label.grid(column=0, row=9, sticky=E)
+        self.module_door_list.grid(column=1, row= 9, sticky=W)
 
         self.module_count_label = ttk.Label(mainframe, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
         self.module_count_optionsvar = StringVar(value=ModuleCount.ALL)
         self.module_count_list = ttk.Combobox(mainframe, textvariable=self.module_count_optionsvar, values=module_count_options)
         self.module_count_list.state(["readonly"])
+
+        self.module_count_label.grid(column=0, row =10, sticky=E)
+        self.module_count_list.grid(column=1, row=10, sticky=W)
 
         # Enemy pool listbox
         self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()

@@ -54,6 +54,13 @@ class ModulePlacementType(str, Enum):
     KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons, tablets
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
 
+class ModuleDoorOptions(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize"
+    MIX = "Mix"
+    DISABLED = "Disabled"
+
 class ModuleCount(int, Enum):
     def __str__(self):
         return str(self.value)
@@ -839,7 +846,7 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, disable_module_doors: bool = False, module_count: ModuleCount = ModuleCount.ALL):
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL):
     random.seed(random_seed)
 
     if module_count == ModuleCount.MINIMUM:
@@ -862,13 +869,27 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
         for o in level.fake_object_list:
             o.extra_info["parent_room_name_real"] = level.name.split("/")[0]
             o.extra_info["parent_room_name_fake"] = level.name 
+
+    mix_data: dict
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
         fake_levels.is_randomized = True
         prepare_and_merge_randomized_doors(fake_levels, intermediary_door_levels)
     else:
         fake_levels.is_randomized = False
-        fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT2_JSON if not disable_module_doors else CONNECT_MODULE_DOOR_DISABLED_JSON))
+
+        path: str
+        if module_door_option == ModuleDoorOptions.DISABLED:
+            path = CONNECT_MODULE_DOOR_DISABLED_JSON
+        else:
+            path = CONNECT2_JSON
+
+        data = CoolJSON.load(path)
+
+        if module_door_option == ModuleDoorOptions.MIX:
+            mix_data = _mix_module_doors(data)
+            
+        fake_levels.connect_levels_from_list(data)
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_EC_TempleIshVault").fake_object_list[0].type = RandomizerType.PYLON
@@ -896,15 +917,98 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if random_enemies:
         randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
-    if disable_module_doors:
+    if module_door_option == ModuleDoorOptions.DISABLED:
         _manual_disable_module_doors(real_levels)
+    elif module_door_option == ModuleDoorOptions.MIX:
+        _manual_mix_module_doors(real_levels, mix_data)
+        
 
     Inventory.reset()
 
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
 
+def _mix_module_doors(level_data: list):
+    mix_data: dict = {}
+    def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 4):
+        nonlocal level_data
+        nonlocal mix_data
+        high_door_placed = False
+        for name in levels_to_change:
+            for level in level_data:
+                if level['requirements']['modules'] != 0 and (level['from'] == name) and \
+                ((name != "rm_NX_MoonCourtyard/3") or (name == "rm_NX_MoonCourtyard/3" and level['to'] in ["rm_NX_CathedralEntrance", "rm_NL_GapOpening/1"])): # Because north has a level with 2 module doors
+                    roll = random.randint(0, 2)
+                    to_place: int
+                    if roll == 1 and not high_door_placed: # Limit only one 4-module door
+                        high_door_placed = True
+                        to_place = high_door_count
+                    elif roll == 0:
+                        to_place = 0
+                    else:
+                        to_place = x_door_count
+                    level['requirements']['modules'] = to_place
 
+                    if name != "rm_NX_MoonCourtyard/3":
+                        mix_data[level["from"]] = to_place
+                    else:
+                        mix_data[level["from"] + ":" + level["to"]] = to_place
+
+    north_module_door_levels = ["rm_NX_MoonCourtyard/3"]
+    west_module_door_levels = ["rm_WA_EntSwitch", "rm_WA_Vale/1"]
+    east_module_door_levels = ["rm_EC_ThePlaza/2", "rm_EC_EastLoop/1"]
+    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner"]
+
+    _mix_doors_in_level(north_module_door_levels)
+    _mix_doors_in_level(west_module_door_levels)
+    _mix_doors_in_level(east_module_door_levels)
+    _mix_doors_in_level(south_module_door_levels)
+
+    print("mix data")
+    print(mix_data)
+
+    return mix_data
+
+
+def _manual_mix_module_doors(real_levels: LevelHolder, mix_data: dict):
+    def _change_mod_door_in_level(level_name: str, count: int, skip: int =0):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == "ModuleDoor":
+                if skip > 0: 
+                    skip -= 1
+                    continue
+
+                if count == 0:
+                    to_remove.append(obj)
+                else:
+                    obj.attrs['c'] = count
+
+            # East manual changes in Plaza
+            if level_name == HLDLevel.Names.RM_EC_THEPLAZA:
+                special_remove_ids = [
+                    3548, 4248, 1682, # Remove the blocks to PlazaToLoop
+                    5404, 7128, 7095, 1702, 95, 5193, 93, 7830]  # Remove the blocks below the warp pad
+                if obj.uid in special_remove_ids:
+                    to_remove.append(obj)
+        for o in to_remove:
+            obj_list.remove(o)
+
+    _change_mod_door_in_level(HLDLevel.Names.RM_WA_ENTSWITCH, mix_data["rm_WA_EntSwitch"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_WA_VALE, mix_data["rm_WA_Vale/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_EC_THEPLAZA, mix_data["rm_EC_ThePlaza/2"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_EC_EASTLOOP, mix_data["rm_EC_EastLoop/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION, mix_data["rm_CH_BDirkDemolition"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER, mix_data["rm_CH_ACorner"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH, mix_data["rm_SX_TowerSouth/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance"], 1)
+    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"])
+
+    return
+
+    
 def _manual_disable_module_doors(real_levels: LevelHolder):
     def _remove_mod_door_in_level(level_name: str):
         obj: HLDObj
