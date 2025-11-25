@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
 from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ModulePlacementType, ModuleCount, ModuleDoorOptions
+from solution import check_solution
 from random import randrange
 import shutil
 import os
@@ -329,6 +330,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.onspinboxchanged()
         self.enemy_list.focus()
 
+    def show_solution(self):
+        solution = check_solution()
+        messagebox.showinfo(message=solution, title="Solution")
+
 
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
@@ -465,8 +470,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         ttk.Button(bottom_frame, text="Randomize", command=self.do_gen).grid(column=0, row=0)
         ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=1,row=0)
-        ttk.Button(bottom_frame, text="Revert to normal", command=self.do_revert).grid(column=2, row=0)
-        ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=3, row=0)
+        ttk.Button(bottom_frame, text="Check solution", command=self.show_solution).grid(column=2, row=0)
+        ttk.Button(bottom_frame, text="Revert to normal", command=self.do_revert).grid(column=3, row=0)
+        ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
 
 
         root.grid_columnconfigure(0, weight=1)

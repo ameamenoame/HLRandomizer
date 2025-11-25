@@ -964,9 +964,6 @@ def _mix_module_doors(level_data: list):
     _mix_doors_in_level(east_module_door_levels)
     _mix_doors_in_level(south_module_door_levels)
 
-    print("mix data")
-    print(mix_data)
-
     return mix_data
 
 
