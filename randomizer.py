@@ -1011,8 +1011,8 @@ def _manual_mix_module_doors(real_levels: LevelHolder, mix_data: dict):
     _change_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION, mix_data["rm_CH_BDirkDemolition"])
     _change_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER, mix_data["rm_CH_ACorner"])
     _change_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH, mix_data["rm_SX_TowerSouth/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"]) # skip is kinda buggy so ordering matters here
     _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance"], 1)
-    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"])
 
     return
 
