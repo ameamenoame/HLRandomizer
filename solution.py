@@ -50,6 +50,24 @@ def check_solution(path="./game_files/randomized"):
 	south_solution = "South\n"
 	central_solution = "Central\n"
 
+ 
+	key_rooms = {
+		"rm_NL_CaveVAULT.lvl": 10,
+"rm_WC_CrystalLakeVault.lvl": 12,
+"rm_EB_FlamePitLAB.lvl": 1,
+"rm_WA_Grotto_buffIntro.lvl": 3,
+"rm_WB_BigBattle.lvl": 4,
+"rm_CH_Bfps.lvl": 16,
+# HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8
+	}
+
+	laser_checks = [
+		HLDLevel.Names.RM_NL_STAIRASCENT,
+		HLDLevel.Names.RM_WT_SLOWLAB,
+		HLDLevel.Names.RM_EB_DEADOTTERWALK,
+		HLDLevel.Names.RM_CH_BDIRKDELUGE
+	]
+
 	def _parse_line(level_name, _lineno, line):
 		nonlocal return_text
 		nonlocal east_solution
@@ -58,13 +76,21 @@ def check_solution(path="./game_files/randomized"):
 		nonlocal north_solution
 		nonlocal central_solution
 
-		def add_to_dir_solution(n, text):
+		def add_to_dir_solution(n, text, obj: HLDObj):
 			nonlocal east_solution
 			nonlocal west_solution
 			nonlocal south_solution
 			nonlocal north_solution
 			nonlocal central_solution
 			area = n.split("_")[1]
+
+			if n in key_rooms.keys():
+				text = text.replace("\n", "")
+				text += " (Behind %d key door)\n" % key_rooms[n]
+			elif n in laser_checks:
+				text = text.replace("\n", "")
+				text += " (Behind laser check)\n"
+   
 			if area.startswith("N"):
 				north_solution += text
 			elif area.startswith("E"):
@@ -83,20 +109,20 @@ def check_solution(path="./game_files/randomized"):
 				if obj.attrs['w'] in [21, 23]: 
 					text = "Laser (%d) found at %s" % (obj.attrs['w'], level_name)
 					text += "\n"
-					add_to_dir_solution(level_name, text)
+					add_to_dir_solution(level_name, text, obj)
 			case "DrifterBones_Key":
 				text = "Key found at " + level_name
 				text += "\n"
-				add_to_dir_solution(level_name, text)
+				add_to_dir_solution(level_name, text, HLDObj.from_line(line))
 			case "ModuleSocket":
 				text = "Module found at " + level_name
 				text += "\n"
-				add_to_dir_solution(level_name, text)
+				add_to_dir_solution(level_name, text, HLDObj.from_line(line))
 			case "ModuleDoor":
 				obj = HLDObj.from_line(line)
-				text = "Module door (%d) found at %s" % (obj.attrs['c'], level_name)
+				text = "DoorModule (%d) found at %s" % (obj.attrs['c'], level_name)
 				text += "\n"
-				add_to_dir_solution(level_name, text)
+				add_to_dir_solution(level_name, text, obj)
 			case _:
 				pass
 		return

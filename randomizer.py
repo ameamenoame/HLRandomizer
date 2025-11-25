@@ -46,7 +46,7 @@ BASE_ENEMY_WEIGHTS = [
     1.0 for i in range(len(BASE_LIST_OF_ENEMIES))
 ]
 
-class ModulePlacementType(str, Enum):
+class ItemPlacementRestriction(str, Enum):
     def __str__(self):
         return self.value
     NONE = "Don't randomize" # Module placements unchanged
@@ -743,7 +743,12 @@ def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: 
                     obj.attrs["-8"] = 0
 
 
-def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room: bool = True):
+def place_all_items(levels: LevelHolder, 
+                    module_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS, 
+                    limit_one_module_per_room: bool = True,
+                    key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS
+                    ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     lasers = [21, 23]
@@ -807,12 +812,10 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
     # AND IMPORTANT FIRST UNIMPORTANT LAST
 
     def _get_place_module_requirements(empty_check, parent_room, dir):
-        nonlocal limit_one_module_per_room
         if not (empty_check.dir_ == dir and not empty_check.enemy_id): return False
 
-
         # Instead of doing this, would rather have the randomized check be the randomized level -> check flow instead of check -> level
-        if module_option == ModulePlacementType.KEY_ITEMS:
+        if module_option == ItemPlacementRestriction.KEY_ITEMS:
             # Limit to one module per room if not using room randomization
             if not levels.is_randomized and limit_one_module_per_room:
                 current_room_fake_levels = levels.find_all_by_partial_name(parent_room)
@@ -822,12 +825,20 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
                             return False
 
             return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
-        elif module_option == ModulePlacementType.NONE:
+        elif module_option == ItemPlacementRestriction.NONE:
             return empty_check.original_type == "MODULE"
-        elif module_option == ModulePlacementType.FREE:
+        elif module_option == ItemPlacementRestriction.FREE:
             return True
         return False
 
+    def _get_placement_restriction(empty_check, parent_room, current_obj: str, type: ItemPlacementRestriction):
+        if type == ItemPlacementRestriction.KEY_ITEMS:
+            return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
+        elif type == ItemPlacementRestriction.NONE:
+            return empty_check.original_type == current_obj
+        elif type == ItemPlacementRestriction.FREE:
+            return True
+        return False
         
 
     place_important("north_modules", _place_module,  lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.NORTH))
@@ -838,15 +849,15 @@ def place_all_items(levels: LevelHolder, module_option: ModulePlacementType = Mo
     place_important("dash_shops", _place_dash_shop, lambda x, _: not x.enemy_id)
     place_unimportant(16, _place_tablet, lambda x, _: not x.enemy_id)
     place_unimportant(4, _place_generic_shop, lambda x, _: not x.enemy_id)
-    place_important("keys", _place_key)
+    place_important("keys", _place_key, lambda e, p: _get_placement_restriction(e, p, "BONES", key_placement_option)) # TODO: Need to separate bones into weapons / outfits/ keys
     place_important("dash_shops", _place_dash_shop)
-    place_important("lasers", _place_laser)
+    place_important("lasers", _place_laser, lambda e, p: _get_placement_restriction(e, p, "BONES", laser_placement_option))
     place_unimportant(4, _place_shotgun)
     place_unimportant(9, _place_outfit)
     place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ModulePlacementType = ModulePlacementType.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL):
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL):
     random.seed(random_seed)
 
     if module_count == ModuleCount.MINIMUM:

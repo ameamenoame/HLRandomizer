@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ModulePlacementType, ModuleCount, ModuleDoorOptions
+from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ItemPlacementRestriction, ModuleCount, ModuleDoorOptions
 from solution import check_solution
 from random import randrange
 import shutil
@@ -378,8 +378,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         
         # Module placement settings
         ttk.Label(mainframe, text="Module placement").grid(column=0, row=6, sticky=E, pady=5, padx=5)
-        module_options = [e.value for e in ModulePlacementType]
-        self.module_optionsvar = StringVar(value=ModulePlacementType.FREE)
+        module_options = [e.value for e in ItemPlacementRestriction]
+        self.module_optionsvar = StringVar(value=ItemPlacementRestriction.FREE)
         module_settings_list = ttk.Combobox(mainframe, textvariable=self.module_optionsvar, values=module_options)
         module_settings_list.grid(column=1, row=6, sticky=W)
         module_settings_list.state(["readonly"])
