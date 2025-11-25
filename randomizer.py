@@ -125,13 +125,32 @@ class CoolJSON:
             return to_return
 
 
+class LayerTypes(str, Enum):
+    def __str__(self):
+        return self.value
+    LASER = "Laser"
+    MOD_3 = "3 modules"
+    MOD_4 = "Module 4"
+    KEYS = "Keys"
+    PYLON = "Pylon"
+    
+
+class Layer:
+    type_: LayerTypes
+
+    @classmethod
+    def passes_requirements(cls, inventory: Inventory):
+        return
+
+
 class Inventory:
 
     reached_checks: list[FakeObject] = []
 
     full = {
         "keys": 16,
-        "lasers": 2,
+        # "lasers": 2,
+        "lasers": 1,
         "north_modules": 8,
         "east_modules": 8,
         "west_modules": 8,
@@ -168,6 +187,14 @@ class Inventory:
         cls.reset_reached_checks()
         cls.reset_current()
         cls.reset_temporary()
+
+    @classmethod
+    def set_module_requirements(cls, count: int = 8):
+        cls.full["north_modules"] = count
+        cls.full["east_modules"] = count
+        cls.full["west_modules"] = count
+        cls.full["south_modules"] = count
+        cls.current = dict(cls.full)
 
     @classmethod
     def pick_up_item(cls, obj: FakeObject):
@@ -580,6 +607,9 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
                 )
             )
 
+    #################################################################################
+    # GET EMPTY CHECK
+    ####################################################################################
     def get_empty_object(self, filter_lambda: Callable):
         inventory_before = False
         inventory_after = True
@@ -724,12 +754,6 @@ def prepare_and_merge_randomized_doors(graph_levels: LevelHolder, door_levels: l
 
 
 def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: list[float], protect_list: list[str]):
-    print("Enemy list")
-    print(list_of_enemies)
-    print("Enemy weights")
-    print(weights)
-    print("Enemy protect list")
-    print(protect_list)
     for level in levels:
         for obj in level.object_list:
             if obj.type == HLDType.SPAWNER:
@@ -751,7 +775,8 @@ def place_all_items(levels: LevelHolder,
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [21, 23]
+    lasers = [random.choice([21, 23])] 
+    # lasers = [21, 23]
     shotguns = [2, 41, 43, 1]
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
     capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
@@ -807,10 +832,6 @@ def place_all_items(levels: LevelHolder,
     def _place_gearbit(check: FakeObject):
         check.type = RandomizerType.GEARBIT
 
-    # THESE ARE PLACED BY RESTRICTIVENESS OF THEIR PLACEMENT
-    # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
-    # AND IMPORTANT FIRST UNIMPORTANT LAST
-
     def _get_place_module_requirements(empty_check, parent_room, dir):
         if not (empty_check.dir_ == dir and not empty_check.enemy_id): return False
 
@@ -831,47 +852,58 @@ def place_all_items(levels: LevelHolder,
             return True
         return False
 
-    def _get_placement_restriction(empty_check, parent_room, current_obj: str, type: ItemPlacementRestriction):
-        if type == ItemPlacementRestriction.KEY_ITEMS:
+    def _get_placement_restriction(empty_check, parent_room, obj_type: str, restriction_type: ItemPlacementRestriction):
+        if parent_room in ["rm_C_Ven_Dash", "rm_PAX_Staging", "rm_IN_BackerTablet"]: return False # Don't put important items in the dash shop
+
+        if restriction_type == ItemPlacementRestriction.KEY_ITEMS:
             return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
-        elif type == ItemPlacementRestriction.NONE:
-            return empty_check.original_type == current_obj
-        elif type == ItemPlacementRestriction.FREE:
+        elif restriction_type == ItemPlacementRestriction.NONE:
+            return empty_check.original_type == obj_type
+        elif restriction_type == ItemPlacementRestriction.FREE:
             return True
         return False
         
 
-    place_important("north_modules", _place_module,  lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.NORTH))
-    place_important("east_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.EAST))
-    place_important("west_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.WEST))
-    place_important("south_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.SOUTH))
+    # THESE ARE PLACED BY RESTRICTIVENESS OF THEIR PLACEMENT
+    # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
+    # AND IMPORTANT FIRST UNIMPORTANT LAST
 
+    def _place_all_modules():
+        print("Place modules")
+        place_important("north_modules", _place_module,  lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.NORTH))
+        place_important("east_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.EAST))
+        place_important("west_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.WEST))
+        place_important("south_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.SOUTH))
+
+    def _place_keys():
+        print("Place keys")
+        place_important("keys", _place_key, lambda e, p: _get_placement_restriction(e, p, "BONES", key_placement_option)) # TODO: Need to separate bones into weapons / outfits/ keys
+    def _place_lasers():
+        print("Place lasers")
+        place_important("lasers", _place_laser, lambda e, p: _get_placement_restriction(e, p, "BONES", laser_placement_option))
+
+    layers = [_place_all_modules, _place_keys, _place_lasers]
+    random.shuffle(layers)
+    for l in layers:
+        l()
+
+    # _place_all_modules()
     place_important("dash_shops", _place_dash_shop, lambda x, _: not x.enemy_id)
     place_unimportant(16, _place_tablet, lambda x, _: not x.enemy_id)
     place_unimportant(4, _place_generic_shop, lambda x, _: not x.enemy_id)
-    place_important("keys", _place_key, lambda e, p: _get_placement_restriction(e, p, "BONES", key_placement_option)) # TODO: Need to separate bones into weapons / outfits/ keys
+    # _place_keys()
     place_important("dash_shops", _place_dash_shop)
-    place_important("lasers", _place_laser, lambda e, p: _get_placement_restriction(e, p, "BONES", laser_placement_option))
+    # _place_lasers()
     place_unimportant(4, _place_shotgun)
     place_unimportant(9, _place_outfit)
-    place_unimportant(164, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
+    place_unimportant(165, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
 def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL):
+    print("Seed: " + str(random_seed))
     random.seed(random_seed)
 
-    if module_count == ModuleCount.MINIMUM:
-        Inventory.full["north_modules"] = 4
-        Inventory.full["east_modules"] = 4
-        Inventory.full["west_modules"] = 4
-        Inventory.full["south_modules"] = 4
-        Inventory.current = dict(Inventory.full)
-    else:
-        Inventory.full["north_modules"] = 8
-        Inventory.full["east_modules"] = 8
-        Inventory.full["west_modules"] = 8
-        Inventory.full["south_modules"] = 8
-        Inventory.current = dict(Inventory.full)
+    Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
 
     fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
@@ -899,6 +931,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
 
         if module_door_option == ModuleDoorOptions.MIX:
             mix_data = _mix_module_doors(data)
+            print("Mix data")
+            print(mix_data)
             
         fake_levels.connect_levels_from_list(data)
 
@@ -931,7 +965,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if module_door_option == ModuleDoorOptions.DISABLED:
         _manual_disable_module_doors(real_levels)
     elif module_door_option == ModuleDoorOptions.MIX:
-        _manual_mix_module_doors(real_levels, mix_data)
+        _manual_mix_real_module_doors(real_levels, mix_data)
         
 
     Inventory.reset()
@@ -978,7 +1012,7 @@ def _mix_module_doors(level_data: list):
     return mix_data
 
 
-def _manual_mix_module_doors(real_levels: LevelHolder, mix_data: dict):
+def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
     def _change_mod_door_in_level(level_name: str, count: int, skip: int =0):
         obj: HLDObj
         obj_list = real_levels.find_by_name(level_name).object_list
