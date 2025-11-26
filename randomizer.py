@@ -642,7 +642,7 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
             for check in level.fake_object_list:
                 check.passed = False
 
-        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check, check.extra_info["parent_room_name_real"])]
+        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check, check.extra_info["parent_room_name_real"], Inventory, self)]
         random_check: FakeObject = random.choice(filtered_checks)
 
         Inventory.reset_reached_checks()
@@ -783,6 +783,7 @@ def place_all_items(levels: LevelHolder,
                     limit_one_module_per_room: bool = True,
                     key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    mod_door_mix_data: dict = {}
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -794,7 +795,7 @@ def place_all_items(levels: LevelHolder,
     swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
     companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
-    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x, _: True):
+    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x, _, inventory, levels: True):
         while Inventory.current[inventory_key] > 0:
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
@@ -802,7 +803,7 @@ def place_all_items(levels: LevelHolder,
             empty_check =  levels.get_empty_object(lambda_filter)
             place_func(empty_check)
 
-    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _: True):
+    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True):
         for _ in range(i):
             Inventory.reset_temporary()
             empty_check = levels.get_empty_object(lambda_filter)
@@ -879,29 +880,159 @@ def place_all_items(levels: LevelHolder,
     # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
     # AND IMPORTANT FIRST UNIMPORTANT LAST
 
-    def _place_all_modules():
+    def _place_all_modules(next_layer):
         print("Place modules")
-        place_important("north_modules", _place_module,  lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.NORTH))
-        place_important("east_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.EAST))
-        place_important("west_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.WEST))
-        place_important("south_modules", _place_module, lambda empty_check, parent_room: _get_place_module_requirements(empty_check, parent_room, Direction.SOUTH))
+        def _place_module_in_dir(area, direction):
+            nonlocal next_layer
+            place_important(area, _place_module,  
+                            lambda empty_check, parent_room, inventory, levels: all([_get_place_module_requirements(empty_check, parent_room, direction), next_layer(empty_check, inventory, levels)]))
 
-    def _place_keys():
+        _place_module_in_dir("north_modules", Direction.NORTH)
+        _place_module_in_dir("east_modules", Direction.EAST)
+        _place_module_in_dir("west_modules", Direction.WEST)
+        _place_module_in_dir("south_modules", Direction.SOUTH)
+
+    def _place_keys(next_layer):
         print("Place keys")
-        place_important("keys", _place_key, lambda e, p: _get_placement_restriction(e, p, "BONES", key_placement_option)) # TODO: Need to separate bones into weapons / outfits/ keys
-    def _place_lasers():
+        place_important("keys", _place_key, lambda e, p, i, l: all([next_layer(e, i, l),_get_placement_restriction(e, p, "BONES", key_placement_option)])) # TODO: Need to separate bones into weapons / outfits/ keys
+    def _place_lasers(next_layer):
         print("Place lasers")
-        place_important("lasers", _place_laser, lambda e, p: _get_placement_restriction(e, p, "BONES", laser_placement_option))
+        place_important("lasers", _place_laser, lambda e, p, i, l: all([next_layer(e, i, l), _get_placement_restriction(e, p, "BONES", laser_placement_option)]))
 
-    layers = [_place_all_modules, _place_keys, _place_lasers]
+    def _get_module_layer_requirement(check, inventory, levels: LevelHolder):
+        nonlocal mod_door_mix_data
+        if check.dir_ in ["Intro", "Central"]: return False
+        level_name: str = check.extra_info["parent_room_name_fake"]
+        level: FakeLevel = levels.find_by_name(level_name)
+
+        # Need to find whether this level is behind a module door
+        def _find_module_door_connection(level: FakeLevel):
+            # if level.name not in mapping.keys(): return False
+            nonlocal mod_door_mix_data
+
+            # Need to figure out which area the current level is in
+
+            north_boss_behind_module_rooms = [
+                HLDLevel.Names.RM_NL_ALTARTHRONE,
+                HLDLevel.Names.RM_NX_SPIRALSTAIRCASE,
+                HLDLevel.Names.RM_NX_JERKPOPE,
+            ]
+            north_gap_behind_module_rooms = [
+                HLDLevel.Names.RM_NL_GAPHALLWAY,
+                HLDLevel.Names.RM_NL_RISINGARENA
+            ]
+
+            east_behind_module_rooms = [
+                HLDLevel.Names.RM_EB_BOGSTREET,
+                HLDLevel.Names.RM_EC_BIGBOGLAB,
+                HLDLevel.Names.RM_EA_BOGTEMPLECAMP,
+                HLDLevel.Names.RM_EA_FROGBOSS,
+            ]
+            east_leaper_behind_module_rooms = [
+                HLDLevel.Names.RM_EB_MELTYLEAPERARENA
+            ]
+
+            west_behind_module_rooms = [
+                HLDLevel.Names.RM_WB_BIGBATTLE,
+                HLDLevel.Names.RM_WC_BIGMEADOWVAULT,
+                HLDLevel.Names.RM_WC_MEADOWCAVECROSSING,
+                HLDLevel.Names.RM_WB_TANUKITROUBLE,
+                HLDLevel.Names.RM_WX_BOSS,
+                HLDLevel.Names.RM_WA_MULTIENTRANCELAB,
+            ]
+            west_bottom_behind_module_rooms = [
+                HLDLevel.Names.RM_WB_TREETREACHERY,
+                HLDLevel.Names.RM_WL_WESTDRIFTERVAULT,
+            ]
+
+            south_baker_behind_module_rooms = [
+                HLDLevel.Names.RM_CH_TABIGONE,
+                HLDLevel.Names.RM_CH_CGATEBLOCK,
+                HLDLevel.Names.RM_CH_TLONGESTROAD,
+                HLDLevel.Names.RM_CH_CENDHALL,
+            ]
+            south_archer_behind_module_rooms = [
+                HLDLevel.Names.RM_CH_APILLARBIRD,
+                HLDLevel.Names.RM_CH_CSPIRAL,
+            ]
+            south_gauntlet_behind_module_rooms = [
+                HLDLevel.Names.RM_S_GAUNTLETEND
+            ]
+
+            full = north_boss_behind_module_rooms + north_gap_behind_module_rooms + east_behind_module_rooms + east_leaper_behind_module_rooms \
+                + west_behind_module_rooms + west_bottom_behind_module_rooms + south_archer_behind_module_rooms + south_baker_behind_module_rooms + south_gauntlet_behind_module_rooms
+
+            name = level.name + ".lvl"
+
+            if name not in full: return False
+
+            mapping = {
+                "rm_WA_EntSwitch": west_bottom_behind_module_rooms,
+                "rm_WA_Vale/1": west_behind_module_rooms,
+                "rm_EC_ThePlaza/2": east_behind_module_rooms,
+                "rm_EC_EastLoop/1": east_leaper_behind_module_rooms,
+                "rm_CH_BDirkDemolition": south_baker_behind_module_rooms,
+                "rm_CH_ACorner": south_archer_behind_module_rooms,
+                "rm_SX_TowerSouth/1": south_gauntlet_behind_module_rooms,
+                "rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1": north_gap_behind_module_rooms,
+                "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance": north_boss_behind_module_rooms
+            }
+
+            area: str = None
+            if level.dir_ == Direction.NORTH:
+                if name in north_boss_behind_module_rooms:
+                    area = "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance"
+                elif name in north_gap_behind_module_rooms:
+                    area ="rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"
+            elif level.dir_ == Direction.EAST:
+                if name in east_behind_module_rooms:
+                    area = "rm_EC_ThePlaza/2"
+                elif name in east_leaper_behind_module_rooms:
+                    area = "rm_EC_EastLoop/1"
+            elif level.dir_ == Direction.WEST:
+                if name in west_behind_module_rooms:
+                    area = "rm_WA_Vale/1"
+                elif name in west_bottom_behind_module_rooms:
+                    area = "rm_WA_EntSwitch"
+            else:
+                if name in south_archer_behind_module_rooms:
+                    area = "rm_CH_ACorner"
+                elif name in south_baker_behind_module_rooms:
+                    area = "rm_CH_BDirkDemolition"
+                elif name in south_gauntlet_behind_module_rooms:
+                    area = "rm_SX_TowerSouth/1"
+            
+            return area != None and mod_door_mix_data[area] > 0
+
+        return _find_module_door_connection(level)
+
+    layers: list[dict] = [
+        { "names": "keys", "func": _place_keys,
+         "req": lambda check, inventory, l: check.requirements["keys"] > 0
+         }, 
+        { "names": "lasers", "func": _place_lasers,
+         "req": lambda check, inventory, l: check.requirements["lasers"] > 0
+         },
+        { "names": "modules", 
+         "func": _place_all_modules,
+         "req": _get_module_layer_requirement
+         }, 
+        ]
+
     random.shuffle(layers)
-    for l in layers:
-        l()
+    print("Layers")
+    print([l["names"] for l in layers])
+    length = len(layers)
+    for i in range(length):
+        if i < length - 1:
+            layers[i]["func"](layers[i+1]["req"])
+        else:
+            layers[i]["func"](lambda _, __, ___: True)
 
     # _place_all_modules()
-    place_important("dash_shops", _place_dash_shop, lambda x, _: not x.enemy_id)
-    place_unimportant(16, _place_tablet, lambda x, _: not x.enemy_id)
-    place_unimportant(4, _place_generic_shop, lambda x, _: not x.enemy_id)
+    place_important("dash_shops", _place_dash_shop, lambda x, a, b, c: not x.enemy_id)
+    place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
+    place_unimportant(4, _place_generic_shop, lambda x, a, b, c: not x.enemy_id)
     # _place_keys()
     place_important("dash_shops", _place_dash_shop)
     # _place_lasers()
@@ -970,7 +1101,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     fake_levels.find_by_name("rm_WA_TowerEnter").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
-    place_all_items(fake_levels, module_placement, limit_one_module_per_room)
+    place_all_items(fake_levels, module_placement, limit_one_module_per_room,
+                    mod_door_mix_data=module_door_mix_data)
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
 
@@ -978,6 +1110,11 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
         fake_level.convert_fake_objects_into_real()
         found = real_levels.find_by_name(fake_level.name.split("/")[0] + ".lvl")
         found.object_list += fake_level.real_object_list
+        
+        
+    #####  
+    # REAL LEVEL CHANGES
+    #####
 
     manual_changes = CoolJSON.load(MANUAL_JSON)
     for level in manual_changes:

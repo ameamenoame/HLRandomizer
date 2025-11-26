@@ -86,7 +86,7 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8
 
 			if n in key_rooms.keys() and not text.startswith(HLDType.DRIFTERVAULTDOOR):
 				text = text.replace("\n", "")
-				text += " (Behind key door)\n" 
+				text += " (May be behind key door)\n" 
 			elif n in laser_checks:
 				text = text.replace("\n", "")
 				text += " (Behind laser check)\n"
