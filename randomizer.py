@@ -910,7 +910,7 @@ def place_all_items(levels: LevelHolder,
     # AND IMPORTANT FIRST UNIMPORTANT LAST
 
 
-    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int, check_amount : int = 3, max_amount: int = 4):
+    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int, check_amount : int = 1, max_amount: int = 4):
         if check.dir_ in ["Intro", "Central"]: return False
         if at_least_one_blocker_placed["modules"]["value"]: 
             # return at_least_one_blocker_placed["modules"]["can_still_place"]
@@ -1133,7 +1133,7 @@ def place_all_items(levels: LevelHolder,
     0,
         { "names": "final_module", 
          "func": _place_final_module,
-         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, check_amount=3, max_amount=3),
+         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, max_amount=3),
          "finish_callback": lambda: _set_blocker_placed("final_module"),
          "reset_callback": lambda: _set_blocker_placed("final_module", False)
          } 
@@ -1211,7 +1211,17 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
             o.extra_info["parent_room_name_real"] = level.name.split("/")[0]
             o.extra_info["parent_room_name_fake"] = level.name 
 
-    module_door_mix_data: dict
+    module_door_mix_data: dict = {
+         "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance": 3,
+        "rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1": module_count / 4,
+         "rm_EC_ThePlaza/2": 3,
+         "rm_EC_EastLoop/1": module_count /4,
+         "rm_WA_Vale/1": 3,
+         "rm_WA_EntSwitch": module_count / 4,
+         "rm_CH_ACorner": 1,
+         "rm_CH_BDirkDemolition": 1,
+         "rm_SX_TowerSouth/1": module_count / 4
+    }
     key_mix_data: dict
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
