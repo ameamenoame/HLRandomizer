@@ -121,7 +121,7 @@ obj,Scenery,9011,147,463,18,-999999,++,0=spr_WRockBlock16,1=0,2=0,3=0,k=0,p=-4,f
 obj,Region,9012,0,0,0,-999999,++,0=400,1=460,p2=0,
 obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 """
-
+    layers = []
 
     def do_install(self, *args):
         """
@@ -206,7 +206,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     if not e["enabled"]: continue
                     final_enemy_weights.append(e["weight"])
 
-                main(
+                self.layers = main(
                     random_doors=self.random_doors.get(),
                     random_enemies=self.random_enemies.get(),
                     output=output,
@@ -331,7 +331,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.enemy_list.focus()
 
     def show_solution(self):
-        solution = check_solution()
+        if not self.layers:
+            messagebox.showerror(message="Please generate a new seed to get a solution", title="Solution")
+            return
+        solution = check_solution(self.layers)
         messagebox.showinfo(message=solution, title="Solution")
 
 

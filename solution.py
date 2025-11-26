@@ -41,8 +41,8 @@ def _scan_directory_lines(
 
 
 
-def check_solution(path="./game_files/randomized"):
-	return_text = ""
+def check_solution(layers, path="./game_files/randomized"):
+	return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
 	north_solution = "North\n"
 	east_solution ="East\n"
@@ -134,5 +134,5 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 		return
 	_scan_directory_lines(path,('.lvl'), _parse_line)
 
-	return_text = '\n'.join([north_solution, east_solution, west_solution , south_solution , central_solution])
+	return_text += '\n'.join([north_solution, east_solution, west_solution , south_solution , central_solution])
 	return return_text

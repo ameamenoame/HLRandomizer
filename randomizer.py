@@ -1169,6 +1169,7 @@ def place_all_items(levels: LevelHolder,
     place_unimportant(9, _place_outfit)
     place_unimportant(165, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
+    return [e["names"] for e in layers]
 
 
 ###############################################################
@@ -1230,7 +1231,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     fake_levels.find_by_name("rm_WA_TowerEnter").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
-    place_all_items(fake_levels, module_placement, limit_one_module_per_room,
+    layers = place_all_items(fake_levels, module_placement, limit_one_module_per_room,
                     mod_door_mix_data=module_door_mix_data,
                     module_count=module_count,
                     key_count=key_count,
@@ -1273,6 +1274,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
 
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
+
+    return layers
 
         
 def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count: KeyCount):
