@@ -785,7 +785,8 @@ def place_all_items(levels: LevelHolder,
                     laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     mod_door_mix_data: dict = {},
                     module_count: ModuleCount = ModuleCount.MINIMUM,
-                    key_count: KeyCount = KeyCount.MINIMUM
+                    key_count: KeyCount = KeyCount.MINIMUM,
+                    key_door_mix_data: dict = {}
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -797,14 +798,24 @@ def place_all_items(levels: LevelHolder,
     swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
     companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
-    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = (lambda x, _, inventory, levels: True), after_each_place_callback: Callable = lambda _: True):
-        while Inventory.current[inventory_key] > 0:
+    def place_important(inventory_key: str, place_func: Callable, 
+                        lambda_filter: Callable = (lambda x, _, inventory, levels: True), 
+                        after_each_place_callback: Callable = (lambda _: True),
+                        place_count: int = -1
+                        ):
+        def _place():
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
 
             empty_check =  levels.get_empty_object(lambda_filter)
             place_func(empty_check)
             after_each_place_callback(empty_check)
+        if place_count == -1:
+            while Inventory.current[inventory_key] > 0:
+                _place()
+        else:
+            for i in range(place_count):
+                _place()
 
     def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True):
         for _ in range(i):
@@ -884,13 +895,12 @@ def place_all_items(levels: LevelHolder,
     # AND IMPORTANT FIRST UNIMPORTANT LAST
 
 
-    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int):
+    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int, check_amount : int = 3, max_amount: int = 4):
         if check.dir_ in ["Intro", "Central"]: return False
         if at_least_one_blocker_placed["modules"]["value"]: 
             # return at_least_one_blocker_placed["modules"]["can_still_place"]
             return True
 
-        nonlocal mod_door_mix_data
         level_name: str = check.extra_info["parent_room_name_fake"]
         level: FakeLevel = levels.find_by_name(level_name)
 
@@ -977,7 +987,7 @@ def place_all_items(levels: LevelHolder,
                 elif name in south_gauntlet_behind_module_rooms:
                     area = "rm_SX_TowerSouth/1"
             
-            return area != None and mod_door_mix_data[area] > 0
+            return area != None and mod_door_mix_data[area] >= check_amount and mod_door_mix_data[area] <= max_amount
 
         is_valid = _find_module_door_connection(level)
         if is_valid:
@@ -993,15 +1003,28 @@ def place_all_items(levels: LevelHolder,
         return True
 
     def _get_key_layer_requirement(check, inventory, level, amount_to_place: int):
+        nonlocal key_door_mix_data
         if not at_least_one_blocker_placed["keys"]["value"]:
-            is_blocked = check.requirements["keys"] > 0
+            mapping: dict = {
+                "rm_NL_CaveVAULT": key_door_mix_data["rm_NX_TitanVista"],
+        "rm_WC_CrystalLakeVault": key_door_mix_data["rm_WC_CrystalLake"],
+        "rm_EB_FlamePitLAB": key_door_mix_data["rm_EB_MeltyMashArena"],
+        "rm_WA_Grotto_buffIntro": key_door_mix_data["rm_WA_Deadwood"],
+        "rm_WB_BigBattle": key_door_mix_data["rm_WB_BigBattle"],
+        "rm_CH_Bfps":  key_door_mix_data["rm_CH_Bfps"],
+        "rm_EC_PlazaAccessLAB": key_door_mix_data["rm_EC_PlazaAccessLAB"]
+            }
+            level_name: str = check.extra_info["parent_room_name_fake"]
+            if level_name not in mapping.keys(): return False
+
+            is_blocked = mapping[level_name] > 0
             if is_blocked:
                 at_least_one_blocker_placed["keys"]["can_still_place"] = amount_to_place > 1
             return is_blocked
         return True
 
-    def _place_all_modules(next_layer):
-        print("Place modules")
+    def _place_3_modules(next_layer):
+        print("Place 3 modules")
         def _place_module_in_dir(area, direction):
             nonlocal next_layer
             place_important(area, _place_module,  
@@ -1010,13 +1033,35 @@ def place_all_items(levels: LevelHolder,
                                 and 
                                 next_layer["req"](empty_check, inventory, levels, module_count),
 
-                            lambda _: next_layer["finish_callback"]()
-                                )
+                            (lambda _: next_layer["finish_callback"]()),
+                            3)
 
         _place_module_in_dir("north_modules", Direction.NORTH)
         _place_module_in_dir("east_modules", Direction.EAST)
         _place_module_in_dir("west_modules", Direction.WEST)
         _place_module_in_dir("south_modules", Direction.SOUTH)
+
+    def _place_final_module(next_layer):
+        print("Place final module")
+        def _place_module_in_dir(area, direction):
+            nonlocal next_layer
+            place_important(area, _place_module,  
+                            lambda empty_check, parent_room, inventory, levels: 
+                                _get_place_module_requirements(empty_check, parent_room, direction) 
+                                and 
+                                next_layer["req"](empty_check, inventory, levels, module_count),
+
+                            (lambda _: next_layer["finish_callback"]()),
+                            1)
+
+        _place_module_in_dir("north_modules", Direction.NORTH)
+        _place_module_in_dir("east_modules", Direction.EAST)
+        _place_module_in_dir("west_modules", Direction.WEST)
+        _place_module_in_dir("south_modules", Direction.SOUTH)
+
+        # random.shuffle(directions)
+        # for d in directions:
+        #     _place_module_in_dir(glue_on_direction("modules", d), d)
 
     def _place_keys(next_layer):
         print("Place keys")
@@ -1049,20 +1094,35 @@ def place_all_items(levels: LevelHolder,
          "req": _get_key_layer_requirement,
          "finish_callback": lambda: _set_blocker_placed("keys")
          }, 
+        { "names": "modules", 
+         "func": _place_3_modules,
+         "req": _get_module_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("modules")
+         }, 
         { "names": "lasers", "func": _place_lasers,
          "req": _get_laser_layer_requirement,
          "finish_callback": lambda: _set_blocker_placed("lasers")
          },
-        { "names": "modules", 
-         "func": _place_all_modules,
-         "req": _get_module_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("modules")
-         }, 
         ]
+
+    random.shuffle(layers)
+    layers.insert( # Final module always the final layer
+    0,
+        { "names": "final_module", 
+         "func": _place_final_module,
+         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, check_amount=3, max_amount=3),
+         "finish_callback": lambda: _set_blocker_placed("final_module")
+         } 
+    )
+
     at_least_one_blocker_placed = {
         "modules": {
             "value": False,
             "can_still_place": True
+        },
+        "final_module": {
+            "value": False,
+            "can_still_place": False
         },
         "keys": {
             "value": False,
@@ -1073,8 +1133,6 @@ def place_all_items(levels: LevelHolder,
             "can_still_place": True
         },
     }
-
-    random.shuffle(layers)
     print("Layers")
     print([l["names"] for l in layers])
     length = len(layers)
@@ -1165,7 +1223,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     place_all_items(fake_levels, module_placement, limit_one_module_per_room,
                     mod_door_mix_data=module_door_mix_data,
                     module_count=module_count,
-                    key_count=key_count
+                    key_count=key_count,
+                    key_door_mix_data=key_mix_data
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
