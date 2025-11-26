@@ -783,7 +783,9 @@ def place_all_items(levels: LevelHolder,
                     limit_one_module_per_room: bool = True,
                     key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
-                    mod_door_mix_data: dict = {}
+                    mod_door_mix_data: dict = {},
+                    module_count: ModuleCount = ModuleCount.MINIMUM,
+                    key_count: KeyCount = KeyCount.MINIMUM
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -795,13 +797,14 @@ def place_all_items(levels: LevelHolder,
     swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
     companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
-    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x, _, inventory, levels: True):
+    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = (lambda x, _, inventory, levels: True), after_each_place_callback: Callable = lambda _: True):
         while Inventory.current[inventory_key] > 0:
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
 
             empty_check =  levels.get_empty_object(lambda_filter)
             place_func(empty_check)
+            after_each_place_callback(empty_check)
 
     def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True):
         for _ in range(i):
@@ -880,34 +883,19 @@ def place_all_items(levels: LevelHolder,
     # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
     # AND IMPORTANT FIRST UNIMPORTANT LAST
 
-    def _place_all_modules(next_layer):
-        print("Place modules")
-        def _place_module_in_dir(area, direction):
-            nonlocal next_layer
-            place_important(area, _place_module,  
-                            lambda empty_check, parent_room, inventory, levels: all([_get_place_module_requirements(empty_check, parent_room, direction), next_layer(empty_check, inventory, levels)]))
 
-        _place_module_in_dir("north_modules", Direction.NORTH)
-        _place_module_in_dir("east_modules", Direction.EAST)
-        _place_module_in_dir("west_modules", Direction.WEST)
-        _place_module_in_dir("south_modules", Direction.SOUTH)
-
-    def _place_keys(next_layer):
-        print("Place keys")
-        place_important("keys", _place_key, lambda e, p, i, l: all([next_layer(e, i, l),_get_placement_restriction(e, p, "BONES", key_placement_option)])) # TODO: Need to separate bones into weapons / outfits/ keys
-    def _place_lasers(next_layer):
-        print("Place lasers")
-        place_important("lasers", _place_laser, lambda e, p, i, l: all([next_layer(e, i, l), _get_placement_restriction(e, p, "BONES", laser_placement_option)]))
-
-    def _get_module_layer_requirement(check, inventory, levels: LevelHolder):
-        nonlocal mod_door_mix_data
+    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int):
         if check.dir_ in ["Intro", "Central"]: return False
+        if at_least_one_blocker_placed["modules"]["value"]: 
+            # return at_least_one_blocker_placed["modules"]["can_still_place"]
+            return True
+
+        nonlocal mod_door_mix_data
         level_name: str = check.extra_info["parent_room_name_fake"]
         level: FakeLevel = levels.find_by_name(level_name)
 
         def _find_module_door_connection(level: FakeLevel):
             # Need to find whether this level is behind a module door
-            if at_least_one_blocker_placed["modules"]: return True
 
             nonlocal mod_door_mix_data
 
@@ -989,46 +977,101 @@ def place_all_items(levels: LevelHolder,
                 elif name in south_gauntlet_behind_module_rooms:
                     area = "rm_SX_TowerSouth/1"
             
-            if area == None: return False
-            is_valid = mod_door_mix_data[area] > 0
-            if is_valid:
-                at_least_one_blocker_placed["modules"] = True
-            return is_valid
+            return area != None and mod_door_mix_data[area] > 0
 
-        return _find_module_door_connection(level)
+        is_valid = _find_module_door_connection(level)
+        if is_valid:
+            at_least_one_blocker_placed["modules"]["can_still_place"] = amount_to_place > 1
+        return is_valid
 
-    def _get_laser_layer_requirement(check, inventory, level):
-        if not at_least_one_blocker_placed["lasers"]:
-            is_blocked = check.requirements["lasers"] > 0
+    def _get_laser_layer_requirement(check, inventory, level, amount_to_place: int):
+        if not at_least_one_blocker_placed["lasers"]["value"]:
+            is_blocked = check.requirements["lasers"] > 0 or check.extra_info["parent_room_name_real"] in ["rm_NL_StairAscent", "rm_WT_SlowLab"]
             if is_blocked:
-                at_least_one_blocker_placed["lasers"] = True
+                at_least_one_blocker_placed["lasers"]["can_still_place"] = amount_to_place > 1
             return is_blocked
         return True
 
-    def _get_key_layer_requirement(check, inventory, level):
-        if not at_least_one_blocker_placed["keys"]:
+    def _get_key_layer_requirement(check, inventory, level, amount_to_place: int):
+        if not at_least_one_blocker_placed["keys"]["value"]:
             is_blocked = check.requirements["keys"] > 0
             if is_blocked:
-                at_least_one_blocker_placed["keys"] = True
+                at_least_one_blocker_placed["keys"]["can_still_place"] = amount_to_place > 1
             return is_blocked
         return True
 
+    def _place_all_modules(next_layer):
+        print("Place modules")
+        def _place_module_in_dir(area, direction):
+            nonlocal next_layer
+            place_important(area, _place_module,  
+                            lambda empty_check, parent_room, inventory, levels: 
+                                _get_place_module_requirements(empty_check, parent_room, direction) 
+                                and 
+                                next_layer["req"](empty_check, inventory, levels, module_count),
+
+                            lambda _: next_layer["finish_callback"]()
+                                )
+
+        _place_module_in_dir("north_modules", Direction.NORTH)
+        _place_module_in_dir("east_modules", Direction.EAST)
+        _place_module_in_dir("west_modules", Direction.WEST)
+        _place_module_in_dir("south_modules", Direction.SOUTH)
+
+    def _place_keys(next_layer):
+        print("Place keys")
+        place_important("keys", _place_key, 
+                        (lambda e, p, i, l: 
+                            _get_placement_restriction(e, p, "BONES", key_placement_option) 
+                            and 
+                            next_layer["req"](e, i, l, key_count)),
+                        lambda _: next_layer["finish_callback"]()
+                        ) # TODO: Need to separate bones into weapons / outfits/ keys
+
+    def _place_lasers(next_layer):
+        print("Place lasers")
+        place_important("lasers", _place_laser, 
+                        (lambda e, p, i, l: 
+                            _get_placement_restriction(e, p, "BONES", laser_placement_option) 
+                            and 
+                            next_layer["req"](e, i, l, len(lasers))),
+                        lambda _: next_layer["finish_callback"]()
+                            )
+
+        
+    def _set_blocker_placed(key: str, val: bool = True):
+        at_least_one_blocker_placed[key]["value"] = val
+        return val
+
     layers: list[dict] = [
-        { "names": "keys", "func": _place_keys,
-         "req": _get_key_layer_requirement
+        {"names": "keys",
+         "func": _place_keys,
+         "req": _get_key_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("keys")
          }, 
         { "names": "lasers", "func": _place_lasers,
-         "req": _get_laser_layer_requirement
+         "req": _get_laser_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("lasers")
          },
         { "names": "modules", 
          "func": _place_all_modules,
-         "req": _get_module_layer_requirement
+         "req": _get_module_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("modules")
          }, 
         ]
     at_least_one_blocker_placed = {
-        "modules": False,
-        "lasers": False,
-        "keys": False
+        "modules": {
+            "value": False,
+            "can_still_place": True
+        },
+        "keys": {
+            "value": False,
+            "can_still_place": True
+        },
+        "lasers": {
+            "value": False,
+            "can_still_place": True
+        },
     }
 
     random.shuffle(layers)
@@ -1037,9 +1080,15 @@ def place_all_items(levels: LevelHolder,
     length = len(layers)
     for i in range(length):
         if i < length - 1:
-            layers[i]["func"](layers[i+1]["req"])
+            layers[i]["func"](layers[i+1])
         else:
-            layers[i]["func"](lambda _, __, ___: True)
+            layers[i]["func"](
+                {
+                    "func": lambda a, b, c, d: True, # Need to match the arg count with the other next_layer functions
+                    "req": lambda a, b, c, d: True,
+                    "finish_callback": lambda: True
+                }
+                ) 
 
     # _place_all_modules()
     place_important("dash_shops", _place_dash_shop, lambda x, a, b, c: not x.enemy_id)
@@ -1114,7 +1163,10 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
     place_all_items(fake_levels, module_placement, limit_one_module_per_room,
-                    mod_door_mix_data=module_door_mix_data)
+                    mod_door_mix_data=module_door_mix_data,
+                    module_count=module_count,
+                    key_count=key_count
+                    )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
 
