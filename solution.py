@@ -58,7 +58,8 @@ def check_solution(path="./game_files/randomized"):
 "rm_WA_Grotto_buffIntro.lvl": 3,
 "rm_WB_BigBattle.lvl": 4,
 "rm_CH_Bfps.lvl": 16,
-HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8
+HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
+"rm_EC_BigBogLAB": 3,
 	}
 
 	laser_checks = [

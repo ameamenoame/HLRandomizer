@@ -1012,12 +1012,15 @@ def place_all_items(levels: LevelHolder,
         "rm_WA_Grotto_buffIntro": key_door_mix_data["rm_WA_Deadwood"],
         "rm_WB_BigBattle": key_door_mix_data["rm_WB_BigBattle"],
         "rm_CH_Bfps":  key_door_mix_data["rm_CH_Bfps"],
-        "rm_EC_PlazaAccessLAB": key_door_mix_data["rm_EC_PlazaAccessLAB"]
+        "rm_EC_PlazaAccessLAB": key_door_mix_data["rm_EC_PlazaAccessLAB"],
+        "rm_EC_BigBogLAB": key_door_mix_data["rm_EC_BigBogLAB"],
             }
-            level_name: str = check.extra_info["parent_room_name_fake"]
+            level_name: str = check.extra_info["parent_room_name_real"]
             if level_name not in mapping.keys(): return False
 
             is_blocked = mapping[level_name] > 0
+            if level_name in ["rm_EC_PlazaAccessLAB", "rm_EC_BigBogLAB"]:
+                is_blocked = is_blocked and check.requirements["keys"] > 0
             if is_blocked:
                 at_least_one_blocker_placed["keys"]["can_still_place"] = amount_to_place > 1
             return is_blocked
@@ -1035,6 +1038,7 @@ def place_all_items(levels: LevelHolder,
 
                             (lambda _: next_layer["finish_callback"]()),
                             3)
+            next_layer["reset_callback"]()
 
         _place_module_in_dir("north_modules", Direction.NORTH)
         _place_module_in_dir("east_modules", Direction.EAST)
@@ -1053,6 +1057,7 @@ def place_all_items(levels: LevelHolder,
 
                             (lambda _: next_layer["finish_callback"]()),
                             1)
+            next_layer["reset_callback"]()
 
         _place_module_in_dir("north_modules", Direction.NORTH)
         _place_module_in_dir("east_modules", Direction.EAST)
@@ -1089,29 +1094,33 @@ def place_all_items(levels: LevelHolder,
         return val
 
     layers: list[dict] = [
-        {"names": "keys",
-         "func": _place_keys,
-         "req": _get_key_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("keys")
-         }, 
+        { "names": "lasers", "func": _place_lasers,
+         "req": _get_laser_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("lasers"),
+         "reset_callback": lambda: _set_blocker_placed("lasers")
+         },
         { "names": "modules", 
          "func": _place_3_modules,
          "req": _get_module_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("modules")
+         "finish_callback": lambda: _set_blocker_placed("modules"),
+         "reset_callback": lambda: _set_blocker_placed("modules", False)
          }, 
-        { "names": "lasers", "func": _place_lasers,
-         "req": _get_laser_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("lasers")
-         },
+        {"names": "keys",
+         "func": _place_keys,
+         "req": _get_key_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("keys"),
+         "reset_callback": lambda: _set_blocker_placed("keys", False)
+         }, 
         ]
 
-    random.shuffle(layers)
+    # random.shuffle(layers)
     layers.insert( # Final module always the final layer
     0,
         { "names": "final_module", 
          "func": _place_final_module,
          "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, check_amount=3, max_amount=3),
-         "finish_callback": lambda: _set_blocker_placed("final_module")
+         "finish_callback": lambda: _set_blocker_placed("final_module"),
+         "reset_callback": lambda: _set_blocker_placed("final_module", False)
          } 
     )
 
@@ -1144,7 +1153,8 @@ def place_all_items(levels: LevelHolder,
                 {
                     "func": lambda a, b, c, d: True, # Need to match the arg count with the other next_layer functions
                     "req": lambda a, b, c, d: True,
-                    "finish_callback": lambda: True
+                    "finish_callback": lambda: True,
+                    "reset_callback": lambda: True,
                 }
                 ) 
 
