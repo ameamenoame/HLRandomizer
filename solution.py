@@ -84,9 +84,9 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8
 			nonlocal central_solution
 			area = n.split("_")[1]
 
-			if n in key_rooms.keys():
+			if n in key_rooms.keys() and not text.startswith(HLDType.DRIFTERVAULTDOOR):
 				text = text.replace("\n", "")
-				text += " (Behind %d key door)\n" % key_rooms[n]
+				text += " (Behind key door)\n" 
 			elif n in laser_checks:
 				text = text.replace("\n", "")
 				text += " (Behind laser check)\n"
@@ -118,6 +118,11 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8
 				text = "Module found at " + level_name
 				text += "\n"
 				add_to_dir_solution(level_name, text, HLDObj.from_line(line))
+			case HLDType.DRIFTERVAULTDOOR:
+				obj = HLDObj.from_line(line)
+				text = "DrifterVaultDoor (%d key door) found at %s" % (obj.attrs['c'], level_name)
+				text += "\n"
+				add_to_dir_solution(level_name, text, obj)
 			case "ModuleDoor":
 				obj = HLDObj.from_line(line)
 				text = "DoorModule (%d) found at %s" % (obj.attrs['c'], level_name)

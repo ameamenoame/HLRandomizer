@@ -67,6 +67,12 @@ class ModuleCount(int, Enum):
     MINIMUM = 16
     ALL = 32
 
+class KeyCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 4
+    ALL = 16
+
 class RandomizerType(str, Enum):
     def __str__(self):
         return self.value
@@ -148,7 +154,7 @@ class Inventory:
     reached_checks: list[FakeObject] = []
 
     full = {
-        "keys": 16,
+        "keys": KeyCount.ALL,
         # "lasers": 2,
         "lasers": 1,
         "north_modules": 8,
@@ -194,6 +200,11 @@ class Inventory:
         cls.full["east_modules"] = count
         cls.full["west_modules"] = count
         cls.full["south_modules"] = count
+        cls.current = dict(cls.full)
+
+    @classmethod
+    def set_key_requirements(cls, count: KeyCount = KeyCount.ALL):
+        cls.full["keys"] = count
         cls.current = dict(cls.full)
 
     @classmethod
@@ -771,7 +782,7 @@ def place_all_items(levels: LevelHolder,
                     module_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS, 
                     limit_one_module_per_room: bool = True,
                     key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
-                    laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS
+                    laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -899,11 +910,22 @@ def place_all_items(levels: LevelHolder,
     place_unimportant(165, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out", list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL):
+
+###############################################################
+# MAIN RANDO LOGIC
+###############################################################
+
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, 
+         output_folder_name: str = "out", 
+         list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, 
+         module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL,
+         key_count:  KeyCount = KeyCount.MINIMUM
+         ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
 
     Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
+    Inventory.set_key_requirements(key_count)
 
     fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
@@ -913,7 +935,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
             o.extra_info["parent_room_name_real"] = level.name.split("/")[0]
             o.extra_info["parent_room_name_fake"] = level.name 
 
-    mix_data: dict
+    module_door_mix_data: dict
+    key_mix_data: dict
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
         fake_levels.is_randomized = True
@@ -927,14 +950,20 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
         else:
             path = CONNECT2_JSON
 
-        data = CoolJSON.load(path)
+        connections_data = CoolJSON.load(path)
 
         if module_door_option == ModuleDoorOptions.MIX:
-            mix_data = _mix_module_doors(data)
-            print("Mix data")
-            print(mix_data)
+            module_door_mix_data = _mix_fake_module_doors(connections_data)
+            print("Module door Mix data")
+            print(module_door_mix_data)
+
+        if key_count == KeyCount.MINIMUM:
+            key_mix_data =_mix_fake_key_doors(connections_data, fake_levels, key_count)
+            print("Key door mix data")
+            print(key_mix_data)
             
-        fake_levels.connect_levels_from_list(data)
+            
+        fake_levels.connect_levels_from_list(connections_data)
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_EC_TempleIshVault").fake_object_list[0].type = RandomizerType.PYLON
@@ -965,15 +994,78 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if module_door_option == ModuleDoorOptions.DISABLED:
         _manual_disable_module_doors(real_levels)
     elif module_door_option == ModuleDoorOptions.MIX:
-        _manual_mix_real_module_doors(real_levels, mix_data)
-        
+        _manual_mix_real_module_doors(real_levels, module_door_mix_data)
+       
+    if key_count == KeyCount.MINIMUM: 
+        _manual_mix_real_key_doors(real_levels, key_mix_data)
 
     Inventory.reset()
 
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
 
-def _mix_module_doors(level_data: list):
+        
+def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count: KeyCount):
+    mix_data: dict = {}
+    def _mix_key_doors_connections(levels_to_change: list, high_door_count = max_key_count):
+        nonlocal connections_data
+        nonlocal mix_data
+        high_door_placed = False
+        for name in levels_to_change:
+            for level in connections_data:
+                if level['requirements']['keys'] != 0 and level["from"].startswith(name):
+                    roll = random.randint(0, 1)
+                    to_place: int
+                    if roll == 1 and not high_door_placed:
+                        high_door_placed = True
+                        to_place = high_door_count
+                    # elif roll == 0:
+                    #     to_place = 0
+                    else:
+                        to_place = 0
+                    level['requirements']['keys'] = to_place
+                    mix_data[level["from"].split("/")[0]] = to_place
+                    break
+
+    def _mix_key_doors_checks(checks: list, high_door_count = max_key_count):
+        nonlocal level_data
+        nonlocal mix_data
+
+        for name in checks:
+            level: FakeLevel
+            for level in level_data:
+                if level.name.startswith(name):
+                    obj: HLDObj
+                    for obj in level.fake_object_list:
+                        if obj.requirements['keys'] > 0:
+                            roll = random.randint(0, 1)
+                            to_place: int
+                            if roll == 1:
+                                to_place = high_door_count
+                            # elif roll == 0:
+                            #     to_place = 0
+                            else:
+                                to_place = 0
+                            obj.requirements['keys'] = to_place
+                            mix_data[level.name.split("/")[0]] = to_place
+
+    # These doors lead to transitions so the connections have to be edited
+    north_key_door_levels = ["rm_NX_TitanVista"]
+    east_key_door_levels = ["rm_EB_MeltyMashArena"]
+    west_key_door_levels = ["rm_WC_CrystalLake", "rm_WA_Deadwood"]
+
+    # These doors don't leave to transition so the checks have to be edited
+    key_required_checks = ["rm_EC_PlazaAccessLAB", "rm_WB_BigBattle", "rm_CH_Bfps", "rm_EC_BigBogLAB"]
+
+    _mix_key_doors_connections(north_key_door_levels)
+    _mix_key_doors_connections(west_key_door_levels)
+    _mix_key_doors_connections(east_key_door_levels)
+
+    _mix_key_doors_checks(key_required_checks)
+
+    return mix_data
+
+def _mix_fake_module_doors(level_data: list):
     mix_data: dict = {}
     def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 4):
         nonlocal level_data
@@ -1011,6 +1103,28 @@ def _mix_module_doors(level_data: list):
 
     return mix_data
 
+def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict):
+    def _change_key_door_in_level(level_name: str, count: int):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == HLDType.DRIFTERVAULTDOOR:
+                if count == 0:
+                    to_remove.append(obj)
+                else:
+                    obj.attrs['c'] = count
+        for o in to_remove:
+            obj_list.remove(o)
+
+    levels = [HLDLevel.Names.RM_NX_TITANVISTA, HLDLevel.Names.RM_EB_MELTYMASHARENA, HLDLevel.Names.RM_WC_CRYSTALLAKE, HLDLevel.Names.RM_WA_DEADWOOD, HLDLevel.Names.RM_EC_PLAZAACCESSLAB, HLDLevel.Names.RM_WB_BIGBATTLE, HLDLevel.Names.RM_CH_BFPS, HLDLevel.Names.RM_EC_BIGBOGLAB]
+
+    for l in levels:
+        name = l.replace(".lvl", "")
+        _change_key_door_in_level(l, mix_data[name])
+
+    return
+
 
 def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
     def _change_mod_door_in_level(level_name: str, count: int, skip: int =0):
@@ -1018,7 +1132,7 @@ def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
         obj_list = real_levels.find_by_name(level_name).object_list
         to_remove = []
         for obj in obj_list:
-            if obj.type == "ModuleDoor":
+            if obj.type == HLDType.MODULEDOOR:
                 if skip > 0: 
                     skip -= 1
                     continue
