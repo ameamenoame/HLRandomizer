@@ -51,7 +51,9 @@ class ItemPlacementRestriction(str, Enum):
         return self.value
     NONE = "Don't randomize" # Module placements unchanged
     FREE = "Free" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
-    KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons, tablets
+    KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons
+    KEY_ITEMS_EXTENDED = "Key items + tablets" 
+    MODULES = "Modules" # Only place where modules would be
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
 
 class ModuleDoorOptions(str, Enum):
@@ -871,8 +873,17 @@ def place_all_items(levels: LevelHolder,
                         if obj.type == RandomizerType.MODULE:
                             return False
 
-            return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
-        elif module_option == ItemPlacementRestriction.NONE:
+            return empty_check.original_type in ["MODULE", "BONES"]
+        
+        elif module_option == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
+            if not levels.is_randomized and limit_one_module_per_room:
+                current_room_fake_levels = levels.find_all_by_partial_name(parent_room)
+                for level in current_room_fake_levels:
+                    for obj in level.fake_object_list:
+                        if obj.type == RandomizerType.MODULE:
+                            return False
+            return empty_check.original_type in ["MODULE", "BONES", "TABLET"]
+        elif module_option == ItemPlacementRestriction.NONE or module_option == ItemPlacementRestriction.MODULES:
             return empty_check.original_type == "MODULE"
         elif module_option == ItemPlacementRestriction.FREE:
             return True
@@ -882,9 +893,13 @@ def place_all_items(levels: LevelHolder,
         if parent_room in ["rm_C_Ven_Dash", "rm_PAX_Staging", "rm_IN_BackerTablet"]: return False # Don't put important items in the dash shop
 
         if restriction_type == ItemPlacementRestriction.KEY_ITEMS:
-            return empty_check.original_type in ["MODULE", "TABLET", "BONES"]
+            return empty_check.original_type in ["MODULE", "BONES"]
+        elif restriction_type == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
+            return empty_check.original_type in ["MODULE", "BONES", "TABLET"]
         elif restriction_type == ItemPlacementRestriction.NONE:
             return empty_check.original_type == obj_type
+        elif restriction_type == ItemPlacementRestriction.MODULES:
+            return empty_check.original_type == "MODULE"
         elif restriction_type == ItemPlacementRestriction.FREE:
             return True
         return False
@@ -1231,11 +1246,15 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     fake_levels.find_by_name("rm_WA_TowerEnter").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
-    layers = place_all_items(fake_levels, module_placement, limit_one_module_per_room,
+    layers = place_all_items(fake_levels, module_placement, 
+                             limit_one_module_per_room,
                     mod_door_mix_data=module_door_mix_data,
                     module_count=module_count,
                     key_count=key_count,
-                    key_door_mix_data=key_mix_data
+                    key_door_mix_data=key_mix_data,
+
+                    key_placement_option=module_placement,
+                    laser_placement_option=module_placement
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
