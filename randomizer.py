@@ -1094,26 +1094,26 @@ def place_all_items(levels: LevelHolder,
         return val
 
     layers: list[dict] = [
-        { "names": "lasers", "func": _place_lasers,
-         "req": _get_laser_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("lasers"),
-         "reset_callback": lambda: _set_blocker_placed("lasers")
-         },
         { "names": "modules", 
          "func": _place_3_modules,
          "req": _get_module_layer_requirement,
          "finish_callback": lambda: _set_blocker_placed("modules"),
-         "reset_callback": lambda: _set_blocker_placed("modules", False)
+         "reset_callback": lambda: _set_blocker_placed("modules")
          }, 
+        { "names": "lasers", "func": _place_lasers,
+         "req": _get_laser_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("lasers"),
+         "reset_callback": lambda: _set_blocker_placed("lasers"),
+         },
         {"names": "keys",
          "func": _place_keys,
          "req": _get_key_layer_requirement,
          "finish_callback": lambda: _set_blocker_placed("keys"),
-         "reset_callback": lambda: _set_blocker_placed("keys", False)
+         "reset_callback": lambda: _set_blocker_placed("keys", False),
          }, 
         ]
 
-    # random.shuffle(layers)
+    random.shuffle(layers)
     layers.insert( # Final module always the final layer
     0,
         { "names": "final_module", 
