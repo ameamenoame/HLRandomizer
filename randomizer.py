@@ -905,12 +905,11 @@ def place_all_items(levels: LevelHolder,
         level_name: str = check.extra_info["parent_room_name_fake"]
         level: FakeLevel = levels.find_by_name(level_name)
 
-        # Need to find whether this level is behind a module door
         def _find_module_door_connection(level: FakeLevel):
-            # if level.name not in mapping.keys(): return False
-            nonlocal mod_door_mix_data
+            # Need to find whether this level is behind a module door
+            if at_least_one_blocker_placed["modules"]: return True
 
-            # Need to figure out which area the current level is in
+            nonlocal mod_door_mix_data
 
             north_boss_behind_module_rooms = [
                 HLDLevel.Names.RM_NL_ALTARTHRONE,
@@ -966,18 +965,6 @@ def place_all_items(levels: LevelHolder,
 
             if name not in full: return False
 
-            mapping = {
-                "rm_WA_EntSwitch": west_bottom_behind_module_rooms,
-                "rm_WA_Vale/1": west_behind_module_rooms,
-                "rm_EC_ThePlaza/2": east_behind_module_rooms,
-                "rm_EC_EastLoop/1": east_leaper_behind_module_rooms,
-                "rm_CH_BDirkDemolition": south_baker_behind_module_rooms,
-                "rm_CH_ACorner": south_archer_behind_module_rooms,
-                "rm_SX_TowerSouth/1": south_gauntlet_behind_module_rooms,
-                "rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1": north_gap_behind_module_rooms,
-                "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance": north_boss_behind_module_rooms
-            }
-
             area: str = None
             if level.dir_ == Direction.NORTH:
                 if name in north_boss_behind_module_rooms:
@@ -1002,22 +989,47 @@ def place_all_items(levels: LevelHolder,
                 elif name in south_gauntlet_behind_module_rooms:
                     area = "rm_SX_TowerSouth/1"
             
-            return area != None and mod_door_mix_data[area] > 0
+            if area == None: return False
+            is_valid = mod_door_mix_data[area] > 0
+            if is_valid:
+                at_least_one_blocker_placed["modules"] = True
+            return is_valid
 
         return _find_module_door_connection(level)
 
+    def _get_laser_layer_requirement(check, inventory, level):
+        if not at_least_one_blocker_placed["lasers"]:
+            is_blocked = check.requirements["lasers"] > 0
+            if is_blocked:
+                at_least_one_blocker_placed["lasers"] = True
+            return is_blocked
+        return True
+
+    def _get_key_layer_requirement(check, inventory, level):
+        if not at_least_one_blocker_placed["keys"]:
+            is_blocked = check.requirements["keys"] > 0
+            if is_blocked:
+                at_least_one_blocker_placed["keys"] = True
+            return is_blocked
+        return True
+
     layers: list[dict] = [
         { "names": "keys", "func": _place_keys,
-         "req": lambda check, inventory, l: check.requirements["keys"] > 0
+         "req": _get_key_layer_requirement
          }, 
         { "names": "lasers", "func": _place_lasers,
-         "req": lambda check, inventory, l: check.requirements["lasers"] > 0
+         "req": _get_laser_layer_requirement
          },
         { "names": "modules", 
          "func": _place_all_modules,
          "req": _get_module_layer_requirement
          }, 
         ]
+    at_least_one_blocker_placed = {
+        "modules": False,
+        "lasers": False,
+        "keys": False
+    }
 
     random.shuffle(layers)
     print("Layers")
