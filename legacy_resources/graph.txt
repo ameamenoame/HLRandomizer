@@ -206,7 +206,7 @@ Check,1416,832,,0,0,0,0,0,0,0,0,GEARBOX,
 Check,336,392,,0,0,0,0,0,0,0,0,MODULE,
 Room,East,rm_EX_DocksCampfire,
 Check,704,304,,0,0,0,0,0,0,0,0,GEARBOX,
-Check,1240,328,,0,1,0,0,0,0,0,0,"BONES,-20,0",KEY
+Check,1240,328,,0,0,0,0,0,0,0,0,"BONES,-20,0",KEY
 Room,East,rm_EV_DocksBridge/2,
 Room,East,rm_EV_DocksBridge/1,
 Check,1408,184,,0,0,0,0,0,0,0,0,GEARBOX,
@@ -431,7 +431,7 @@ Check,1224,264,5908,0,0,0,0,0,0,0,0,GEARBIT ENEMY,
 Check,1208,1168,,0,0,0,0,0,0,0,0,TABLET, 6
 Room,South,rm_CH_BDirkDeluge,
 Check,392,760,,0,0,0,0,0,0,0,0,"GEARBOX,10,5",
-Check,752,984,,0,1,0,0,0,0,0,0,GEARBOX,
+Check,752,984,,0,1,0,0,0,0,0,0,MODULE,
 Check,320,1120,4759,0,0,0,0,0,0,0,0,GEARBIT ENEMY,
 Room,South,rm_CH_BPods,
 Check,928,944,,0,0,0,0,0,0,0,0,"GEARBOX,10,0",
