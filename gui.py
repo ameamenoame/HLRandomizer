@@ -380,7 +380,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         
         # Module placement settings
-        ttk.Label(mainframe, text="Module placement").grid(column=0, row=6, sticky=E, pady=5, padx=5)
+        ttk.Label(mainframe, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(value=ItemPlacementRestriction.FREE)
         module_settings_list = ttk.Combobox(mainframe, textvariable=self.module_optionsvar, values=module_options)
