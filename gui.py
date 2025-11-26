@@ -382,7 +382,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # Module placement settings
         ttk.Label(mainframe, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
-        self.module_optionsvar = StringVar(value=ItemPlacementRestriction.FREE)
+        self.module_optionsvar = StringVar(value=ItemPlacementRestriction.KEY_ITEMS)
         module_settings_list = ttk.Combobox(mainframe, textvariable=self.module_optionsvar, values=module_options)
         module_settings_list.grid(column=1, row=6, sticky=W)
         module_settings_list.state(["readonly"])
@@ -394,19 +394,19 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_door_label = ttk.Label(mainframe, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
-        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.NONE)
+        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
         self.module_door_list = ttk.Combobox(mainframe, textvariable=self.module_door_optionsvar, values=module_door_options)
         self.module_door_list.state(["readonly"])
-        self.module_door_label.grid(column=0, row=9, sticky=E)
+        self.module_door_label.grid(column=0, row=9, sticky=E, padx=5, pady=5)
         self.module_door_list.grid(column=1, row= 9, sticky=W)
 
         self.module_count_label = ttk.Label(mainframe, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
-        self.module_count_optionsvar = StringVar(value=ModuleCount.ALL)
+        self.module_count_optionsvar = StringVar(value=ModuleCount.MINIMUM)
         self.module_count_list = ttk.Combobox(mainframe, textvariable=self.module_count_optionsvar, values=module_count_options)
         self.module_count_list.state(["readonly"])
 
-        self.module_count_label.grid(column=0, row =10, sticky=E)
+        self.module_count_label.grid(column=0, row =10, sticky=E, padx=5, pady=5)
         self.module_count_list.grid(column=1, row=10, sticky=W)
 
         # Enemy pool listbox

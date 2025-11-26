@@ -50,9 +50,9 @@ class ItemPlacementRestriction(str, Enum):
     def __str__(self):
         return self.value
     NONE = "Don't randomize" # Module placements unchanged
-    FREE = "Free" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
-    KEY_ITEMS = "Key items" # Module can only appear at key item places - outfits, keys, weapons
-    KEY_ITEMS_EXTENDED = "Key items + tablets" 
+    FREE = "Free (252 checks)" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    KEY_ITEMS = "Key items (63 checks)" # Module can only appear at key item places - outfits, keys, weapons
+    KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)" 
     MODULES = "Modules" # Only place where modules would be
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
 
@@ -974,7 +974,7 @@ def place_all_items(levels: LevelHolder,
             full = north_boss_behind_module_rooms + north_gap_behind_module_rooms + east_behind_module_rooms + east_leaper_behind_module_rooms \
                 + west_behind_module_rooms + west_bottom_behind_module_rooms + south_archer_behind_module_rooms + south_baker_behind_module_rooms + south_gauntlet_behind_module_rooms
 
-            name = level.name + ".lvl"
+            name = level.name.split("/")[0] + ".lvl"
 
             if name not in full: return False
 
@@ -1055,9 +1055,9 @@ def place_all_items(levels: LevelHolder,
                             3)
             next_layer["reset_callback"]()
 
+        _place_module_in_dir("west_modules", Direction.WEST)
         _place_module_in_dir("north_modules", Direction.NORTH)
         _place_module_in_dir("east_modules", Direction.EAST)
-        _place_module_in_dir("west_modules", Direction.WEST)
         _place_module_in_dir("south_modules", Direction.SOUTH)
 
     def _place_final_module(next_layer):
@@ -1074,9 +1074,9 @@ def place_all_items(levels: LevelHolder,
                             1)
             next_layer["reset_callback"]()
 
+        _place_module_in_dir("west_modules", Direction.WEST)
         _place_module_in_dir("north_modules", Direction.NORTH)
         _place_module_in_dir("east_modules", Direction.EAST)
-        _place_module_in_dir("west_modules", Direction.WEST)
         _place_module_in_dir("south_modules", Direction.SOUTH)
 
         # random.shuffle(directions)
