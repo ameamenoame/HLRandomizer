@@ -73,7 +73,7 @@ class ModuleCount(int, Enum):
 class KeyCount(int, Enum):
     def __str__(self):
         return str(self.value)
-    MINIMUM = 4
+    MINIMUM = 1
     ALL = 16
 
 class RandomizerType(str, Enum):
@@ -1040,8 +1040,8 @@ def place_all_items(levels: LevelHolder,
             return is_blocked
         return True
 
-    def _place_3_modules(next_layer):
-        print("Place 3 modules")
+    def _place_2_modules(next_layer):
+        print("Place 2 modules")
         def _place_module_in_dir(area, direction):
             nonlocal next_layer
             place_important(area, _place_module,  
@@ -1051,7 +1051,7 @@ def place_all_items(levels: LevelHolder,
                                 next_layer["req"](empty_check, inventory, levels, module_count),
 
                             (lambda _: next_layer["finish_callback"]()),
-                            3)
+                            2)
             next_layer["reset_callback"]()
 
         _place_module_in_dir("west_modules", Direction.WEST)
@@ -1060,7 +1060,7 @@ def place_all_items(levels: LevelHolder,
         _place_module_in_dir("south_modules", Direction.SOUTH)
 
     def _place_final_module(next_layer):
-        print("Place final module")
+        print("Place module")
         def _place_module_in_dir(area, direction):
             nonlocal next_layer
             place_important(area, _place_module,  
@@ -1081,6 +1081,7 @@ def place_all_items(levels: LevelHolder,
         # random.shuffle(directions)
         # for d in directions:
         #     _place_module_in_dir(glue_on_direction("modules", d), d)
+
 
     def _place_keys(next_layer):
         print("Place keys")
@@ -1107,17 +1108,30 @@ def place_all_items(levels: LevelHolder,
         at_least_one_blocker_placed[key]["value"] = val
         return val
 
+
     layers: list[dict] = [
-        { "names": "modules", 
-         "func": _place_3_modules,
-         "req": _get_module_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("modules"),
-         "reset_callback": lambda: _set_blocker_placed("modules")
+        # { "names": "modules", 
+        #  "func": _place_3_modules,
+        #  "req": _get_module_layer_requirement,
+        #  "finish_callback": lambda: _set_blocker_placed("modules"),
+        #  "reset_callback": lambda: _set_blocker_placed("modules")
+        #  }, 
+
+        { "names": "modules_layer_2", 
+         "func": _place_final_module,
+         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                 check_amount=3,
+                                                                 max_amount=4
+                                                                 ),
+         "finish_callback": lambda: _set_blocker_placed("modules_layer_2"),
+         "reset_callback": lambda: _set_blocker_placed("modules_layer_2", False)
          }, 
+         
+         
         { "names": "lasers", "func": _place_lasers,
          "req": _get_laser_layer_requirement,
          "finish_callback": lambda: _set_blocker_placed("lasers"),
-         "reset_callback": lambda: _set_blocker_placed("lasers"),
+         "reset_callback": lambda: _set_blocker_placed("lasers", False),
          },
         {"names": "keys",
          "func": _place_keys,
@@ -1128,7 +1142,7 @@ def place_all_items(levels: LevelHolder,
         ]
 
     random.shuffle(layers)
-    layers.insert( # Final module always the final layer
+    layers.insert( # Final modules always the final layer
     0,
         { "names": "final_module", 
          "func": _place_final_module,
@@ -1137,9 +1151,44 @@ def place_all_items(levels: LevelHolder,
          "reset_callback": lambda: _set_blocker_placed("final_module", False)
          } 
     )
+    layers.append(
+        { "names": "modules_layer_1", 
+         "func": _place_2_modules,
+         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                 check_amount=1,
+                                                                 max_amount=3
+                                                                 ),
+         "finish_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+         "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False)
+         }, 
+    )
+    layers.append( # This layer is just to get the requirements placeholder
+        { "names": "modules_layer_0", 
+         "func": lambda _: True, # 
+        #  "req": lambda c, i, l, a: not _get_module_layer_requirement(c,i, l,a, 
+        #                                                          check_amount=1,
+        #                                                          max_amount=3
+        #                                                          ),
+        "req": lambda c,i,l,a: True,
+         "finish_callback": lambda: _set_blocker_placed("modules_layer_0", False),
+         "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False)
+         }, 
+    )
 
     at_least_one_blocker_placed = {
         "modules": {
+            "value": False,
+            "can_still_place": True
+        },
+        "modules_layer_2": {
+            "value": False,
+            "can_still_place": True
+        },
+        "modules_layer_1": {
+            "value": False,
+            "can_still_place": True
+        },
+        "modules_layer_0": {
             "value": False,
             "can_still_place": True
         },
@@ -1368,14 +1417,14 @@ def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count:
 
 def _mix_fake_module_doors(level_data: list):
     mix_data: dict = {}
-    def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 4):
+    def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 3):
         nonlocal level_data
         nonlocal mix_data
 
         count = max(2, len(levels_to_change))
         choices = []
             
-        choices = [3 for i in range(count)]
+        choices = [2 for i in range(count)]
         choices[0] = high_door_count
         
 
