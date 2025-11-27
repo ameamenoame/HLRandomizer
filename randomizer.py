@@ -20,6 +20,7 @@ JSON_DIR = "jsons"
 
 # Temporarily don't use the packed path
 GRAPH_JSON =    os.path.join(JSON_DIR, "out_graph.json")  # "jsons\\out_graph.json"
+GRAPH_LIMITED_JSON =    os.path.join(JSON_DIR, "out_graph_limited.json")  # "jsons\\out_graph_limited.json"
 DOOR_JSON =     os.path.join(JSON_DIR, "out_door.json")  # "jsons\\out_door.json"
 CONNECT_JSON =  os.path.join(JSON_DIR, "out_connect.json")  # "jsons\\out_connect.json"
 CONNECT2_JSON = os.path.join(JSON_DIR, "out_connect2.json")  # "jsons\\out_connect2.json"
@@ -53,7 +54,7 @@ class ItemPlacementRestriction(str, Enum):
     FREE = "Free (252 checks)" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
     KEY_ITEMS = "Key items (63 checks)" # Module can only appear at key item places - outfits, keys, weapons
     KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)" 
-    MODULES = "Modules" # Only place where modules would be
+    MODULES_EXTENDED = "Modules Extended (39 checks)" # Only place where modules would be plus special key / outfit checks
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
 
 class ModuleDoorOptions(str, Enum):
@@ -864,7 +865,7 @@ def place_all_items(levels: LevelHolder,
         if not (empty_check.dir_ == dir and not empty_check.enemy_id): return False
 
         # Instead of doing this, would rather have the randomized check be the randomized level -> check flow instead of check -> level
-        if module_option == ItemPlacementRestriction.KEY_ITEMS:
+        if module_option == ItemPlacementRestriction.KEY_ITEMS or module_option == ItemPlacementRestriction.MODULES_EXTENDED:
             # Limit to one module per room if not using room randomization
             if not levels.is_randomized and limit_one_module_per_room:
                 current_room_fake_levels = levels.find_all_by_partial_name(parent_room)
@@ -883,7 +884,7 @@ def place_all_items(levels: LevelHolder,
                         if obj.type == RandomizerType.MODULE:
                             return False
             return empty_check.original_type in ["MODULE", "BONES", "TABLET"]
-        elif module_option == ItemPlacementRestriction.NONE or module_option == ItemPlacementRestriction.MODULES:
+        elif module_option == ItemPlacementRestriction.NONE:
             return empty_check.original_type == "MODULE"
         elif module_option == ItemPlacementRestriction.FREE:
             return True
@@ -892,14 +893,12 @@ def place_all_items(levels: LevelHolder,
     def _get_placement_restriction(empty_check, parent_room, obj_type: str, restriction_type: ItemPlacementRestriction):
         if parent_room in ["rm_C_Ven_Dash", "rm_PAX_Staging", "rm_IN_BackerTablet"]: return False # Don't put important items in the dash shop
 
-        if restriction_type == ItemPlacementRestriction.KEY_ITEMS:
+        if restriction_type == ItemPlacementRestriction.KEY_ITEMS or module_option == ItemPlacementRestriction.MODULES_EXTENDED:
             return empty_check.original_type in ["MODULE", "BONES"]
         elif restriction_type == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
             return empty_check.original_type in ["MODULE", "BONES", "TABLET"]
         elif restriction_type == ItemPlacementRestriction.NONE:
             return empty_check.original_type == obj_type
-        elif restriction_type == ItemPlacementRestriction.MODULES:
-            return empty_check.original_type == "MODULE"
         elif restriction_type == ItemPlacementRestriction.FREE:
             return True
         return False
@@ -1203,7 +1202,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
     Inventory.set_key_requirements(key_count)
 
-    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
+    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON if not module_placement==ItemPlacementRestriction.MODULES_EXTENDED else GRAPH_LIMITED_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
 
     for level in fake_levels:
