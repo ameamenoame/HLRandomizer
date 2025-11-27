@@ -1371,20 +1371,20 @@ def _mix_fake_module_doors(level_data: list):
     def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 4):
         nonlocal level_data
         nonlocal mix_data
-        high_door_placed = False
+
+        count = max(2, len(levels_to_change))
+        choices = []
+            
+        choices = [3 for i in range(count)]
+        choices[0] = high_door_count
+        
+
         for name in levels_to_change:
             for level in level_data:
                 if level['requirements']['modules'] != 0 and (level['from'] == name) and \
                 ((name != "rm_NX_MoonCourtyard/3") or (name == "rm_NX_MoonCourtyard/3" and level['to'] in ["rm_NX_CathedralEntrance", "rm_NL_GapOpening/1"])): # Because north has a level with 2 module doors
-                    roll = random.randint(0, 2)
-                    to_place: int
-                    if roll == 1 and not high_door_placed: # Limit only one 4-module door
-                        high_door_placed = True
-                        to_place = high_door_count
-                    elif roll == 0:
-                        to_place = 0
-                    else:
-                        to_place = x_door_count
+                    to_place = random.choice(choices)
+                    choices.remove(to_place)
                     level['requirements']['modules'] = to_place
 
                     if name != "rm_NX_MoonCourtyard/3":
