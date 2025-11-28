@@ -1332,19 +1332,10 @@ def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count:
     def _mix_key_doors_connections(levels_to_change: list, high_door_count = max_key_count):
         nonlocal connections_data
         nonlocal mix_data
-        high_door_placed = False
         for name in levels_to_change:
             for level in connections_data:
                 if level['requirements']['keys'] != 0 and level["from"].startswith(name):
-                    roll = random.randint(0, 1)
-                    to_place: int
-                    if roll == 1 and not high_door_placed:
-                        high_door_placed = True
-                        to_place = high_door_count
-                    # elif roll == 0:
-                    #     to_place = 0
-                    else:
-                        to_place = 0
+                    to_place: int = high_door_count
                     level['requirements']['keys'] = to_place
                     mix_data[level["from"].split("/")[0]] = to_place
                     break
