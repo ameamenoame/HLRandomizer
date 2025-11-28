@@ -44,11 +44,11 @@ def _scan_directory_lines(
 def check_solution(layers, path="./game_files/randomized"):
 	return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
-	north_solution = "North\n"
-	east_solution ="East\n"
-	west_solution = "West\n"
-	south_solution = "South\n"
-	central_solution = "Central\n"
+	north_solution = ""
+	east_solution =""
+	west_solution = ""
+	south_solution = ""
+	central_solution = ""
 
  
 	key_rooms = {
@@ -134,5 +134,17 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 		return
 	_scan_directory_lines(path,('.lvl'), _parse_line)
 
-	return_text += '\n'.join([north_solution, east_solution, west_solution , south_solution , central_solution])
+	result = []
+	for s in [north_solution, east_solution, west_solution , south_solution , central_solution]:
+		lines = s.split("\n")
+		sorted_lines = sorted(lines, key=lambda line: line[0:2] if line else "")
+		result.append("\n".join(sorted_lines))
+
+	result[0] = "\nNorth" + result[0]
+	result[1] = "\nEast" + result[1]
+	result[2] = "\nWest" + result[2]
+	result[3] = "\nSouth" + result[3]
+	result[4] = "\nCentral" + result[4]
+
+	return_text += '\n'.join(result)
 	return return_text

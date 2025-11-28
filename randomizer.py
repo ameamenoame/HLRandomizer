@@ -1040,37 +1040,18 @@ def place_all_items(levels: LevelHolder,
             return is_blocked
         return True
 
-    def _place_2_modules(next_layer):
-        print("Place 2 modules")
+
+    def _place_module_in_all_dir(next_layer, count: int = 1):
+        print("Place %d module" % count)
         def _place_module_in_dir(area, direction):
-            nonlocal next_layer
             place_important(area, _place_module,  
                             lambda empty_check, parent_room, inventory, levels: 
                                 _get_place_module_requirements(empty_check, parent_room, direction) 
                                 and 
-                                next_layer["req"](empty_check, inventory, levels, module_count),
+                                next_layer["req"](empty_check, inventory, levels, count),
 
                             (lambda _: next_layer["finish_callback"]()),
-                            2)
-            next_layer["reset_callback"]()
-
-        _place_module_in_dir("west_modules", Direction.WEST)
-        _place_module_in_dir("north_modules", Direction.NORTH)
-        _place_module_in_dir("east_modules", Direction.EAST)
-        _place_module_in_dir("south_modules", Direction.SOUTH)
-
-    def _place_final_module(next_layer):
-        print("Place module")
-        def _place_module_in_dir(area, direction):
-            nonlocal next_layer
-            place_important(area, _place_module,  
-                            lambda empty_check, parent_room, inventory, levels: 
-                                _get_place_module_requirements(empty_check, parent_room, direction) 
-                                and 
-                                next_layer["req"](empty_check, inventory, levels, module_count),
-
-                            (lambda _: next_layer["finish_callback"]()),
-                            1)
+                            count)
             next_layer["reset_callback"]()
 
         _place_module_in_dir("west_modules", Direction.WEST)
@@ -1110,15 +1091,8 @@ def place_all_items(levels: LevelHolder,
 
 
     layers: list[dict] = [
-        # { "names": "modules", 
-        #  "func": _place_3_modules,
-        #  "req": _get_module_layer_requirement,
-        #  "finish_callback": lambda: _set_blocker_placed("modules"),
-        #  "reset_callback": lambda: _set_blocker_placed("modules")
-        #  }, 
-
         { "names": "modules_layer_2", 
-         "func": _place_final_module,
+         "func": lambda next: _place_module_in_all_dir(next),
          "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
                                                                  check_amount=3,
                                                                  max_amount=4
@@ -1145,7 +1119,7 @@ def place_all_items(levels: LevelHolder,
     layers.insert( # Final modules always the final layer
     0,
         { "names": "final_module", 
-         "func": _place_final_module,
+         "func": _place_module_in_all_dir,
          "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, max_amount=3),
          "finish_callback": lambda: _set_blocker_placed("final_module"),
          "reset_callback": lambda: _set_blocker_placed("final_module", False)
@@ -1153,23 +1127,20 @@ def place_all_items(levels: LevelHolder,
     )
     layers.append(
         { "names": "modules_layer_1", 
-         "func": _place_2_modules,
+         "func": lambda next: _place_module_in_all_dir(next, 2),
          "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
                                                                  check_amount=1,
-                                                                 max_amount=3
+                                                                 max_amount=2
                                                                  ),
          "finish_callback": lambda: _set_blocker_placed("modules_layer_1", False),
          "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False)
          }, 
     )
-    layers.append( # This layer is just to get the requirements placeholder
+
+    layers.append( # This layer is just to get the requirements lambda
         { "names": "modules_layer_0", 
          "func": lambda _: True, # 
-        #  "req": lambda c, i, l, a: not _get_module_layer_requirement(c,i, l,a, 
-        #                                                          check_amount=1,
-        #                                                          max_amount=3
-        #                                                          ),
-        "req": lambda c,i,l,a: True,
+         "req": lambda c,i,l,a: True,
          "finish_callback": lambda: _set_blocker_placed("modules_layer_0", False),
          "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False)
          }, 
@@ -1206,6 +1177,7 @@ def place_all_items(levels: LevelHolder,
         },
     }
     print("Layers")
+    layers.pop()
     print([l["names"] for l in layers])
     length = len(layers)
     for i in range(length):
@@ -1388,14 +1360,7 @@ def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count:
                     obj: HLDObj
                     for obj in level.fake_object_list:
                         if obj.requirements['keys'] > 0:
-                            roll = random.randint(0, 1)
-                            to_place: int
-                            if roll == 1:
-                                to_place = high_door_count
-                            # elif roll == 0:
-                            #     to_place = 0
-                            else:
-                                to_place = 0
+                            to_place: int = high_door_count
                             obj.requirements['keys'] = to_place
                             mix_data[level.name.split("/")[0]] = to_place
 
