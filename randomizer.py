@@ -455,22 +455,33 @@ class FakeObject:
             return to_return
 
         def _get_shop(obj: FakeObject):
+            mapping = {
+                "UpgradeDash": "spr_NPC_teddy_idleSup",
+                "UpgradeSpecial": "spr_NPC_seanguin_idleAnim",
+                "UpgradeHealthPack": "spr_NPC_akashecary_idleGrind",
+                "UpgradeSword": "spr_NPC_beau_idleTap",
+                "UpgradeWeapon": "spr_NPC_Fatso",
+            
+            }
+
+            val = mapping[obj.extra_info["shop_id"]]
+
             body_to_return = HLDObj(
-                type=HLDType.SCENERY,
+                type=HLDType.NPCGENERIC,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["body"]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["body"]["y"],
                 attrs={
-                    "0": "spr_C_dummy",
-                    "1": 0,
-                    "2": 0,
-                    "3": 0,
-                    "k": 0,
-                    "p": -4,
-                    "fp": 0,
-                    "4": 0,
-                    "5": 0,
-                    "f": 0,
-                    "l": 0,
+                    "wlb": 1,
+                    "wl": -999999,
+                    "32": "spr_none",
+                    "300": val,
+                    "301": val,
+                    "302": val,
+                    "310": val,
+                    "xs": -1,
+                    "bi": 0,
+                    "tr": 5,
+                    "tg": 1
                 },
                 uid=COUNTER.use(),
             )
@@ -786,10 +797,11 @@ def place_all_items(levels: LevelHolder,
                     limit_one_module_per_room: bool = True,
                     key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    shops_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
                     mod_door_mix_data: dict = {},
                     module_count: ModuleCount = ModuleCount.MINIMUM,
                     key_count: KeyCount = KeyCount.MINIMUM,
-                    key_door_mix_data: dict = {}
+                    key_door_mix_data: dict = {},
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -1193,16 +1205,14 @@ def place_all_items(levels: LevelHolder,
                 }
                 ) 
 
-    # _place_all_modules()
-    place_important("dash_shops", _place_dash_shop, lambda x, a, b, c: not x.enemy_id)
+    place_important("dash_shops", _place_dash_shop, 
+lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option)
+                        )
     place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
-    place_unimportant(4, _place_generic_shop, lambda x, a, b, c: not x.enemy_id)
-    # _place_keys()
-    place_important("dash_shops", _place_dash_shop)
-    # _place_lasers()
+    place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
     place_unimportant(4, _place_shotgun)
     place_unimportant(9, _place_outfit)
-    place_unimportant(165, _place_gearbit) # Original count: 165. Reduced to 164 to make space for pistol
+    place_unimportant(165, _place_gearbit)
 
     return [e["names"] for e in layers]
 
