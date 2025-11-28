@@ -32,7 +32,7 @@ def get_json_from_graph(path: str, out: str):
                     to_export.append(temp_room)
                     temp_room = FakeLevel(name=split_line[2], dir_=split_line[1])
                 case "Check":
-                    original_type_with_manual = comma_split(split_line[12])
+                    original_type_with_manual = comma_split(split_line[13])
                     manual_shift_x = 0
                     manual_shift_y = 0
                     original_type = original_type_with_manual[0]
@@ -57,6 +57,7 @@ def get_json_from_graph(path: str, out: str):
                             "west_pylons": int(split_line[9]),
                             "south_pylons": int(split_line[10]),
                             "dash_shops": int(split_line[11]),
+                            "pistol": int(split_line[12]),
                         }
                     )
                     temp_room.fake_object_list.append(check)
