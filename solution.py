@@ -92,6 +92,9 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 			elif n in laser_checks:
 				text = text.replace("\n", "")
 				text += " (Behind laser check)\n"
+			elif n.replace(".lvl", "") in ["rm_IN_BackerTablet", "rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]:
+				text = text.replace("\n", "")
+				text += " (Behind pistol check)\n"
    
 			if area.startswith("N") or area.startswith("I"):
 				north_solution += text
