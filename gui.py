@@ -219,7 +219,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     limit_one_module_per_room=self.limit_one_module_per_room.get(),
                     module_door_option=self.module_door_optionsvar.get(),
                     module_count=int(self.module_count_optionsvar.get()),
-                    randomize_pistol=self.random_pistol.get()
+                    randomize_pistol=self.random_pistol.get(),
+                    randomize_shop=self.random_shops.get(),
                 )
                 success = True
                 break

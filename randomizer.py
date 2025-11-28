@@ -806,7 +806,8 @@ def place_all_items(levels: LevelHolder,
                     key_count: KeyCount = KeyCount.MINIMUM,
                     key_door_mix_data: dict = {},
                     randomize_pistol: bool = False,
-                    pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS
+                    randomize_shop: bool = False,
+                    pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -1028,6 +1029,14 @@ def place_all_items(levels: LevelHolder,
             at_least_one_blocker_placed["modules"]["can_still_place"] = amount_to_place > 1
         return is_valid
 
+    def _get_dash_shop_layer_requirement(check, inventory, layers, amount_to_place: int):
+        if not at_least_one_blocker_placed["dash_shops"]["value"]:
+            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_WA_Vale", "rm_S_GauntletEnd", "rm_EB_DeadOtterWalk", "rm_WL_WestDrifterVault"]
+            if is_blocked:
+                at_least_one_blocker_placed["dash_shops"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
+
     def _get_pistol_layer_requirement(check, inventory, layers, amount_to_place: int):
         if not at_least_one_blocker_placed["pistol"]["value"]:
             is_blocked = check.extra_info["parent_room_name_real"] in ["rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]
@@ -1144,8 +1153,8 @@ def place_all_items(levels: LevelHolder,
         ]
 
     if randomize_pistol:
-        while(layers[-1]["names"] == "lasers"): # Ensures pistol is before the lasers layer
-            random.shuffle(layers)
+        # while(layers[-1]["names"] == "lasers"): # Ensures pistol is before the lasers layer
+        #     random.shuffle(layers)
         pistol_layer = { "names": "pistol", 
          "func": lambda next_layer: place_important("pistol", _place_pistol, 
                                 lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", pistol_placement_option)
@@ -1158,8 +1167,49 @@ def place_all_items(levels: LevelHolder,
          "reset_callback": lambda: _set_blocker_placed("pistol", False)
          } 
         layers.append(pistol_layer)
+
+        random.shuffle(layers)
+
+        def _find_layer(name):
+            nonlocal layers
+            for i in range(len(layers)):
+                if layers[i]["names"] == name: return i
+
+        pistol_i = _find_layer("pistol")
+        laser_i = _find_layer("lasers")
+        while(laser_i > pistol_i):
+            random.shuffle(layers)
+            pistol_i = _find_layer("pistol")
+            laser_i = _find_layer("lasers")
+
+        
+                
     else:
         random.shuffle(layers)
+
+        
+    if randomize_shop:
+        dash_shop_layer = { "names": "dash_shops", 
+            "func": lambda next_layer: place_important("dash_shops", _place_dash_shop, 
+                                lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", shops_placement_option)
+                                and
+                                next_layer["req"](e, i, l, 1),
+                                lambda _: next_layer["finish_callback"](),
+                                                ),
+            "req": _get_dash_shop_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("dash_shops"),
+            "reset_callback": lambda: _set_blocker_placed("dash_shops", False)
+            } 
+
+        i: int = random.randint(0, len(layers))
+        while layers[max(0,i-1)]["names"] == "modules_layer_2": # Cannot be directly behind a module layer
+            i = random.randint(0, len(layers))
+        layers.insert(i, dash_shop_layer)
+            
+
+            
+            
+
 
     layers.insert( # Final modules always the final layer
     0,
@@ -1224,6 +1274,10 @@ def place_all_items(levels: LevelHolder,
             "value": False,
             "can_still_place": True
         },
+        "dash_shops": {
+            "value": False,
+            "can_still_place": True
+        },
     }
     print("Layers")
     layers.pop()
@@ -1242,9 +1296,6 @@ def place_all_items(levels: LevelHolder,
                 }
                 ) 
 
-    place_important("dash_shops", _place_dash_shop, 
-lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option)
-                        )
     place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
     place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
     place_unimportant(3, _place_shotgun)
@@ -1263,7 +1314,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
          list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, 
          module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL,
          key_count:  KeyCount = KeyCount.MINIMUM,
-         randomize_pistol: bool = False
+         randomize_pistol: bool = False,
+         randomize_shop: bool = False,
          ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1332,7 +1384,10 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
                     key_door_mix_data=key_mix_data,
                     key_placement_option=module_placement,
                     laser_placement_option=module_placement,
-                    randomize_pistol=randomize_pistol
+                    shops_placement_option=module_placement,
+                    pistol_placement_option=module_placement,
+                    randomize_pistol=randomize_pistol,
+                    randomize_shop=randomize_shop,
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))

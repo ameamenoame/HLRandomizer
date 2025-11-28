@@ -116,6 +116,9 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 					text = "Pistol found at %s" % (level_name)
 					text += "\n"
 					add_to_dir_solution(level_name, text, obj)
+			case HLDType.UPGRADEDASH:
+				text = "Dash shop found at %s\n" % level_name
+				add_to_dir_solution(level_name, text, None)
 			case "DrifterBones_Key":
 				text = "Key found at " + level_name
 				text += "\n"

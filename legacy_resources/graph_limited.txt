@@ -117,7 +117,7 @@ Check,216,328,,0,0,0,0,0,0,0,0,TABLET, 15
 Room,West,rm_WA_Vale/3,
 Room,West,rm_WA_Vale/1,
 Check,992,328,,0,0,0,0,0,0,0,0,GEARBOX,
-Check,56,584,,0,0,0,0,0,0,0,1,GEARBOX,
+Check,56,584,,0,0,0,0,0,0,0,1,"BONES,-13,-4",KEY
 Room,West,rm_WC_BigMeadow,
 Check,592,56,,0,0,0,0,0,0,0,0,GEARBOX,
 Room,West,rm_WC_BigMeadowVAULT,
