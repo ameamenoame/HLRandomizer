@@ -8,6 +8,7 @@
 import os
 from hldlib import HLDObj, HLDLevel, HLDType, HLDBasics
 from typing import Callable, Iterable
+from pathlib import Path
 
 def _scan_directory_lines(
     directory: str,
@@ -41,7 +42,7 @@ def _scan_directory_lines(
 
 
 
-def check_solution(layers, path="./game_files/randomized"):
+def check_solution(layers, path=Path("game_files") / "randomized"):
 	return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
 	north_solution = ""
@@ -109,6 +110,10 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 				obj = HLDObj.from_line(line)
 				if obj.attrs['w'] in [21, 23]: 
 					text = "Laser (%d) found at %s" % (obj.attrs['w'], level_name)
+					text += "\n"
+					add_to_dir_solution(level_name, text, obj)
+				elif obj.attrs['w'] == 1:
+					text = "Pistol found at %s" % (level_name)
 					text += "\n"
 					add_to_dir_solution(level_name, text, obj)
 			case "DrifterBones_Key":

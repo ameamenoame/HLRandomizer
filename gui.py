@@ -218,7 +218,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     module_placement=self.module_optionsvar.get(),
                     limit_one_module_per_room=self.limit_one_module_per_room.get(),
                     module_door_option=self.module_door_optionsvar.get(),
-                    module_count=int(self.module_count_optionsvar.get())
+                    module_count=int(self.module_count_optionsvar.get()),
+                    randomize_pistol=self.random_pistol.get()
                 )
                 success = True
                 break
@@ -229,7 +230,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 else:
                     messagebox.showerror(message=f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
                     self.random_seed.set("")
-                    break
+                    raise e
+            except Exception as e:
+                if not using_preset_seed:
+                    print("Retrying!")
+                    Inventory.reset()
+                else:
+                    messagebox.showerror(message=f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
+                    self.random_seed.set("")
+                    raise e
 
         if success: messagebox.showinfo(message=f"Randomization successful! Close this dialog and press 'Push to HLD' to save the randomized levels to Hyper Light Drifter.\n\nSeed: " + str(self.random_seed.get()), title="Success")
 

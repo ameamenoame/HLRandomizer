@@ -160,6 +160,7 @@ class Inventory:
         "keys": KeyCount.ALL,
         # "lasers": 2,
         "lasers": 1,
+        "pistol": 1,
         "north_modules": 8,
         "east_modules": 8,
         "west_modules": 8,
@@ -218,6 +219,8 @@ class Inventory:
         def _pick_up_weapon():
             if obj.extra_info["weapon_id"] in [21, 23]:
                 cls.temporary["lasers"] += 1
+            elif obj.extra_info["weapon_id"] == 1:
+                cls.temporary["pistol"] += 1
 
         def _pick_up_key():
             cls.temporary["keys"] += 1
@@ -802,13 +805,14 @@ def place_all_items(levels: LevelHolder,
                     module_count: ModuleCount = ModuleCount.MINIMUM,
                     key_count: KeyCount = KeyCount.MINIMUM,
                     key_door_mix_data: dict = {},
+                    randomize_pistol: bool = False,
+                    pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     lasers = [random.choice([21, 23])] 
-    # lasers = [21, 23]
-    shotguns = [2, 41, 43, 1]
-    shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
+    shotguns = [2, 41, 43]; random.shuffle(shotguns)
+    shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]; random.shuffle(shops)
     capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
     swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
     companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
@@ -864,6 +868,10 @@ def place_all_items(levels: LevelHolder,
         check.type = RandomizerType.WEAPON
         check.extra_info["weapon_id"] = shotguns.pop()
 
+    def _place_pistol(check: FakeObject):
+        check.type = RandomizerType.WEAPON
+        check.extra_info["weapon_id"] = 1
+
     def _place_outfit(check: FakeObject):
         check.type = RandomizerType.OUTFIT
         check.extra_info["cape_id"] = capes.pop()
@@ -903,7 +911,9 @@ def place_all_items(levels: LevelHolder,
         return False
 
     def _get_placement_restriction(empty_check, parent_room, obj_type: str, restriction_type: ItemPlacementRestriction):
-        if parent_room in ["rm_C_Ven_Dash", "rm_PAX_Staging", "rm_IN_BackerTablet"]: return False # Don't put important items in the dash shop
+        exclude_list = ["rm_C_Ven_Dash", "rm_PAX_Staging"]
+        if not randomize_pistol: exclude_list.append("rm_IN_BackerTablet")
+        if parent_room in exclude_list: return False # Don't put important items in the dash shop
 
         if restriction_type == ItemPlacementRestriction.KEY_ITEMS or module_option == ItemPlacementRestriction.MODULES_EXTENDED:
             return empty_check.original_type in ["MODULE", "BONES"]
@@ -922,9 +932,7 @@ def place_all_items(levels: LevelHolder,
 
 
     def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int, check_amount : int = 1, max_amount: int = 4):
-        if check.dir_ in ["Intro", "Central"]: return False
         if at_least_one_blocker_placed["modules"]["value"]: 
-            # return at_least_one_blocker_placed["modules"]["can_still_place"]
             return True
 
         level_name: str = check.extra_info["parent_room_name_fake"]
@@ -1019,6 +1027,14 @@ def place_all_items(levels: LevelHolder,
         if is_valid:
             at_least_one_blocker_placed["modules"]["can_still_place"] = amount_to_place > 1
         return is_valid
+
+    def _get_pistol_layer_requirement(check, inventory, layers, amount_to_place: int):
+        if not at_least_one_blocker_placed["pistol"]["value"]:
+            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]
+            if is_blocked:
+                at_least_one_blocker_placed["pistol"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
 
     def _get_laser_layer_requirement(check, inventory, level, amount_to_place: int):
         if not at_least_one_blocker_placed["lasers"]["value"]:
@@ -1127,7 +1143,24 @@ def place_all_items(levels: LevelHolder,
          }, 
         ]
 
-    random.shuffle(layers)
+    if randomize_pistol:
+        while(layers[-1]["names"] == "lasers"): # Ensures pistol is before the lasers layer
+            random.shuffle(layers)
+        pistol_layer = { "names": "pistol", 
+         "func": lambda next_layer: place_important("pistol", _place_pistol, 
+                                lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", pistol_placement_option)
+                                and
+                                next_layer["req"](e, i, l, 1),
+                                lambda _: next_layer["finish_callback"](),
+                                                ),
+         "req": _get_pistol_layer_requirement,
+         "finish_callback": lambda: _set_blocker_placed("pistol"),
+         "reset_callback": lambda: _set_blocker_placed("pistol", False)
+         } 
+        layers.append(pistol_layer)
+    else:
+        random.shuffle(layers)
+
     layers.insert( # Final modules always the final layer
     0,
         { "names": "final_module", 
@@ -1187,6 +1220,10 @@ def place_all_items(levels: LevelHolder,
             "value": False,
             "can_still_place": True
         },
+        "pistol": {
+            "value": False,
+            "can_still_place": True
+        },
     }
     print("Layers")
     layers.pop()
@@ -1210,7 +1247,7 @@ lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", 
                         )
     place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
     place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
-    place_unimportant(4, _place_shotgun)
+    place_unimportant(3, _place_shotgun)
     place_unimportant(9, _place_outfit)
     place_unimportant(165, _place_gearbit)
 
@@ -1225,7 +1262,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
          output_folder_name: str = "out", 
          list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, 
          module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL,
-         key_count:  KeyCount = KeyCount.MINIMUM
+         key_count:  KeyCount = KeyCount.MINIMUM,
+         randomize_pistol: bool = False
          ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1292,9 +1330,9 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
                     module_count=module_count,
                     key_count=key_count,
                     key_door_mix_data=key_mix_data,
-
                     key_placement_option=module_placement,
-                    laser_placement_option=module_placement
+                    laser_placement_option=module_placement,
+                    randomize_pistol=randomize_pistol
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
@@ -1328,6 +1366,9 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
        
     if key_count == KeyCount.MINIMUM: 
         _manual_mix_real_key_doors(real_levels, key_mix_data)
+
+    if randomize_pistol:
+        _remove_intro_death_cutscene(real_levels)
 
     Inventory.reset()
 
@@ -1418,6 +1459,19 @@ def _mix_fake_module_doors(level_data: list):
     _mix_doors_in_level(south_module_door_levels)
 
     return mix_data
+
+    
+def _remove_intro_death_cutscene(real_levels: LevelHolder):
+    obj_list = real_levels.find_by_name(HLDLevel.Names.RM_IN_HALUCINATIONDEATH).object_list
+    to_remove =[]
+    for obj in obj_list:
+        if obj.type == HLDType.SICKAREA:
+            to_remove.append(obj)
+            
+    for o in to_remove:
+        obj_list.remove(o)
+
+    return
 
 def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict):
     def _change_key_door_in_level(level_name: str, count: int):
