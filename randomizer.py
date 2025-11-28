@@ -1039,7 +1039,7 @@ def place_all_items(levels: LevelHolder,
 
     def _get_pistol_layer_requirement(check, inventory, layers, amount_to_place: int):
         if not at_least_one_blocker_placed["pistol"]["value"]:
-            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]
+            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_IN_BackerTablet", "rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]
             if is_blocked:
                 at_least_one_blocker_placed["pistol"]["can_still_place"] = amount_to_place > 1
             return is_blocked

@@ -93,7 +93,7 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 				text = text.replace("\n", "")
 				text += " (Behind laser check)\n"
    
-			if area.startswith("N"):
+			if area.startswith("N") or area.startswith("I"):
 				north_solution += text
 			elif area.startswith("E"):
 				east_solution += text
