@@ -55,7 +55,7 @@ Check,1712,512,7796,0,0,0,0,0,0,0,0, GEARBIT ENEMY,
 Room,West,rm_WA_DeadwoodS1,
 Check,256,128,,0,0,0,0,0,0,0,0,GEARBOX,
 Room,West,rm_WA_Grotto_buffIntro/1,
-Check,496,368,,0,0,0,0,0,0,0,0,TABLET, 13
+Check,496,368,,0,0,0,0,0,0,0,0,"BONES,-10,0",OUTFIT,
 Room,West,rm_WA_Grotto_buffIntro/2,
 Check,632,352,,0,0,0,0,0,0,0,0,GEARBOX,
 Room,West,rm_WC_WindingWood/1,
