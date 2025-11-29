@@ -428,15 +428,18 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_count_optionsvar,
             preset
         )
-        do_push(
-            OUT_FOLDER_NAME,
-            PATH_TO_HLD
-        )
 
         # Definitely not thread safe
         results['success']= gen_result[0]
         results['final_seed'] = gen_result[1]
         results['layers'] = gen_result[2]
+        
+
+        if results['success']:
+            do_push(
+                OUT_FOLDER_NAME,
+                PATH_TO_HLD
+            )
 
         root.event_generate('<<GenerationComplete>>')
 

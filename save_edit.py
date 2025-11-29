@@ -174,7 +174,7 @@ def savedata_load(metadata, args):
         raise InvalidArgsError("Usage: load [save_num]")
     filename = metadata.get_name(args[1])
     if (not os.path.exists(filename)):
-        raise FileError("File does not exist")
+        raise FileNotFoundError("File does not exist")
 
     metadata.set_save(args[1])
     savefile = open(filename, "rb", buffering=0)
