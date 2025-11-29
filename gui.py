@@ -2,11 +2,13 @@ import threading
 from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
+from preset import PresetType, Preset
 from hldlib import HLDBasics, HLDLevel
 from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ItemPlacementRestriction, ModuleCount, ModuleDoorOptions
 from solution import check_solution
 from random import randrange
 import shutil
+from save_edit import autofill_path
 import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
 
@@ -44,8 +46,9 @@ class GamePathSetup:
     def set_path(self, *args):
         try:
             path = self.game_path.get().strip()
+            save_path = self.save_path.get().strip()
             with open("hlddir.txt", "w") as f:
-                f.write(path)
+                f.write("\n".join([path, save_path]))
             messagebox.showinfo(message="Game path set to " + path + "\nPlease close the randomizer and open it again to start the randomizer.", title="Success")
             self.root.destroy()
         except:
@@ -63,7 +66,12 @@ class GamePathSetup:
         game_path_entry.grid(column=2, row=1, sticky=(W, E))
 
         ttk.Label(mainframe, text="Please specify the path to the game on disk (default is on the C drive but if you changed the installation location copy the path to it here)").grid(column=2, row=0, sticky=W)
-        ttk.Button(mainframe, text="Set path", command=self.set_path).grid(column=3, row=1, sticky=W)
+        ttk.Button(mainframe, text="Set path", command=self.set_path, width=50).grid(column=1, row=4, sticky=NSEW, columnspan=2)
+
+        ttk.Label(mainframe, text="Specify save path").grid(column=2, row=2, sticky=W)
+        self.save_path = StringVar(value=autofill_path(None))
+        save_path_entry = ttk.Entry(mainframe, textvariable=self.save_path, width=64)
+        save_path_entry.grid(column=2, row=3, sticky=(W, E))
 
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
@@ -285,6 +293,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         limit_one_module_per_room,
         module_door_optionsvar,
         module_count_optionsvar,
+        preset,
         PATH_TO_HLD,
         root,
         results
@@ -305,6 +314,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             limit_one_module_per_room,
             module_door_optionsvar,
             module_count_optionsvar,
+            preset,
                 ):
             """
             Starts the randomized level files creation sequence
@@ -369,6 +379,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         module_count=module_count_optionsvar,
                         randomize_pistol=random_pistol,
                         randomize_shop=random_shops,
+                        preset=preset
                     )
                     success = True
                     break
@@ -414,7 +425,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_optionsvar,
             limit_one_module_per_room,
             module_door_optionsvar,
-            module_count_optionsvar
+            module_count_optionsvar,
+            preset
         )
         do_push(
             OUT_FOLDER_NAME,
@@ -485,6 +497,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.limit_one_module_per_room.get(),
             self.module_door_optionsvar.get(),
             int(self.module_count_optionsvar.get()),
+            self.preset_optionsvar.get(),
             self.PATH_TO_HLD,
             root,
             self.results
@@ -505,6 +518,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         else: messagebox.showerror(message=f"Could not generate seed. Try again or try another seed if a seed was set.", title="Error")
         self.progressbar.grid_remove()
         self.subwindow.destroy()
+
+    def _set_preset_description_text(self, a, b,c):
+        p: Preset | None = Preset.get_preset_from_name(self.preset_optionsvar.get())
+        self.preset_description_label["text"] = p.description + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset." \
+            if p else "No preset selected"
 
     def __init__(self, root, path):
         self.root = root
@@ -673,9 +691,30 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             child.grid_configure(padx=5, pady=5)
 
 
+
+
+        # PRESETS #
+        preset_frame = ttk.LabelFrame(root, text="Presets")
+        preset_frame.grid(column=0, row=8, sticky=NSEW, padx=5, pady=5)
+
+        ttk.Label(preset_frame, text="Preset").grid(column=0, row=1, sticky=NW)
+
+        preset_options = [e.value for e in PresetType]
+        self.preset_optionsvar = StringVar(value=PresetType.NONE)
+        self.preset_list = ttk.Combobox(preset_frame, textvariable=self.preset_optionsvar, values=preset_options)
+        self.preset_list.grid(column=1, row=1, sticky=NW)
+        self.preset_list.state(["readonly"])
+        self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
+        self.preset_description_label.grid(column=1, row=2, sticky=NW)
+        self.preset_optionsvar.trace('w', self._set_preset_description_text)
+
+        for child in preset_frame.winfo_children(): 
+            child.grid_configure(padx=5, pady=5)
+
+
         # Bottom buttons #
         bottom_frame = Frame(root)
-        bottom_frame.grid(column=0, row=8, sticky=NSEW)
+        bottom_frame.grid(column=0, row=9, sticky=NSEW)
 
 
         # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
@@ -696,6 +735,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # Frames configurations #
 
         root.bind("<<GenerationComplete>>", self.gen_finish)
+
 
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=1)

@@ -14,6 +14,16 @@ class HLDBasics:
         raise ValueError("No hldDir.txt found.")
 
     @staticmethod
+    def find_save_path() -> str:
+        for dir_path, dir_names, file_names in os.walk("."):
+            for file_name in file_names:
+                if file_name.lower() == "hlddir.txt":
+                    with open(os.path.join(dir_path, file_name)) as hld_dir_file:
+                        hld_dir_file.readline() # Skip first line
+                        return hld_dir_file.readline().rstrip()
+        raise ValueError("No hldDir.txt found.")
+
+    @staticmethod
     def get_levels(path: str, dirs: Iterable[str]):
         for dir_ in dirs:
             for level in [level for level in os.listdir(os.path.join(path, dir_)) if level.endswith(".lvl")]:

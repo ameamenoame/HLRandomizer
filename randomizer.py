@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
 from os import path
+from preset import Preset
 import json
 import os
 import random
@@ -379,14 +380,15 @@ class FakeObject:
             outfit_sprite_map = {
                 11: 0, # Purple
                 9: 36, # Black 
-                6: 37,
-                4: 35,
+                6: 37, # Orange
+                4: 35, # White
                 3: 33, # Fuchsia
                 2: 31, # Blue
-                5: 32,
-                7: 38,
+                5: 32, # Yellow
+                10: 32, # Ochre
+                7: 38, # Green-Blue
                 8: 34, # Pink drifter's,
-                12: 0, # Black
+                12: 0, # Black NG+
                 13:0, # Sky blue
             }
             to_return = HLDObj(
@@ -1334,6 +1336,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
          key_count:  KeyCount = KeyCount.MINIMUM,
          randomize_pistol: bool = False,
          randomize_shop: bool = False,
+         preset: Preset | None = None
          ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1452,6 +1455,15 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
 
         if randomize_pistol:
             _remove_intro_death_cutscene(real_levels)
+
+    # Apply presets #
+
+    if preset:
+        p: Preset = Preset.get_preset_from_name(preset)
+        p.execute_changes()
+    
+    
+
 
     Inventory.reset()
 
