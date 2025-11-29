@@ -47,10 +47,12 @@ class GamePathSetup:
             with open("hlddir.txt", "w") as f:
                 f.write(path)
             messagebox.showinfo(message="Game path set to " + path + "\nPlease close the randomizer and open it again to start the randomizer.", title="Success")
+            self.root.destroy()
         except:
             messagebox.showerror(message="Could not set game path.")
 
     def __init__(self, root):
+        self.root = root
         root.title("Hyper Light Drifter Randomizer Path Setup")
 
         mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
@@ -510,12 +512,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.PATH_TO_HLD = path
 
         if not os.path.isdir('game_files'):
-            setup_frame = ttk.Frame(root)
-            setup_frame.grid(column=0, row=0, sticky=NE)
-            ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
-            ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
-            return
-
+            self.setup_frame = ttk.Frame(root)
+            self.setup_frame.grid(column=0, row=0, sticky=NE)
+            ttk.Button(self.setup_frame, text="Set up Randomizer", command=lambda: self.do_install() or self.setup_frame.grid_forget()).grid(column=0, row=0, sticky=W, pady=5)
+            ttk.Label(self.setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
             
         # Header #
 
