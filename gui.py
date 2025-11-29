@@ -401,9 +401,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         hm_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/heartmachine"))
 
 
-
-        seed_frame = Frame(root)
-        seed_frame.grid(column=0, row=2, sticky=NSEW)
+        # Seed settings #
+        seed_frame = ttk.LabelFrame(root, text="Seed")
+        seed_frame.grid(column=0, row=2, sticky=EW)
 
         self.random_seed = StringVar(value=None)
         ttk.Label(seed_frame, text="Seed (leave empty for a random seed)").grid(column=0, row=3, pady=5, padx=5)
@@ -416,8 +416,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Options settings #
 
-        options_frame = Frame(root)
-        options_frame.grid(column=0, row=3, sticky=NSEW)
+        options_frame = ttk.LabelFrame(root, text="Options")
+        options_frame.grid(column=0, row=3, sticky=EW)
         
         self.random_doors = BooleanVar(value=False)
         ttk.Checkbutton(options_frame, text='Randomize rooms', 
@@ -441,8 +441,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         
         # Progression settings #
-        progression_frame = Frame(root)
-        progression_frame.grid(column=0, row=4)
+        progression_frame = ttk.LabelFrame(root, text="Progression")
+        progression_frame.grid(column=0, row=4, sticky=EW)
         ttk.Label(progression_frame, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(value=ItemPlacementRestriction.MODULES_EXTENDED)
@@ -485,8 +485,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         for e in self.enemy_data:
             if e["name"] == "Birdman": e["protected"] = True
         
-        enemy_pool_frame = ttk.Frame(root, height=90)
-        enemy_pool_frame.grid(column=0, row=5, sticky=NSEW)
+        enemy_pool_frame = ttk.LabelFrame(root, height=90, text="Enemies")
+        enemy_pool_frame.grid(column=0, row=5, sticky=EW)
+
         ttk.Label(enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=0, row=0, sticky=NE)
         self.enemy_list = Listbox(enemy_pool_frame, listvariable=self.enemy_choicesvar, width=27)
         self.enemy_list.configure(exportselection=False)
@@ -527,7 +528,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
 
 
-        ttk.Separator(root, orient='horizontal').grid(column=0, row=7, sticky=EW, columnspan=8)
+        # ttk.Separator(root, orient='horizontal').grid(column=0, row=7, sticky=EW, columnspan=8)
 
         # Bottom buttons #
         bottom_frame = Frame(root)
@@ -547,6 +548,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.grid_rowconfigure(2, weight=1)
         root.grid_rowconfigure(3, weight=1)
         root.grid_rowconfigure(4, weight=1)
+        root.grid_rowconfigure(5, weight=1)
+        for child in root.winfo_children(): 
+            child.grid_configure(padx=15, pady=5)
         for child in enemy_pool_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
         for child in bottom_frame.winfo_children(): 
