@@ -347,6 +347,19 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         solution = check_solution(self.layers)
         messagebox.showinfo(message=solution, title="Solution")
 
+        
+    def set_weekly_seed(self):
+        import datetime
+        import hashlib
+        import base64
+        def short_base64_hash_week():
+            year, week, _ = datetime.date.today().isocalendar()
+            data = f"{year}-{week}".encode()
+            digest = hashlib.md5(data).digest()
+            return base64.urlsafe_b64encode(digest)[:12].decode()
+
+        seed =  short_base64_hash_week()
+        self.random_seed.set(seed)
 
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
@@ -358,62 +371,75 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
             ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
 
-        mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
+        mainframe = ttk.Frame(root)
         mainframe.grid(column=0, row=1, sticky=NSEW)
 
-        ttk.Label(mainframe, text="Settings", justify=CENTER, font=("TkHeadingFont", 20)).grid(column=0, row=2, sticky=N)
+        ttk.Label(mainframe, text="Settings", justify=CENTER, font=("TkHeadingFont", 20)).grid(column=0, row=2, sticky=N, padx=20)
+
+        seed_frame = Frame(root)
+        seed_frame.grid(column=0, row=2, sticky=NSEW)
 
         self.random_seed = StringVar(value=None)
-        ttk.Label(mainframe, text="Seed (leave empty for a random seed)").grid(column=0, row=3, pady=5, padx=5)
-        seed_entry = ttk.Entry(mainframe, textvariable=self.random_seed, width=30)
-        seed_entry.grid(column=1, row=3, sticky=EW, columnspan=2)
+        ttk.Label(seed_frame, text="Seed (leave empty for a random seed)").grid(column=0, row=3, pady=5, padx=5)
+        seed_entry = ttk.Entry(seed_frame, textvariable=self.random_seed, width=30)
+        seed_entry.grid(column=1, row=3, sticky=EW, pady=5, padx=5)
+
+        ttk.Button(seed_frame, text="Clear", command=lambda: self.random_seed.set("")).grid(column=2, row=3, sticky=NE, pady=5, padx=5)
+        ttk.Button(seed_frame, text="Try weekly seed", command=self.set_weekly_seed).grid(column=1, row=4, sticky=NW, pady=5, padx=5)
+
+        options_frame = Frame(root)
+        options_frame.grid(column=0, row=3, sticky=NSEW)
         
         self.random_doors = BooleanVar(value=False)
-        ttk.Checkbutton(mainframe, text='Randomize rooms', 
+        ttk.Checkbutton(options_frame, text='Randomize rooms', 
 	    variable=self.random_doors,
 	    onvalue=True, offvalue= False).grid(column=0, row=4, sticky=W, pady=5, padx=5)
 
         self.random_enemies = BooleanVar(value=True)
-        ttk.Checkbutton(mainframe, text='Randomize enemies', 
+        ttk.Checkbutton(options_frame, text='Randomize enemies', 
 	    variable=self.random_enemies,
 	    onvalue=True, offvalue= False).grid(column=0, row=5, sticky=W, pady=5, padx=5)
 
         self.random_shops = BooleanVar(value=False)
-        ttk.Checkbutton(mainframe, text='Randomize shops (if unset, shops will stay in town)', 
+        ttk.Checkbutton(options_frame, text='Randomize shops (if unset, shops will stay in town)', 
 	    variable=self.random_shops,
 	    onvalue=True, offvalue= False).grid(column=1, row=4, sticky=W)
 
         self.random_pistol = BooleanVar(value=False)
-        ttk.Checkbutton(mainframe, text='Randomize pistol for NG', 
+        ttk.Checkbutton(options_frame, text='Randomize pistol for NG', 
 	    variable=self.random_pistol,
 	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
 
+
+
         
-        # Module placement settings
-        ttk.Label(mainframe, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
+        # Progression settings #
+        progression_frame = Frame(root)
+        progression_frame.grid(column=0, row=4)
+        ttk.Label(progression_frame, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(value=ItemPlacementRestriction.MODULES_EXTENDED)
-        module_settings_list = ttk.Combobox(mainframe, textvariable=self.module_optionsvar, values=module_options, width=32)
+        module_settings_list = ttk.Combobox(progression_frame, textvariable=self.module_optionsvar, values=module_options, width=32)
         module_settings_list.grid(column=1, row=6, sticky=W, columnspan=3)
         module_settings_list.state(["readonly"])
 
         self.limit_one_module_per_room = BooleanVar(value=True)
-        ttk.Checkbutton(mainframe, text='Limit 1 module per room', 
+        ttk.Checkbutton(progression_frame, text='Limit 1 module per room', 
 	    variable=self.limit_one_module_per_room,
 	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
 
-        self.module_door_label = ttk.Label(mainframe, text="Module door")
+        self.module_door_label = ttk.Label(progression_frame, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
         self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
-        self.module_door_list = ttk.Combobox(mainframe, textvariable=self.module_door_optionsvar, values=module_door_options)
+        self.module_door_list = ttk.Combobox(progression_frame, textvariable=self.module_door_optionsvar, values=module_door_options)
         self.module_door_list.state(["readonly"])
         self.module_door_label.grid(column=0, row=9, sticky=E, padx=5, pady=5)
         self.module_door_list.grid(column=1, row= 9, sticky=W)
 
-        self.module_count_label = ttk.Label(mainframe, text="Module count")
+        self.module_count_label = ttk.Label(progression_frame, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
         self.module_count_optionsvar = StringVar(value=ModuleCount.MINIMUM)
-        self.module_count_list = ttk.Combobox(mainframe, textvariable=self.module_count_optionsvar, values=module_count_options)
+        self.module_count_list = ttk.Combobox(progression_frame, textvariable=self.module_count_optionsvar, values=module_count_options)
         self.module_count_list.state(["readonly"])
 
         self.module_count_label.grid(column=0, row =10, sticky=E, padx=5, pady=5)
@@ -433,7 +459,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             if e["name"] == "Birdman": e["protected"] = True
         
         enemy_pool_frame = ttk.Frame(root, height=90)
-        enemy_pool_frame.grid(column=0, row=2, sticky=NSEW)
+        enemy_pool_frame.grid(column=0, row=5, sticky=NSEW)
         ttk.Label(enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=0, row=0, sticky=NE)
         self.enemy_list = Listbox(enemy_pool_frame, listvariable=self.enemy_choicesvar, width=27)
         self.enemy_list.configure(exportselection=False)
@@ -457,7 +483,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Pool edit buttons
         buttons_frame = ttk.Frame(enemy_pool_frame)
-        buttons_frame.grid(column=0, row=3, columnspan=2)
+        buttons_frame.grid(column=0, row=6, columnspan=2)
         ttk.Button(buttons_frame, text="Enable", command=self.enable_enemy).grid(column=0,row=0,)
         ttk.Button(buttons_frame, text="Disable", command=self.disable_enemy).grid(column=1,row=0, padx=5)
         ttk.Button(buttons_frame, text="Toggle rando protection", command=self.protect_enemy).grid(column=2,row=0, padx=5)
@@ -474,11 +500,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
 
 
-        ttk.Separator(root, orient='horizontal').grid(column=0, row=4, sticky=EW, columnspan=8)
+        ttk.Separator(root, orient='horizontal').grid(column=0, row=7, sticky=EW, columnspan=8)
 
         # Bottom buttons
         bottom_frame = Frame(root)
-        bottom_frame.grid(column=0, row=5, sticky=NE)
+        bottom_frame.grid(column=0, row=8, sticky=NE)
 
 
         ttk.Button(bottom_frame, text="Randomize", command=self.do_gen).grid(column=0, row=0)
@@ -492,6 +518,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.grid_columnconfigure(1, weight=1)
         root.grid_rowconfigure(1, weight=1)
         root.grid_rowconfigure(2, weight=1)
+        root.grid_rowconfigure(3, weight=1)
+        root.grid_rowconfigure(4, weight=1)
         for child in enemy_pool_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
         for child in bottom_frame.winfo_children(): 
