@@ -158,8 +158,7 @@ class Inventory:
 
     full = {
         "keys": KeyCount.ALL,
-        # "lasers": 2,
-        "lasers": 1,
+        "lasers": 2,
         "pistol": 1,
         "north_modules": 8,
         "east_modules": 8,
@@ -209,6 +208,11 @@ class Inventory:
     @classmethod
     def set_key_requirements(cls, count: KeyCount = KeyCount.ALL):
         cls.full["keys"] = count
+        cls.current = dict(cls.full)
+
+    @classmethod
+    def set_lasers_requirements(cls, count: int = 2):
+        cls.full["lasers"] = count
         cls.current = dict(cls.full)
 
     @classmethod
@@ -808,10 +812,11 @@ def place_all_items(levels: LevelHolder,
                     randomize_pistol: bool = False,
                     randomize_shop: bool = False,
                     pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    random_doors:bool = False
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [random.choice([21, 23])] 
+    lasers = [random.choice([21, 23])]  if not random_doors else [21, 23]
     shotguns = [2, 41, 43]; random.shuffle(shotguns)
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]; random.shuffle(shops)
     capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
@@ -1127,183 +1132,193 @@ def place_all_items(levels: LevelHolder,
         return val
 
 
-    layers: list[dict] = [
-        { "names": "modules_layer_2", 
-         "func": lambda next: _place_module_in_all_dir(next),
-         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
-                                                                 check_amount=3,
-                                                                 max_amount=4
-                                                                 ),
-         "finish_callback": lambda: _set_blocker_placed("modules_layer_2"),
-         "reset_callback": lambda: _set_blocker_placed("modules_layer_2", False)
-         }, 
-         
-         
-        { "names": "lasers", "func": _place_lasers,
-         "req": _get_laser_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("lasers"),
-         "reset_callback": lambda: _set_blocker_placed("lasers", False),
-         },
-        {"names": "keys",
-         "func": _place_keys,
-         "req": _get_key_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("keys"),
-         "reset_callback": lambda: _set_blocker_placed("keys", False),
-         }, 
-        ]
+    if not random_doors:
+        layers: list[dict] = [
+            { "names": "modules_layer_2", 
+            "func": lambda next: _place_module_in_all_dir(next),
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                    check_amount=3,
+                                                                    max_amount=4
+                                                                    ),
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_2"),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_2", False)
+            }, 
+            
+            
+            { "names": "lasers", "func": _place_lasers,
+            "req": _get_laser_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("lasers"),
+            "reset_callback": lambda: _set_blocker_placed("lasers", False),
+            },
+            {"names": "keys",
+            "func": _place_keys,
+            "req": _get_key_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("keys"),
+            "reset_callback": lambda: _set_blocker_placed("keys", False),
+            }, 
+            ]
 
-    if randomize_pistol:
-        # while(layers[-1]["names"] == "lasers"): # Ensures pistol is before the lasers layer
-        #     random.shuffle(layers)
-        pistol_layer = { "names": "pistol", 
-         "func": lambda next_layer: place_important("pistol", _place_pistol, 
-                                lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", pistol_placement_option)
-                                and
-                                next_layer["req"](e, i, l, 1),
-                                lambda _: next_layer["finish_callback"](),
-                                                ),
-         "req": _get_pistol_layer_requirement,
-         "finish_callback": lambda: _set_blocker_placed("pistol"),
-         "reset_callback": lambda: _set_blocker_placed("pistol", False)
-         } 
-        layers.append(pistol_layer)
+        if randomize_pistol:
+            pistol_layer = { "names": "pistol", 
+            "func": lambda next_layer: place_important("pistol", _place_pistol, 
+                                    lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", pistol_placement_option)
+                                    and
+                                    next_layer["req"](e, i, l, 1),
+                                    lambda _: next_layer["finish_callback"](),
+                                                    ),
+            "req": _get_pistol_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("pistol"),
+            "reset_callback": lambda: _set_blocker_placed("pistol", False)
+            } 
+            layers.append(pistol_layer)
 
-        random.shuffle(layers)
-
-        def _find_layer(name):
-            nonlocal layers
-            for i in range(len(layers)):
-                if layers[i]["names"] == name: return i
-
-        pistol_i = _find_layer("pistol")
-        laser_i = _find_layer("lasers")
-        while(laser_i > pistol_i):
             random.shuffle(layers)
+
+
+            # Ensure pistol is before the lasers layer
+            def _find_layer(name):
+                nonlocal layers
+                for i in range(len(layers)):
+                    if layers[i]["names"] == name: return i
             pistol_i = _find_layer("pistol")
             laser_i = _find_layer("lasers")
-
-        
-                
-    else:
-        random.shuffle(layers)
-
-        
-    if randomize_shop:
-        dash_shop_layer = { "names": "dash_shops", 
-            "func": lambda next_layer: place_important("dash_shops", _place_dash_shop, 
-                                lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", shops_placement_option)
-                                and
-                                next_layer["req"](e, i, l, 1),
-                                lambda _: next_layer["finish_callback"](),
-                                                ),
-            "req": _get_dash_shop_layer_requirement,
-            "finish_callback": lambda: _set_blocker_placed("dash_shops"),
-            "reset_callback": lambda: _set_blocker_placed("dash_shops", False)
-            } 
-
-        i: int = random.randint(0, len(layers))
-        while layers[max(0,i-1)]["names"] == "modules_layer_2": # Cannot be directly behind a module layer
-            i = random.randint(0, len(layers))
-        layers.insert(i, dash_shop_layer)
-            
-
-            
-            
-
-
-    layers.insert( # Final modules always the final layer
-    0,
-        { "names": "final_module", 
-         "func": _place_module_in_all_dir,
-         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, max_amount=3),
-         "finish_callback": lambda: _set_blocker_placed("final_module"),
-         "reset_callback": lambda: _set_blocker_placed("final_module", False)
-         } 
-    )
-    layers.append(
-        { "names": "modules_layer_1", 
-         "func": lambda next: _place_module_in_all_dir(next, 2),
-         "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
-                                                                 check_amount=1,
-                                                                 max_amount=2
-                                                                 ),
-         "finish_callback": lambda: _set_blocker_placed("modules_layer_1", False),
-         "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False)
-         }, 
-    )
-
-    layers.append( # This layer is just to get the requirements lambda
-        { "names": "modules_layer_0", 
-         "func": lambda _: True, # 
-         "req": lambda c,i,l,a: True,
-         "finish_callback": lambda: _set_blocker_placed("modules_layer_0", False),
-         "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False)
-         }, 
-    )
-
-    at_least_one_blocker_placed = {
-        "modules": {
-            "value": False,
-            "can_still_place": True
-        },
-        "modules_layer_2": {
-            "value": False,
-            "can_still_place": True
-        },
-        "modules_layer_1": {
-            "value": False,
-            "can_still_place": True
-        },
-        "modules_layer_0": {
-            "value": False,
-            "can_still_place": True
-        },
-        "final_module": {
-            "value": False,
-            "can_still_place": False
-        },
-        "keys": {
-            "value": False,
-            "can_still_place": True
-        },
-        "lasers": {
-            "value": False,
-            "can_still_place": True
-        },
-        "pistol": {
-            "value": False,
-            "can_still_place": True
-        },
-        "dash_shops": {
-            "value": False,
-            "can_still_place": True
-        },
-    }
-    print("Layers")
-    layers.pop()
-    print([l["names"] for l in layers])
-    length = len(layers)
-    for i in range(length):
-        if i < length - 1:
-            layers[i]["func"](layers[i+1])
+            while(laser_i > pistol_i):
+                random.shuffle(layers)
+                pistol_i = _find_layer("pistol")
+                laser_i = _find_layer("lasers")
         else:
-            layers[i]["func"](
-                {
-                    "func": lambda a, b, c, d: True, # Need to match the arg count with the other next_layer functions
-                    "req": lambda a, b, c, d: True,
-                    "finish_callback": lambda: True,
-                    "reset_callback": lambda: True,
-                }
-                ) 
+            random.shuffle(layers)
 
-    place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
-    place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
-    place_unimportant(3, _place_shotgun)
-    place_unimportant(9, _place_outfit)
-    place_unimportant(165, _place_gearbit)
+            
+        if randomize_shop:
+            dash_shop_layer = { "names": "dash_shops", 
+                "func": lambda next_layer: place_important("dash_shops", _place_dash_shop, 
+                                    lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", shops_placement_option)
+                                    and
+                                    next_layer["req"](e, i, l, 1),
+                                    lambda _: next_layer["finish_callback"](),
+                                                    ),
+                "req": _get_dash_shop_layer_requirement,
+                "finish_callback": lambda: _set_blocker_placed("dash_shops"),
+                "reset_callback": lambda: _set_blocker_placed("dash_shops", False)
+                } 
 
-    return [e["names"] for e in layers]
+            i: int = random.randint(0, len(layers))
+            while layers[max(0,i-1)]["names"] == "modules_layer_2": # Cannot be directly behind a module layer
+                i = random.randint(0, len(layers))
+            layers.insert(i, dash_shop_layer)
+                
 
+                
+                
+
+
+        layers.insert( # Final modules always the final layer
+        0,
+            { "names": "final_module", 
+            "func": _place_module_in_all_dir,
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, max_amount=3),
+            "finish_callback": lambda: _set_blocker_placed("final_module"),
+            "reset_callback": lambda: _set_blocker_placed("final_module", False)
+            } 
+        )
+        layers.append(
+            { "names": "modules_layer_1", 
+            "func": lambda next: _place_module_in_all_dir(next, 2),
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                    check_amount=1,
+                                                                    max_amount=2
+                                                                    ),
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False)
+            }, 
+        )
+
+        layers.append( # This layer is just to get the requirements lambda
+            { "names": "modules_layer_0", 
+            "func": lambda _: True, # 
+            "req": lambda c,i,l,a: True,
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_0", False),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False)
+            }, 
+        )
+
+        at_least_one_blocker_placed = {
+            "modules": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_2": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_1": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_0": {
+                "value": False,
+                "can_still_place": True
+            },
+            "final_module": {
+                "value": False,
+                "can_still_place": False
+            },
+            "keys": {
+                "value": False,
+                "can_still_place": True
+            },
+            "lasers": {
+                "value": False,
+                "can_still_place": True
+            },
+            "pistol": {
+                "value": False,
+                "can_still_place": True
+            },
+            "dash_shops": {
+                "value": False,
+                "can_still_place": True
+            },
+        }
+        print("Layers")
+        layers.pop()
+        print([l["names"] for l in layers])
+        length = len(layers)
+        for i in range(length):
+            if i < length - 1:
+                layers[i]["func"](layers[i+1])
+            else:
+                layers[i]["func"](
+                    {
+                        "func": lambda a, b, c, d: True, # Need to match the arg count with the other next_layer functions
+                        "req": lambda a, b, c, d: True,
+                        "finish_callback": lambda: True,
+                        "reset_callback": lambda: True,
+                    }
+                    ) 
+        place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
+        place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
+        place_unimportant(3, _place_shotgun)
+        place_unimportant(9, _place_outfit)
+        place_unimportant(165, _place_gearbit)
+        return [e["names"] for e in layers]
+    else:
+        place_important("north_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.NORTH and not x.enemy_id)
+        place_important("east_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.EAST and not x.enemy_id)
+        place_important("west_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.WEST and not x.enemy_id)
+        place_important("south_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.SOUTH and not x.enemy_id)
+        place_important("dash_shops", _place_dash_shop, lambda x, a,b,c: not x.enemy_id)
+        place_unimportant(16, _place_tablet, lambda x, a,b,c: not x.enemy_id)
+        place_unimportant(4, _place_generic_shop, lambda x, a,b,c: not x.enemy_id)
+        place_important("keys", _place_key)
+        place_important("dash_shops", _place_dash_shop)
+        place_important("lasers", _place_laser)
+        place_unimportant(3, _place_shotgun)
+        place_unimportant(9, _place_outfit)
+        place_unimportant(165, _place_gearbit)
+
+        return []
 
 ###############################################################
 # MAIN RANDO LOGIC
@@ -1320,10 +1335,16 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
 
-    Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
-    Inventory.set_key_requirements(key_count)
+    if not random_doors:
+        Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
+        Inventory.set_key_requirements(key_count)
+        Inventory.set_lasers_requirements(1)
+    else:
+        Inventory.set_module_requirements(8)
+        Inventory.set_key_requirements(KeyCount.ALL)
+        Inventory.set_lasers_requirements(2)
 
-    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON if not module_placement==ItemPlacementRestriction.MODULES_EXTENDED else GRAPH_LIMITED_JSON))
+    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON if not module_placement==ItemPlacementRestriction.MODULES_EXTENDED or random_doors else GRAPH_LIMITED_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
 
     for level in fake_levels:
@@ -1342,7 +1363,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
          "rm_CH_BDirkDemolition": 1,
          "rm_SX_TowerSouth/1": module_count / 4
     }
-    key_mix_data: dict
+    key_mix_data: dict = {}
+
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
         fake_levels.is_randomized = True
@@ -1388,6 +1410,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
                     pistol_placement_option=module_placement,
                     randomize_pistol=randomize_pistol,
                     randomize_shop=randomize_shop,
+                    random_doors=random_doors
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
@@ -1414,16 +1437,17 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if random_enemies:
         randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
-    if module_door_option == ModuleDoorOptions.DISABLED:
-        _manual_disable_module_doors(real_levels)
-    elif module_door_option == ModuleDoorOptions.MIX:
-        _manual_mix_real_module_doors(real_levels, module_door_mix_data)
-       
-    if key_count == KeyCount.MINIMUM: 
-        _manual_mix_real_key_doors(real_levels, key_mix_data)
+    if not random_doors:
+        if module_door_option == ModuleDoorOptions.DISABLED:
+            _manual_disable_module_doors(real_levels)
+        elif module_door_option == ModuleDoorOptions.MIX:
+            _manual_mix_real_module_doors(real_levels, module_door_mix_data)
+        
+        if key_count == KeyCount.MINIMUM: 
+            _manual_mix_real_key_doors(real_levels, key_mix_data)
 
-    if randomize_pistol:
-        _remove_intro_death_cutscene(real_levels)
+        if randomize_pistol:
+            _remove_intro_death_cutscene(real_levels)
 
     Inventory.reset()
 

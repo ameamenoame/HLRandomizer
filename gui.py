@@ -245,9 +245,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.enemy_list.focus()
 
     def show_solution(self):
-        if not self.layers:
-            messagebox.showerror(message="Please generate a new seed to get a solution", title="Solution")
-            return
         solution = check_solution(self.layers)
         messagebox.showinfo(message=solution, title="Solution")
 
@@ -453,6 +450,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.subwindow = Toplevel(self.root, padx=20, pady=10)
         self.subwindow.title("Generating")
+        self.subwindow.iconbitmap("icon.ico")
 
         self.progressbar = ttk.Progressbar(self.subwindow, orient=HORIZONTAL, length=200, mode='indeterminate')
         self.progressbar.grid(column=0, row=0, sticky=EW, columnspan=4)
@@ -492,7 +490,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.t.daemon=True
         self.t.start()
 
-        self.subwindow.protocol("WM_DELETE_WINDOW", lambda: True)
+        # self.subwindow.protocol("WM_DELETE_WINDOW", lambda: True)
 
         self.root.wait_window(self.subwindow)
 
