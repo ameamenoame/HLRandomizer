@@ -12,6 +12,7 @@ from save_edit import autofill_path
 import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
 import platform
+import getpass
 
 def _append_if_missing(filepath, text):
     try:
@@ -62,7 +63,16 @@ class GamePathSetup:
         mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
 
-        self.game_path = StringVar(value="C:\Program Files (x86)\Steam\steamapps\common\HyperLightDrifter")
+        system = platform.system()
+        username = getpass.getuser()
+        if system == "Linux":
+            game_path = f"/home/{username}/.local/share/Steam/steamapps/common/HyperLightDrifter/assets"
+        elif system == "Darwin":
+            game_path = f"/Users/{username}/Library/Application Support/Steam/SteamApps/common/HyperLightDrifter/HyperLightDrifter.app/Contents/Resources"
+        else:
+            # defaulting to Windows
+            game_path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\HyperLightDrifter"
+        self.game_path = StringVar(value=game_path)
         game_path_entry = ttk.Entry(mainframe, textvariable=self.game_path, width=64)
         game_path_entry.grid(column=2, row=1, sticky=(W, E))
 
