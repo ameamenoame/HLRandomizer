@@ -1459,11 +1459,11 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     # Apply presets #
 
     if preset:
-        p: Preset = Preset.get_preset_from_name(preset)
-        p.execute_changes()
-    
-    
-
+        try:
+            p: Preset = Preset.get_preset_from_name(preset)
+            p.execute_changes()
+        except Exception:
+            raise Exception("Save file to apply preset to does not exist")
 
     Inventory.reset()
 

@@ -383,7 +383,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     )
                     success = True
                     break
-                except IndexError as e:
+                except Exception as e:
                     if not using_preset_seed:
                         print("Retrying!")
                         Inventory.reset()
