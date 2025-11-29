@@ -1,3 +1,4 @@
+import threading
 from tkinter import *
 from tkinter import ttk, messagebox
 from time import time
@@ -160,88 +161,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         print(f"Done in {end_time-start_time:.2f} s")
         messagebox.showinfo(message=f"Setup finished. You can now start randomization.", title="Done")
 
-    def do_gen(self, *args):
-        """
-        Starts the randomized level files creation sequence
-        Leave random seed empty if you don't wish to use a seed
-        At the end creates a folder named 'randomized' in 'game_files'
-        """
-
-        output = True  # get_y_n("Output?")
-        output_folder_name = self.OUT_FOLDER_NAME
-
-        success = False
-
-
-
-        _delete_if_exists(PATH_TO_MANUAL, self.NO_PISTOL_RANDO_MANUAL_CHANGE)
-        _delete_if_exists(PATH_TO_MANUAL, self.PISTOL_RANDO_MANUAL_CHANGE)
-        if not self.random_pistol.get():
-            _append_if_missing(PATH_TO_MANUAL, self.NO_PISTOL_RANDO_MANUAL_CHANGE)
-        else:
-            _append_if_missing(PATH_TO_MANUAL, self.PISTOL_RANDO_MANUAL_CHANGE)
-
-        if not self.random_shops.get():
-            _append_if_missing(PATH_TO_MANUAL, self.SHOP_RANDO_MANUAL_CHANGE)
-        else:
-            _delete_if_exists(PATH_TO_MANUAL, self.SHOP_RANDO_MANUAL_CHANGE)
-
-        generate_all_jsons()
-
-        using_preset_seed = self.random_seed.get()
-
-        bound = 1000000000000
-        while True:
-            try:
-                if not using_preset_seed:
-                    self.random_seed.set(str(randrange(-bound, bound)))
-
-                    
-                final_enemy_list = []
-                for e in self.enemy_data:
-                    if not e["enabled"]: continue
-                    final_enemy_list.append(e["name"])
-                final_enemy_weights = []
-                for e in self.enemy_data:
-                    if not e["enabled"]: continue
-                    final_enemy_weights.append(e["weight"])
-
-                self.layers = main(
-                    random_doors=self.random_doors.get(),
-                    random_enemies=self.random_enemies.get(),
-                    output=output,
-                    output_folder_name=output_folder_name if output_folder_name else self.OUT_FOLDER_NAME,
-                    random_seed=self.random_seed.get() if self.random_seed.get() else None,
-                    list_of_enemies=final_enemy_list,
-                    enemy_weights=final_enemy_weights,
-                    protect_list=self.enemy_protect_pool,
-                    module_placement=self.module_optionsvar.get(),
-                    limit_one_module_per_room=self.limit_one_module_per_room.get(),
-                    module_door_option=self.module_door_optionsvar.get(),
-                    module_count=int(self.module_count_optionsvar.get()),
-                    randomize_pistol=self.random_pistol.get(),
-                    randomize_shop=self.random_shops.get(),
-                )
-                success = True
-                break
-            except IndexError as e:
-                if not using_preset_seed:
-                    print("Retrying!")
-                    Inventory.reset()
-                else:
-                    messagebox.showerror(message=f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
-                    self.random_seed.set("")
-                    raise e
-            except Exception as e:
-                if not using_preset_seed:
-                    print("Retrying!")
-                    Inventory.reset()
-                else:
-                    messagebox.showerror(message=f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
-                    self.random_seed.set("")
-                    raise e
-
-        return success
 
     def do_del(self):
         """
@@ -258,22 +177,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             print(f"Done in {end_time-start_time:.2f} s")
             messagebox.showinfo(message="Generated files deleted")
 
-    def do_push(self):
-        """
-        Pushes selected levels to HLD installation folder
-        Usage example: push randomized
-        ^ Pushes a folder named 'randomized' from 'game_files' to the HLD installation folder
-        """
-        folder_to_push = self.OUT_FOLDER_NAME
-        if folder_to_push not in os.listdir(OUTPUT_PATH):
-            messagebox.showerror(message="Output folder not found.")
-            return False
-        else:
-            start_time = time()
-            shutil.copytree(os.path.join(OUTPUT_PATH, folder_to_push), self.PATH_TO_HLD, dirs_exist_ok=True)
-            end_time = time()
-            print(f"Done in {end_time-start_time:.2f} s")
-            return True
 
     def do_revert(self):
         folder_to_push = "backup"
@@ -365,12 +268,246 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         import webbrowser
         webbrowser.open_new(url)
 
+        
+    @staticmethod
+    def thread_do_work(
+        random_seed,
+        enemy_data,
+        random_pistol,
+        random_shops,
+        OUT_FOLDER_NAME,
+        NO_PISTOL_RANDO_MANUAL_CHANGE,
+        PISTOL_RANDO_MANUAL_CHANGE,
+        SHOP_RANDO_MANUAL_CHANGE,
+        random_doors,
+        random_enemies,
+        enemy_protect_pool,
+        module_optionsvar,
+        limit_one_module_per_room,
+        module_door_optionsvar,
+        module_count_optionsvar,
+        PATH_TO_HLD,
+        root,
+        results
+    ):
+        def do_gen(
+            random_seed,
+            enemy_data,
+            random_pistol,
+            random_shops,
+            OUT_FOLDER_NAME,
+            NO_PISTOL_RANDO_MANUAL_CHANGE,
+            PISTOL_RANDO_MANUAL_CHANGE,
+            SHOP_RANDO_MANUAL_CHANGE,
+            random_doors,
+            random_enemies,
+            enemy_protect_pool,
+            module_optionsvar,
+            limit_one_module_per_room,
+            module_door_optionsvar,
+            module_count_optionsvar,
+                ):
+            """
+            Starts the randomized level files creation sequence
+            Leave random seed empty if you don't wish to use a seed
+            At the end creates a folder named 'randomized' in 'game_files'
+            """
+
+
+            output = True
+            output_folder_name = OUT_FOLDER_NAME
+
+            success = False
+
+            _delete_if_exists(PATH_TO_MANUAL, NO_PISTOL_RANDO_MANUAL_CHANGE)
+            _delete_if_exists(PATH_TO_MANUAL, PISTOL_RANDO_MANUAL_CHANGE)
+            if not random_pistol:
+                _append_if_missing(PATH_TO_MANUAL, NO_PISTOL_RANDO_MANUAL_CHANGE)
+            else:
+                _append_if_missing(PATH_TO_MANUAL, PISTOL_RANDO_MANUAL_CHANGE)
+
+            if not random_shops:
+                _append_if_missing(PATH_TO_MANUAL, SHOP_RANDO_MANUAL_CHANGE)
+            else:
+                _delete_if_exists(PATH_TO_MANUAL, SHOP_RANDO_MANUAL_CHANGE)
+
+            generate_all_jsons()
+
+            layers = []
+
+            using_preset_seed = random_seed
+
+            bound = 1000000000000
+            count = 0
+            while count < 1000:
+                count+=1
+                try:
+                    if not using_preset_seed:
+                        random_seed = str(randrange(-bound, bound))
+
+                    final_enemy_list = []
+                    for e in enemy_data:
+                        if not e["enabled"]: continue
+                        final_enemy_list.append(e["name"])
+                    final_enemy_weights = []
+                    for e in enemy_data:
+                        if not e["enabled"]: continue
+                        final_enemy_weights.append(e["weight"])
+
+
+                    layers = main(
+                        random_doors=random_doors,
+                        random_enemies=random_enemies,
+                        output=output,
+                        output_folder_name=output_folder_name if output_folder_name else OUT_FOLDER_NAME,
+                        random_seed=random_seed if random_seed else None,
+                        list_of_enemies=final_enemy_list,
+                        enemy_weights=final_enemy_weights,
+                        protect_list=enemy_protect_pool,
+                        module_placement=module_optionsvar,
+                        limit_one_module_per_room=limit_one_module_per_room,
+                        module_door_option=module_door_optionsvar,
+                        module_count=module_count_optionsvar,
+                        randomize_pistol=random_pistol,
+                        randomize_shop=random_shops,
+                    )
+                    success = True
+                    break
+                except IndexError as e:
+                    if not using_preset_seed:
+                        print("Retrying!")
+                        Inventory.reset()
+                    else:
+                        print(f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
+                        break 
+
+            return (success, random_seed, layers)
+    
+        def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
+            """
+            Pushes selected levels to HLD installation folder
+            Usage example: push randomized
+            ^ Pushes a folder named 'randomized' from 'game_files' to the HLD installation folder
+            """
+            folder_to_push = OUT_FOLDER_NAME
+            if folder_to_push not in os.listdir(OUTPUT_PATH):
+                messagebox.showerror(message="Output folder not found.")
+                return False
+            else:
+                start_time = time()
+                shutil.copytree(os.path.join(OUTPUT_PATH, folder_to_push), PATH_TO_HLD, dirs_exist_ok=True)
+                end_time = time()
+                print(f"Done in {end_time-start_time:.2f} s")
+                return True
+
+        gen_result = do_gen(
+            random_seed,
+            enemy_data,
+            random_pistol,
+            random_shops,
+            OUT_FOLDER_NAME,
+            NO_PISTOL_RANDO_MANUAL_CHANGE,
+            PISTOL_RANDO_MANUAL_CHANGE,
+            SHOP_RANDO_MANUAL_CHANGE,
+            random_doors,
+            random_enemies,
+            enemy_protect_pool,
+            module_optionsvar,
+            limit_one_module_per_room,
+            module_door_optionsvar,
+            module_count_optionsvar
+        )
+        do_push(
+            OUT_FOLDER_NAME,
+            PATH_TO_HLD
+        )
+
+        # Definitely not thread safe
+        results['success']= gen_result[0]
+        results['final_seed'] = gen_result[1]
+        results['layers'] = gen_result[2]
+
+        root.event_generate('<<GenerationComplete>>')
+
     def randomize(self):
-        success = self.do_gen() and self.do_push()
-        if success: messagebox.showinfo(message=f"Randomization successful!\n\nSeed: " + str(self.random_seed.get()), title="Success")
-        else: messagebox.showerror(message=f"Randomization error!\n\nSeed: " + str(self.random_seed.get()), title="Error")
+        def center_subwindow(parent, subwindow):
+            parent.update_idletasks()  # Ensure parent dimensions are accurate
+            subwindow.update_idletasks() # Ensure subwindow dimensions are accurate
+
+            # Get parent window's position and dimensions
+            parent_x = parent.winfo_x()
+            parent_y = parent.winfo_y()
+            parent_width = parent.winfo_width()
+            parent_height = parent.winfo_height()
+
+            # Get subwindow's dimensions
+            subwindow_width = subwindow.winfo_width()
+            subwindow_height = subwindow.winfo_height()
+
+            # Calculate subwindow's position to center it
+            x = parent_x + (parent_width - subwindow_width) // 2
+            y = parent_y + (parent_height - subwindow_height) // 2
+
+            # Set the subwindow's geometry
+            subwindow.geometry(f"{subwindow_width}x{subwindow_height}+{x}+{y}")
+
+        self.subwindow = Toplevel(self.root, padx=20, pady=10)
+        self.subwindow.title("Generating")
+
+        self.progressbar = ttk.Progressbar(self.subwindow, orient=HORIZONTAL, length=200, mode='indeterminate')
+        self.progressbar.grid(column=0, row=0, sticky=EW, columnspan=4)
+        self.subwindow.grid_rowconfigure(0, weight=1)
+
+        self.subwindow.transient(self.root)
+        self.subwindow.grab_set()
+
+        center_subwindow(self.root, self.subwindow)
+        self.progressbar.grid()
+        self.progressbar.start()
+
+        self.results = {
+            'success': False,
+            'final_seed': ""
+        }
+        self.t = threading.Thread(target=MainRandomizerUI.thread_do_work, args=[
+            self.random_seed.get(),
+            self.enemy_data,
+            self.random_pistol.get(),
+            self.random_shops.get(),
+            self.OUT_FOLDER_NAME,
+            self.NO_PISTOL_RANDO_MANUAL_CHANGE,
+            self.PISTOL_RANDO_MANUAL_CHANGE,
+            self.SHOP_RANDO_MANUAL_CHANGE,
+            self.random_doors.get(),
+            self.random_enemies.get(),
+            self.enemy_protect_pool,
+            self.module_optionsvar.get(),
+            self.limit_one_module_per_room.get(),
+            self.module_door_optionsvar.get(),
+            int(self.module_count_optionsvar.get()),
+            self.PATH_TO_HLD,
+            root,
+            self.results
+        ])
+        self.t.daemon=True
+        self.t.start()
+
+        self.subwindow.protocol("WM_DELETE_WINDOW", lambda: True)
+
+        self.root.wait_window(self.subwindow)
+
+    def gen_finish(self, e):
+        self.progressbar.stop()
+        if self.results['success']: 
+            self.random_seed.set(self.results["final_seed"])
+            messagebox.showinfo(message=f"Generation successful!\n\nSeed: " + str(self.results['final_seed']), title="Success")
+            self.layers = self.results['layers']
+        else: messagebox.showerror(message=f"Could not generate seed. Try again or try another seed if a seed was set.", title="Error")
+        self.progressbar.grid_remove()
+        self.subwindow.destroy()
 
     def __init__(self, root, path):
+        self.root = root
         root.title("Hyper Light Drifter Randomizer")
         self.PATH_TO_HLD = path
 
@@ -534,6 +671,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
 
 
+        for child in enemy_pool_frame.winfo_children(): 
+            child.grid_configure(padx=5, pady=5)
+
+
         # Bottom buttons #
         bottom_frame = Frame(root)
         bottom_frame.grid(column=0, row=8, sticky=NSEW)
@@ -549,6 +690,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                    command= self.randomize).grid(column=3, row=0, sticky=NE)
         bottom_frame.grid_columnconfigure(3, weight=1)
 
+        for child in bottom_frame.winfo_children(): 
+            child.grid_configure(padx=5, pady=5)
+
+        
+
+        # Frames configurations #
+
+        root.bind("<<GenerationComplete>>", self.gen_finish)
 
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=1)
@@ -559,10 +708,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.grid_rowconfigure(5, weight=1)
         for child in root.winfo_children(): 
             child.grid_configure(padx=15, pady=5)
-        for child in enemy_pool_frame.winfo_children(): 
-            child.grid_configure(padx=5, pady=5)
-        for child in bottom_frame.winfo_children(): 
-            child.grid_configure(padx=5, pady=5)
 
 root = Tk()
 root.iconbitmap("icon.ico")
