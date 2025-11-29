@@ -610,14 +610,14 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
 
     def find_by_name(self, name: str) -> HLDLevel | FakeLevel | None:
         for level in self:
-            if level.name == name:
+            if level.name.lower() == name.lower():
                 return level
         else:
             return None
 
     def find_first_by_partial_name(self, name: str) -> HLDLevel | FakeLevel | None:
         for level in self:
-            if name in level.name:
+            if name.lower() in level.name.lower():
                 return level
         else:
             return None
@@ -625,7 +625,7 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
     def find_all_by_partial_name(self, name: str) -> list[HLDLevel | FakeLevel]:
         to_return = []
         for level in self:
-            if level.name.startswith(name):
+            if level.name.lower().startswith(name.lower()):
                 to_return.append(level)
         return to_return
 

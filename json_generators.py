@@ -4,14 +4,15 @@ import re
 import os
 
 COUNTER = HLDBasics.Counter(9000)
-PATH_TO_GRAPH = "legacy_resources\\graph.txt"
-PATH_TO_GRAPH_LIMITED = "legacy_resources\\graph_limited.txt"
-PATH_TO_DOOR = "legacy_resources\\doors.txt"
-PATH_TO_CONNECT = "legacy_resources\\connect.txt"
-PATH_TO_CONNECT2 = "legacy_resources\\connect2.txt"
-PATH_TO_CONNECT_MODULE_DOORS_DISABLED = "legacy_resources\\connect_mod_door_disabled.txt" # Module doors disabled
-PATH_TO_MANUAL = "legacy_resources\\manual.txt"
-PATH_TO_MANUAL2 = "legacy_resources\\manual2.txt"
+RESOURCES_DIR = "legacy_resources"
+PATH_TO_GRAPH = os.path.join(RESOURCES_DIR, "graph.txt")
+PATH_TO_GRAPH_LIMITED = os.path.join(RESOURCES_DIR, "graph_limited.txt")
+PATH_TO_DOOR = os.path.join(RESOURCES_DIR, "doors.txt")
+PATH_TO_CONNECT = os.path.join(RESOURCES_DIR, "connect.txt")
+PATH_TO_CONNECT2 = os.path.join(RESOURCES_DIR, "connect2.txt")
+PATH_TO_CONNECT_MODULE_DOORS_DISABLED = os.path.join(RESOURCES_DIR, "connect_mod_door_disabled.txt") # Module doors disabled
+PATH_TO_MANUAL = os.path.join(RESOURCES_DIR, "manual.txt")
+PATH_TO_MANUAL2 = os.path.join(RESOURCES_DIR, "manual2.txt")
 
 
 def comma_split(line_: str):

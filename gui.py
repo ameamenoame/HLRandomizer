@@ -11,6 +11,8 @@ import shutil
 from save_edit import autofill_path
 import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
+import platform
+import getpass
 
 def _append_if_missing(filepath, text):
     try:
@@ -61,7 +63,16 @@ class GamePathSetup:
         mainframe = ttk.Frame(root, padding=(3, 3, 12, 12))
         mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
 
-        self.game_path = StringVar(value="C:\Program Files (x86)\Steam\steamapps\common\HyperLightDrifter")
+        system = platform.system()
+        username = getpass.getuser()
+        if system == "Linux":
+            game_path = f"/home/{username}/.local/share/Steam/steamapps/common/HyperLightDrifter/assets"
+        elif system == "Darwin":
+            game_path = f"/Users/{username}/Library/Application Support/Steam/SteamApps/common/HyperLightDrifter/HyperLightDrifter.app/Contents/Resources"
+        else:
+            # defaulting to Windows
+            game_path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\HyperLightDrifter"
+        self.game_path = StringVar(value=game_path)
         game_path_entry = ttk.Entry(mainframe, textvariable=self.game_path, width=64)
         game_path_entry.grid(column=2, row=1, sticky=(W, E))
 
@@ -467,7 +478,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.subwindow = Toplevel(self.root, padx=20, pady=10)
         self.subwindow.title("Generating")
-        self.subwindow.iconbitmap("icon.ico")
+        # .ico icons don't work on other platforms, skip for now
+        if platform.system() == "Windows":
+            self.subwindow.iconbitmap("icon.ico")
 
         self.progressbar = ttk.Progressbar(self.subwindow, orient=HORIZONTAL, length=200, mode='indeterminate')
         self.progressbar.grid(column=0, row=0, sticky=EW, columnspan=4)
@@ -751,7 +764,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             child.grid_configure(padx=15, pady=5)
 
 root = Tk()
-root.iconbitmap("icon.ico")
+# .ico icons don't work on other platforms, skip for now
+if platform.system() == "Windows":
+    root.iconbitmap("icon.ico")
 
 try:
     PATH_TO_HLD = HLDBasics.find_path()
