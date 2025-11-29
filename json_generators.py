@@ -4,12 +4,15 @@ import re
 import os
 
 COUNTER = HLDBasics.Counter(9000)
-PATH_TO_GRAPH = "legacy_resources\\graph.txt"
-PATH_TO_DOOR = "legacy_resources\\doors.txt"
-PATH_TO_CONNECT = "legacy_resources\\connect.txt"
-PATH_TO_CONNECT2 = "legacy_resources\\connect2.txt"
-PATH_TO_MANUAL = "legacy_resources\\manual.txt"
-PATH_TO_MANUAL2 = "legacy_resources\\manual2.txt"
+RESOURCES_DIR = "legacy_resources"
+PATH_TO_GRAPH = os.path.join(RESOURCES_DIR, "graph.txt")
+PATH_TO_GRAPH_LIMITED = os.path.join(RESOURCES_DIR, "graph_limited.txt")
+PATH_TO_DOOR = os.path.join(RESOURCES_DIR, "doors.txt")
+PATH_TO_CONNECT = os.path.join(RESOURCES_DIR, "connect.txt")
+PATH_TO_CONNECT2 = os.path.join(RESOURCES_DIR, "connect2.txt")
+PATH_TO_CONNECT_MODULE_DOORS_DISABLED = os.path.join(RESOURCES_DIR, "connect_mod_door_disabled.txt") # Module doors disabled
+PATH_TO_MANUAL = os.path.join(RESOURCES_DIR, "manual.txt")
+PATH_TO_MANUAL2 = os.path.join(RESOURCES_DIR, "manual2.txt")
 
 
 def comma_split(line_: str):
@@ -21,13 +24,16 @@ def get_json_from_graph(path: str, out: str):
         to_export = []
         temp_room = FakeLevel("rm_PLACEHOLDER", "no")
         for line in graph_file:
+            if line[0] == "#" or line =="\n":
+                continue
             split_line = comma_split(line)
+            if len(split_line) == 0: continue
             match split_line[0]:
                 case "Room":
                     to_export.append(temp_room)
                     temp_room = FakeLevel(name=split_line[2], dir_=split_line[1])
                 case "Check":
-                    original_type_with_manual = comma_split(split_line[12])
+                    original_type_with_manual = comma_split(split_line[13])
                     manual_shift_x = 0
                     manual_shift_y = 0
                     original_type = original_type_with_manual[0]
@@ -52,6 +58,7 @@ def get_json_from_graph(path: str, out: str):
                             "west_pylons": int(split_line[9]),
                             "south_pylons": int(split_line[10]),
                             "dash_shops": int(split_line[11]),
+                            "pistol": int(split_line[12]),
                         }
                     )
                     temp_room.fake_object_list.append(check)
@@ -193,9 +200,10 @@ def get_json_from_manual12(path: str, out: str):
     list_of_objects = []
     with open(path, "r") as f:
         for line in f:
-            if line[0] == "#":
+            if line[0] == "#" or line =="\n":
                 continue
             split_line = comma_split(line)
+            if len(split_line) == 0: continue
             match split_line[0]:
                 case "Room":
                     changes.append({
@@ -217,9 +225,11 @@ def get_json_from_manual12(path: str, out: str):
 def generate_all_jsons():
     os.makedirs("jsons", exist_ok=True)
     get_json_from_graph(PATH_TO_GRAPH, os.path.join(JSON_DIR, "out_graph.json"))
+    get_json_from_graph(PATH_TO_GRAPH_LIMITED, os.path.join(JSON_DIR, "out_graph_limited.json"))
     get_json_from_door(PATH_TO_DOOR, os.path.join(JSON_DIR, "out_door.json"))
     get_json_from_connect(PATH_TO_CONNECT, os.path.join(JSON_DIR, "out_connect.json"))
     get_json_from_connect(PATH_TO_CONNECT2, os.path.join(JSON_DIR, "out_connect2.json"))
+    get_json_from_connect(PATH_TO_CONNECT_MODULE_DOORS_DISABLED, os.path.join(JSON_DIR, "out_connect_mod_door_disabled.json"))
     get_json_from_manual12(PATH_TO_MANUAL2, os.path.join(JSON_DIR, "out_manual2.json"))
     get_json_from_manual12(PATH_TO_MANUAL, os.path.join(JSON_DIR, "out_manual.json"))
 

@@ -4,18 +4,31 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
 from os import path
+from preset import Preset
 import json
 import os
 import random
 
 
 JSON_DIR = "jsons"
-GRAPH_JSON =    path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_graph.json"))  # "jsons\\out_graph.json"
-DOOR_JSON =     path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_door.json"))  # "jsons\\out_door.json"
-CONNECT_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect.json"))  # "jsons\\out_connect.json"
-CONNECT2_JSON = path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect2.json"))  # "jsons\\out_connect2.json"
-MANUAL_JSON =   path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual.json"))  # "jsons\\out_manual.json"
-MANUAL2_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual2.json"))  # "jsons\\out_manual2.json"
+# GRAPH_JSON =    path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_graph.json"))  # "jsons\\out_graph.json"
+# DOOR_JSON =     path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_door.json"))  # "jsons\\out_door.json"
+# CONNECT_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect.json"))  # "jsons\\out_connect.json"
+# CONNECT2_JSON = path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_connect2.json"))  # "jsons\\out_connect2.json"
+# MANUAL_JSON =   path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual.json"))  # "jsons\\out_manual.json"
+# MANUAL2_JSON =  path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_manual2.json"))  # "jsons\\out_manual2.json"
+
+
+# Temporarily don't use the packed path
+GRAPH_JSON =    os.path.join(JSON_DIR, "out_graph.json")  # "jsons\\out_graph.json"
+GRAPH_LIMITED_JSON =    os.path.join(JSON_DIR, "out_graph_limited.json")  # "jsons\\out_graph_limited.json"
+DOOR_JSON =     os.path.join(JSON_DIR, "out_door.json")  # "jsons\\out_door.json"
+CONNECT_JSON =  os.path.join(JSON_DIR, "out_connect.json")  # "jsons\\out_connect.json"
+CONNECT2_JSON = os.path.join(JSON_DIR, "out_connect2.json")  # "jsons\\out_connect2.json"
+CONNECT_MODULE_DOOR_DISABLED_JSON = os.path.join(JSON_DIR, "out_connect_mod_door_disabled.json")  
+MANUAL_JSON =   os.path.join(JSON_DIR, "out_manual.json")  # "jsons\\out_manual.json"
+MANUAL2_JSON =  os.path.join(JSON_DIR, "out_manual2.json")  # "jsons\\out_manual2.json"
+
 OUTPUT_PATH = "game_files"
 BACKUP_FOLDER_NAME = "backup"
 ITEMLESS_FOLDER_NAME = "itemless"
@@ -24,6 +37,45 @@ PATH_TO_ITEMLESS = os.path.join(OUTPUT_PATH, ITEMLESS_FOLDER_NAME)
 PATH_TO_DOORLESS = os.path.join(OUTPUT_PATH, DOORLESS_FOLDER_NAME)
 COUNTER = HLDBasics.Counter()
 
+BASE_LIST_OF_ENEMIES = [
+    "slime", "Birdman", "SmallCrystalSpider", "spider", "Grumpshroom",
+    "Wolf", "dirk",  "SpiralBombFrog", "RifleDirk",
+    "NinjaStarFrog", "TanukiGun", "CultBird", "missiledirk", "TanukiSword",
+    "Melty", "GhostBeamBird", "Leaper", "Dirkommander", "BlaDirk", "CrystalBaby"
+]
+BASE_ENEMY_PROTECT_POOL = ["Birdman"]
+BASE_ENEMY_WEIGHTS = [
+    1.0 for i in range(len(BASE_LIST_OF_ENEMIES))
+]
+
+class ItemPlacementRestriction(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize" # Module placements unchanged
+    FREE = "Free (252 checks)" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    KEY_ITEMS = "Key items (63 checks)" # Module can only appear at key item places - outfits, keys, weapons
+    KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)" 
+    MODULES_EXTENDED = "Modules Extended (39 checks)" # Only place where modules would be plus special key / outfit checks
+    # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
+
+class ModuleDoorOptions(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize"
+    MIX = "Mix"
+    DISABLED = "Disabled"
+
+class ModuleCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 16
+    ALL = 32
+
+class KeyCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 1
+    ALL = 16
 
 class RandomizerType(str, Enum):
     def __str__(self):
@@ -83,13 +135,32 @@ class CoolJSON:
             return to_return
 
 
+class LayerTypes(str, Enum):
+    def __str__(self):
+        return self.value
+    LASER = "Laser"
+    MOD_3 = "3 modules"
+    MOD_4 = "Module 4"
+    KEYS = "Keys"
+    PYLON = "Pylon"
+    
+
+class Layer:
+    type_: LayerTypes
+
+    @classmethod
+    def passes_requirements(cls, inventory: Inventory):
+        return
+
+
 class Inventory:
 
     reached_checks: list[FakeObject] = []
 
     full = {
-        "keys": 16,
+        "keys": KeyCount.ALL,
         "lasers": 2,
+        "pistol": 1,
         "north_modules": 8,
         "east_modules": 8,
         "west_modules": 8,
@@ -128,6 +199,24 @@ class Inventory:
         cls.reset_temporary()
 
     @classmethod
+    def set_module_requirements(cls, count: int = 8):
+        cls.full["north_modules"] = count
+        cls.full["east_modules"] = count
+        cls.full["west_modules"] = count
+        cls.full["south_modules"] = count
+        cls.current = dict(cls.full)
+
+    @classmethod
+    def set_key_requirements(cls, count: KeyCount = KeyCount.ALL):
+        cls.full["keys"] = count
+        cls.current = dict(cls.full)
+
+    @classmethod
+    def set_lasers_requirements(cls, count: int = 2):
+        cls.full["lasers"] = count
+        cls.current = dict(cls.full)
+
+    @classmethod
     def pick_up_item(cls, obj: FakeObject):
         def _pick_up_module():
             cls.temporary[glue_on_direction("modules", obj.dir_)] += 1
@@ -135,6 +224,8 @@ class Inventory:
         def _pick_up_weapon():
             if obj.extra_info["weapon_id"] in [21, 23]:
                 cls.temporary["lasers"] += 1
+            elif obj.extra_info["weapon_id"] == 1:
+                cls.temporary["pistol"] += 1
 
         def _pick_up_key():
             cls.temporary["keys"] += 1
@@ -286,13 +377,27 @@ class FakeObject:
             return to_return
 
         def _get_outfit(obj: FakeObject):
+            outfit_sprite_map = {
+                11: 0, # Purple
+                9: 36, # Black 
+                6: 37, # Orange
+                4: 35, # White
+                3: 33, # Fuchsia
+                2: 31, # Blue
+                5: 32, # Yellow
+                10: 32, # Ochre
+                7: 38, # Green-Blue
+                8: 34, # Pink drifter's,
+                12: 0, # Black NG+
+                13:0, # Sky blue
+            }
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_OUTFIT,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": outfit_sprite_map[obj.extra_info["cape_id"]],
                     "f": 0,
                     "k": 0,
                     "w": -999999,
@@ -307,13 +412,14 @@ class FakeObject:
             return to_return
 
         def _get_key(obj: FakeObject):
+            key_sprite_index_list = [5, 17, 28, 26, 15, 24, 3, 18, 8]
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_KEY,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": random.choice(key_sprite_index_list),
                     "f": 0,
                     "k": 1,
                     "w": -999999,
@@ -328,13 +434,22 @@ class FakeObject:
             return to_return
 
         def _get_weapon(obj: FakeObject):
+            weapon_sprite_index_map = {
+                1: 1,
+                2: 75,
+                8: 22,
+                21: 12,
+                23: 0,
+                41: 6,
+                43: 20,
+            }
             to_return = HLDObj(
                 type=HLDType.DRIFTERBONES_WEAPON,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["y"],
                 attrs={
                     "spr": "spr_DrifterBones",
-                    "i": 31,
+                    "i": weapon_sprite_index_map[obj.extra_info["weapon_id"]],
                     "f": 0,
                     "k": 0,
                     "w": obj.extra_info["weapon_id"],
@@ -349,22 +464,33 @@ class FakeObject:
             return to_return
 
         def _get_shop(obj: FakeObject):
+            mapping = {
+                "UpgradeDash": "spr_NPC_teddy_idleSup",
+                "UpgradeSpecial": "spr_NPC_seanguin_idleAnim",
+                "UpgradeHealthPack": "spr_NPC_akashecary_idleGrind",
+                "UpgradeSword": "spr_NPC_beau_idleTap",
+                "UpgradeWeapon": "spr_NPC_Fatso",
+            
+            }
+
+            val = mapping[obj.extra_info["shop_id"]]
+
             body_to_return = HLDObj(
-                type=HLDType.SCENERY,
+                type=HLDType.NPCGENERIC,
                 x=obj.x + obj.manual_shift_x + in_offset_map[obj.original_type]["x"] - out_offset_map[obj.type]["body"]["x"],
                 y=obj.y + obj.manual_shift_y + in_offset_map[obj.original_type]["y"] - out_offset_map[obj.type]["body"]["y"],
                 attrs={
-                    "0": "spr_C_dummy",
-                    "1": 0,
-                    "2": 0,
-                    "3": 0,
-                    "k": 0,
-                    "p": -4,
-                    "fp": 0,
-                    "4": 0,
-                    "5": 0,
-                    "f": 0,
-                    "l": 0,
+                    "wlb": 1,
+                    "wl": -999999,
+                    "32": "spr_none",
+                    "300": val,
+                    "301": val,
+                    "302": val,
+                    "310": val,
+                    "xs": -1,
+                    "bi": 0,
+                    "tr": 5,
+                    "tg": 1
                 },
                 uid=COUNTER.use(),
             )
@@ -450,6 +576,7 @@ class FakeObject:
             RandomizerType.DOOR: _get_door,
             RandomizerType.TELEPORTER: _get_teleporter,
             RandomizerType.TELEVATOR: _get_televator,
+            "check": lambda _: [], # For empty checks, return nothing
         }
 
         real_object = type_map[self.type](self)
@@ -475,23 +602,32 @@ class Connection:
 
 
 class LevelHolder(list[HLDLevel | FakeLevel]):
+    is_randomized = False
+
     def dump_all(self, path: str):
         for level in self:
             level.dump_level(os.path.join(path, level.dir_))
 
     def find_by_name(self, name: str) -> HLDLevel | FakeLevel | None:
         for level in self:
-            if level.name == name:
+            if level.name.lower() == name.lower():
                 return level
         else:
             return None
 
     def find_first_by_partial_name(self, name: str) -> HLDLevel | FakeLevel | None:
         for level in self:
-            if name in level.name:
+            if name.lower() in level.name.lower():
                 return level
         else:
             return None
+
+    def find_all_by_partial_name(self, name: str) -> list[HLDLevel | FakeLevel]:
+        to_return = []
+        for level in self:
+            if level.name.lower().startswith(name.lower()):
+                to_return.append(level)
+        return to_return
 
     def connect_levels_from_list(self, list_: list):
         for connect_info in list_:
@@ -505,6 +641,9 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
                 )
             )
 
+    #################################################################################
+    # GET EMPTY CHECK
+    ####################################################################################
     def get_empty_object(self, filter_lambda: Callable):
         inventory_before = False
         inventory_after = True
@@ -526,7 +665,7 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
             for check in level.fake_object_list:
                 check.passed = False
 
-        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check)]
+        filtered_checks = [check for check in Inventory.reached_checks if filter_lambda(check, check.extra_info["parent_room_name_real"], Inventory, self)]
         random_check: FakeObject = random.choice(filtered_checks)
 
         Inventory.reset_reached_checks()
@@ -648,18 +787,12 @@ def prepare_and_merge_randomized_doors(graph_levels: LevelHolder, door_levels: l
     graph_levels.connect_levels_from_list(connection_list)
 
 
-def randomize_enemies(levels: LevelHolder):
-    list_of_enemies = [
-        "slime", "Birdman", "SmallCrystalSpider", "spider", "Grumpshroom",
-        "Wolf", "dirk",  "SpiralBombFrog", "RifleDirk",
-        "NinjaStarFrog", "TanukiGun", "CultBird", "missiledirk", "TanukiSword",
-        "Melty", "GhostBeamBird", "Leaper", "Dirkommander", "BlaDirk", "CrystalBaby"
-    ]
+def randomize_enemies(levels: LevelHolder, list_of_enemies: list[str], weights: list[float], protect_list: list[str]):
     for level in levels:
         for obj in level.object_list:
             if obj.type == HLDType.SPAWNER:
-                if obj.attrs["-1"] in list_of_enemies and obj.attrs["-1"] != "Birdman":
-                    obj.attrs["-1"] = random.choice(list_of_enemies)
+                if obj.attrs["-1"] in BASE_LIST_OF_ENEMIES and obj.attrs["-1"] not in protect_list:
+                    obj.attrs["-1"] = random.choices(list_of_enemies, weights)[0]
                     obj.attrs["-2"] = 0
                     obj.attrs["-4"] = 1
                     obj.attrs["-5"] = 0
@@ -668,24 +801,51 @@ def randomize_enemies(levels: LevelHolder):
                     obj.attrs["-8"] = 0
 
 
-def place_all_items(levels: LevelHolder):
+def place_all_items(levels: LevelHolder, 
+                    module_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS, 
+                    limit_one_module_per_room: bool = True,
+                    key_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    laser_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    shops_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
+                    mod_door_mix_data: dict = {},
+                    module_count: ModuleCount = ModuleCount.MINIMUM,
+                    key_count: KeyCount = KeyCount.MINIMUM,
+                    key_door_mix_data: dict = {},
+                    randomize_pistol: bool = False,
+                    randomize_shop: bool = False,
+                    pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
+                    random_doors:bool = False,
+                    mod_door_option: ModuleDoorOptions = ModuleDoorOptions.MIX,
+                    ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [21, 23]
-    shotguns = [2, 41, 43]
-    shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
-    capes = [2, 3, 4, 5, 6, 7, 9, 11, 12]; random.shuffle(capes)
-    swords = [2, 3, 4, 5, 6, 7, 9, 11, 12]; random.shuffle(swords)
-    companions = [2, 3, 4, 5, 6, 7, 9, 11, 13]; random.shuffle(companions)
+    lasers = [random.choice([21, 23])]  if not random_doors else [21, 23]
+    shotguns = [2, 41, 43]; random.shuffle(shotguns)
+    shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]; random.shuffle(shops)
+    capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
+    swords = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(swords) # Additional capes: 12 (NG+ black outfit), 13 (Sky blue Switch-exclusive cape)
+    companions = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(companions)
 
-    def place_important(inventory_key: str, place_func: Callable, lambda_filter: Callable = lambda x: True):
-        while Inventory.current[inventory_key] > 0:
+    def place_important(inventory_key: str, place_func: Callable, 
+                        lambda_filter: Callable = (lambda x, _, inventory, levels: True), 
+                        after_each_place_callback: Callable = (lambda _: True),
+                        place_count: int = -1
+                        ):
+        def _place():
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
-            empty_check = levels.get_empty_object(lambda_filter)
-            place_func(empty_check)
 
-    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x: True):
+            empty_check =  levels.get_empty_object(lambda_filter)
+            place_func(empty_check)
+            after_each_place_callback(empty_check)
+        if place_count == -1:
+            while Inventory.current[inventory_key] > 0:
+                _place()
+        else:
+            for i in range(place_count):
+                _place()
+
+    def place_unimportant(i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True):
         for _ in range(i):
             Inventory.reset_temporary()
             empty_check = levels.get_empty_object(lambda_filter)
@@ -717,6 +877,10 @@ def place_all_items(levels: LevelHolder):
         check.type = RandomizerType.WEAPON
         check.extra_info["weapon_id"] = shotguns.pop()
 
+    def _place_pistol(check: FakeObject):
+        check.type = RandomizerType.WEAPON
+        check.extra_info["weapon_id"] = 1
+
     def _place_outfit(check: FakeObject):
         check.type = RandomizerType.OUTFIT
         check.extra_info["cape_id"] = capes.pop()
@@ -726,43 +890,535 @@ def place_all_items(levels: LevelHolder):
     def _place_gearbit(check: FakeObject):
         check.type = RandomizerType.GEARBIT
 
+    def _get_place_module_requirements(empty_check, parent_room, dir):
+        if not (empty_check.dir_ == dir and not empty_check.enemy_id): return False
+
+        can_place: bool = False
+
+        if module_option == ItemPlacementRestriction.KEY_ITEMS or module_option == ItemPlacementRestriction.MODULES_EXTENDED:
+            can_place =  empty_check.original_type in ["MODULE", "BONES"]
+        elif module_option == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
+            can_place = empty_check.original_type in ["MODULE", "BONES", "TABLET"]
+        elif module_option == ItemPlacementRestriction.NONE:
+            can_place = empty_check.original_type == "MODULE"
+        elif module_option == ItemPlacementRestriction.FREE:
+            can_place = True
+
+        # Limit to one module per room if not using room randomization
+        # Instead of doing this, would rather have the randomized check be the randomized level -> check flow instead of check -> level
+        if not levels.is_randomized and limit_one_module_per_room and can_place:
+            current_room_fake_levels = levels.find_all_by_partial_name(parent_room)
+            for level in current_room_fake_levels:
+                for obj in level.fake_object_list:
+                    if obj.type == RandomizerType.MODULE:
+                        return False
+
+        return can_place
+
+    def _get_placement_restriction(empty_check, parent_room, obj_type: str, restriction_type: ItemPlacementRestriction):
+        exclude_list = ["rm_C_Ven_Dash", "rm_PAX_Staging"]
+        if not randomize_pistol: exclude_list.append("rm_IN_BackerTablet")
+        if parent_room in exclude_list: return False # Don't put important items in the dash shop
+
+        if restriction_type == ItemPlacementRestriction.KEY_ITEMS or module_option == ItemPlacementRestriction.MODULES_EXTENDED:
+            return empty_check.original_type in ["MODULE", "BONES"]
+        elif restriction_type == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
+            return empty_check.original_type in ["MODULE", "BONES", "TABLET"]
+        elif restriction_type == ItemPlacementRestriction.NONE:
+            return empty_check.original_type == obj_type
+        elif restriction_type == ItemPlacementRestriction.FREE:
+            return True
+        return False
+        
+
     # THESE ARE PLACED BY RESTRICTIVENESS OF THEIR PLACEMENT
     # SO MOST RESTRICTIVE FIRST LEAST RESTRICTIVE LAST
     # AND IMPORTANT FIRST UNIMPORTANT LAST
-    place_important("north_modules", _place_module, lambda x: x.dir_ == Direction.NORTH and not x.enemy_id)
-    place_important("east_modules", _place_module, lambda x: x.dir_ == Direction.EAST and not x.enemy_id)
-    place_important("west_modules", _place_module, lambda x: x.dir_ == Direction.WEST and not x.enemy_id)
-    place_important("south_modules", _place_module, lambda x: x.dir_ == Direction.SOUTH and not x.enemy_id)
-    place_important("dash_shops", _place_dash_shop, lambda x: not x.enemy_id)
-    place_unimportant(16, _place_tablet, lambda x: not x.enemy_id)
-    place_unimportant(4, _place_generic_shop, lambda x: not x.enemy_id)
-    place_important("keys", _place_key)
-    place_important("dash_shops", _place_dash_shop)
-    place_important("lasers", _place_laser)
-    place_unimportant(3, _place_shotgun)
-    place_unimportant(9, _place_outfit)
-    place_unimportant(165, _place_gearbit)
 
 
-def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, output_folder_name: str = "out"):
+    def _get_module_layer_requirement(check, inventory, levels: LevelHolder, amount_to_place: int, check_amount : int = 1, max_amount: int = 4):
+        if at_least_one_blocker_placed["modules"]["value"]: 
+            return True
 
+        level_name: str = check.extra_info["parent_room_name_fake"]
+        level: FakeLevel = levels.find_by_name(level_name)
+
+        def _find_module_door_connection(level: FakeLevel):
+            # Need to find whether this level is behind a module door
+
+            nonlocal mod_door_mix_data
+
+            north_boss_behind_module_rooms = [
+                HLDLevel.Names.RM_NL_ALTARTHRONE,
+                HLDLevel.Names.RM_NX_SPIRALSTAIRCASE,
+                HLDLevel.Names.RM_NX_JERKPOPE,
+            ]
+            north_gap_behind_module_rooms = [
+                HLDLevel.Names.RM_NL_GAPHALLWAY,
+                HLDLevel.Names.RM_NL_RISINGARENA
+            ]
+
+            east_behind_module_rooms = [
+                HLDLevel.Names.RM_EB_BOGSTREET,
+                HLDLevel.Names.RM_EC_BIGBOGLAB,
+                HLDLevel.Names.RM_EA_BOGTEMPLECAMP,
+                HLDLevel.Names.RM_EA_FROGBOSS,
+            ]
+            east_leaper_behind_module_rooms = [
+                HLDLevel.Names.RM_EB_MELTYLEAPERARENA
+            ]
+
+            west_behind_module_rooms = [
+                HLDLevel.Names.RM_WB_BIGBATTLE,
+                HLDLevel.Names.RM_WC_BIGMEADOWVAULT,
+                HLDLevel.Names.RM_WC_MEADOWCAVECROSSING,
+                HLDLevel.Names.RM_WB_TANUKITROUBLE,
+                HLDLevel.Names.RM_WX_BOSS,
+                HLDLevel.Names.RM_WA_MULTIENTRANCELAB,
+            ]
+            west_bottom_behind_module_rooms = [
+                HLDLevel.Names.RM_WB_TREETREACHERY,
+                HLDLevel.Names.RM_WL_WESTDRIFTERVAULT,
+            ]
+
+            south_baker_behind_module_rooms = [
+                HLDLevel.Names.RM_CH_TABIGONE,
+                HLDLevel.Names.RM_CH_CGATEBLOCK,
+                HLDLevel.Names.RM_CH_TLONGESTROAD,
+                HLDLevel.Names.RM_CH_CENDHALL,
+            ]
+            south_archer_behind_module_rooms = [
+                HLDLevel.Names.RM_CH_APILLARBIRD,
+                HLDLevel.Names.RM_CH_CSPIRAL,
+            ]
+            south_gauntlet_behind_module_rooms = [
+                HLDLevel.Names.RM_S_GAUNTLETEND
+            ]
+
+            full = north_boss_behind_module_rooms + north_gap_behind_module_rooms + east_behind_module_rooms + east_leaper_behind_module_rooms \
+                + west_behind_module_rooms + west_bottom_behind_module_rooms + south_archer_behind_module_rooms + south_baker_behind_module_rooms + south_gauntlet_behind_module_rooms
+
+            name = level.name.split("/")[0] + ".lvl"
+
+            if name not in full: return False
+
+            area: str = None
+            if level.dir_ == Direction.NORTH:
+                if name in north_boss_behind_module_rooms:
+                    area = "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance"
+                elif name in north_gap_behind_module_rooms:
+                    area ="rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"
+            elif level.dir_ == Direction.EAST:
+                if name in east_behind_module_rooms:
+                    area = "rm_EC_ThePlaza/2"
+                elif name in east_leaper_behind_module_rooms:
+                    area = "rm_EC_EastLoop/1"
+            elif level.dir_ == Direction.WEST:
+                if name in west_behind_module_rooms:
+                    area = "rm_WA_Vale/1"
+                elif name in west_bottom_behind_module_rooms:
+                    area = "rm_WA_EntSwitch"
+            else:
+                if name in south_archer_behind_module_rooms:
+                    area = "rm_CH_ACorner"
+                elif name in south_baker_behind_module_rooms:
+                    area = "rm_CH_BDirkDemolition"
+                elif name in south_gauntlet_behind_module_rooms:
+                    area = "rm_SX_TowerSouth/1"
+            
+            return area != None and mod_door_mix_data[area] >= check_amount and mod_door_mix_data[area] <= max_amount
+
+        is_valid = _find_module_door_connection(level)
+        if is_valid:
+            at_least_one_blocker_placed["modules"]["can_still_place"] = amount_to_place > 1
+        return is_valid
+
+    def _get_dash_shop_layer_requirement(check, inventory, layers, amount_to_place: int):
+        if not at_least_one_blocker_placed["dash_shops"]["value"]:
+            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_WA_Vale", "rm_S_GauntletEnd", "rm_EB_DeadOtterWalk", "rm_WL_WestDrifterVault"]
+            if is_blocked:
+                at_least_one_blocker_placed["dash_shops"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
+
+    def _get_pistol_layer_requirement(check, inventory, layers, amount_to_place: int):
+        if not at_least_one_blocker_placed["pistol"]["value"]:
+            is_blocked = check.extra_info["parent_room_name_real"] in ["rm_IN_BackerTablet", "rm_NL_GapHallway", "rm_WC_CrystalLakeVault", "rm_EL_FrogArena", "rm_EX_DocksCampfire", "rm_CH_CGateBlock"]
+            if is_blocked:
+                at_least_one_blocker_placed["pistol"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
+
+    def _get_laser_layer_requirement(check, inventory, level, amount_to_place: int):
+        if not at_least_one_blocker_placed["lasers"]["value"]:
+            is_blocked = check.requirements["lasers"] > 0 or check.extra_info["parent_room_name_real"] in ["rm_NL_StairAscent", "rm_WT_SlowLab"]
+            if is_blocked:
+                at_least_one_blocker_placed["lasers"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
+
+    def _get_key_layer_requirement(check, inventory, level, amount_to_place: int):
+        nonlocal key_door_mix_data
+        if not at_least_one_blocker_placed["keys"]["value"]:
+            mapping: dict = {
+                "rm_NL_CaveVAULT": key_door_mix_data["rm_NX_TitanVista"],
+        "rm_WC_CrystalLakeVault": key_door_mix_data["rm_WC_CrystalLake"],
+        "rm_EB_FlamePitLAB": key_door_mix_data["rm_EB_MeltyMashArena"],
+        "rm_WA_Grotto_buffIntro": key_door_mix_data["rm_WA_Deadwood"],
+        "rm_WB_BigBattle": key_door_mix_data["rm_WB_BigBattle"],
+        "rm_CH_Bfps":  key_door_mix_data["rm_CH_Bfps"],
+        "rm_EC_PlazaAccessLAB": key_door_mix_data["rm_EC_PlazaAccessLAB"],
+        "rm_EC_BigBogLAB": key_door_mix_data["rm_EC_BigBogLAB"],
+            }
+            level_name: str = check.extra_info["parent_room_name_real"]
+            if level_name not in mapping.keys(): return False
+
+            is_blocked = mapping[level_name] > 0
+            if level_name in ["rm_EC_PlazaAccessLAB", "rm_EC_BigBogLAB"]:
+                is_blocked = is_blocked and check.requirements["keys"] > 0
+            if is_blocked:
+                at_least_one_blocker_placed["keys"]["can_still_place"] = amount_to_place > 1
+            return is_blocked
+        return True
+
+
+    def _place_module_in_all_dir(next_layer, count: int = 1):
+        print("Place %d module" % count)
+        def _place_module_in_dir(area, direction):
+            place_important(area, _place_module,  
+                            lambda empty_check, parent_room, inventory, levels: 
+                                _get_place_module_requirements(empty_check, parent_room, direction) 
+                                and 
+                                next_layer["req"](empty_check, inventory, levels, count),
+
+                            (lambda _: next_layer["finish_callback"]()),
+                            count)
+            next_layer["reset_callback"]()
+
+        _place_module_in_dir("west_modules", Direction.WEST)
+        _place_module_in_dir("north_modules", Direction.NORTH)
+        _place_module_in_dir("east_modules", Direction.EAST)
+        _place_module_in_dir("south_modules", Direction.SOUTH)
+
+        # random.shuffle(directions)
+        # for d in directions:
+        #     _place_module_in_dir(glue_on_direction("modules", d), d)
+
+
+    def _place_keys(next_layer):
+        print("Place keys")
+        place_important("keys", _place_key, 
+                        (lambda e, p, i, l: 
+                            _get_placement_restriction(e, p, "BONES", key_placement_option) 
+                            and 
+                            next_layer["req"](e, i, l, key_count)),
+                        lambda _: next_layer["finish_callback"]()
+                        ) # TODO: Need to separate bones into weapons / outfits/ keys
+
+    def _place_lasers(next_layer):
+        print("Place lasers")
+        place_important("lasers", _place_laser, 
+                        (lambda e, p, i, l: 
+                            _get_placement_restriction(e, p, "BONES", laser_placement_option) 
+                            and 
+                            next_layer["req"](e, i, l, len(lasers))),
+                        lambda _: next_layer["finish_callback"]()
+                            )
+
+        
+    def _set_blocker_placed(key: str, val: bool = True):
+        at_least_one_blocker_placed[key]["value"] = val
+        return val
+
+
+    if not random_doors:
+        layers: list[dict] = [
+            { "names": "modules_layer_2", 
+            "func": lambda next: _place_module_in_all_dir(next),
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                    check_amount=3,
+                                                                    max_amount=4
+                                                                    ) if mod_door_option == ModuleDoorOptions.MIX else True ,
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_2"),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_2", False)
+            }, 
+            
+            
+            { "names": "lasers", "func": _place_lasers,
+            "req": _get_laser_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("lasers"),
+            "reset_callback": lambda: _set_blocker_placed("lasers", False),
+            },
+            {"names": "keys",
+            "func": _place_keys,
+            "req": _get_key_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("keys"),
+            "reset_callback": lambda: _set_blocker_placed("keys", False),
+            }, 
+            ]
+
+        if randomize_pistol:
+            pistol_layer = { "names": "pistol", 
+            "func": lambda next_layer: place_important("pistol", _place_pistol, 
+                                    lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", pistol_placement_option)
+                                    and
+                                    next_layer["req"](e, i, l, 1),
+                                    lambda _: next_layer["finish_callback"](),
+                                                    ),
+            "req": _get_pistol_layer_requirement,
+            "finish_callback": lambda: _set_blocker_placed("pistol"),
+            "reset_callback": lambda: _set_blocker_placed("pistol", False)
+            } 
+            layers.append(pistol_layer)
+
+            random.shuffle(layers)
+
+
+            # Ensure pistol is before the lasers layer
+            def _find_layer(name):
+                nonlocal layers
+                for i in range(len(layers)):
+                    if layers[i]["names"] == name: return i
+            pistol_i = _find_layer("pistol")
+            laser_i = _find_layer("lasers")
+            while(laser_i > pistol_i):
+                random.shuffle(layers)
+                pistol_i = _find_layer("pistol")
+                laser_i = _find_layer("lasers")
+        else:
+            random.shuffle(layers)
+
+            
+        if randomize_shop:
+            dash_shop_layer = { "names": "dash_shops", 
+                "func": lambda next_layer: place_important("dash_shops", _place_dash_shop, 
+                                    lambda e, p, i, l: _get_placement_restriction(e, p, "BONES", shops_placement_option)
+                                    and
+                                    next_layer["req"](e, i, l, 1),
+                                    lambda _: next_layer["finish_callback"](),
+                                                    ),
+                "req": _get_dash_shop_layer_requirement,
+                "finish_callback": lambda: _set_blocker_placed("dash_shops"),
+                "reset_callback": lambda: _set_blocker_placed("dash_shops", False)
+                } 
+
+            i: int = random.randint(0, len(layers))
+            while layers[max(0,i-1)]["names"] == "modules_layer_2": # Cannot be directly behind a module layer
+                i = random.randint(0, len(layers))
+            layers.insert(i, dash_shop_layer)
+                
+
+
+        layers.insert( # Final modules always the final layer
+        0,
+            { "names": "final_module", 
+            "func": _place_module_in_all_dir,
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, max_amount=3),
+            "finish_callback": lambda: _set_blocker_placed("final_module"),
+            "reset_callback": lambda: _set_blocker_placed("final_module", False)
+            } 
+        )
+        layers.append(
+            { "names": "modules_layer_1", 
+            "func": lambda next: _place_module_in_all_dir(next, 2),
+            "req": lambda c, i, l, a: _get_module_layer_requirement(c,i, l,a, 
+                                                                    check_amount=1,
+                                                                    max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3
+                                                                    ) if mod_door_option != ModuleDoorOptions.NONE else True,
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False)
+            }, 
+        )
+
+        layers.append( # This layer is just to get the requirements lambda
+            { "names": "modules_layer_0", 
+            "func": lambda _: True, # 
+            "req": lambda c,i,l,a: True,
+            "finish_callback": lambda: _set_blocker_placed("modules_layer_0", False),
+            "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False)
+            }, 
+        )
+
+        at_least_one_blocker_placed = {
+            "modules": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_2": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_1": {
+                "value": False,
+                "can_still_place": True
+            },
+            "modules_layer_0": {
+                "value": False,
+                "can_still_place": True
+            },
+            "final_module": {
+                "value": False,
+                "can_still_place": False
+            },
+            "keys": {
+                "value": False,
+                "can_still_place": True
+            },
+            "lasers": {
+                "value": False,
+                "can_still_place": True
+            },
+            "pistol": {
+                "value": False,
+                "can_still_place": True
+            },
+            "dash_shops": {
+                "value": False,
+                "can_still_place": True
+            },
+        }
+        print("Layers")
+        layers.pop()
+        print([l["names"] for l in layers])
+        length = len(layers)
+        for i in range(length):
+            if i < length - 1:
+                layers[i]["func"](layers[i+1])
+            else:
+                layers[i]["func"](
+                    {
+                        "func": lambda a, b, c, d: True, # Need to match the arg count with the other next_layer functions
+                        "req": lambda a, b, c, d: True,
+                        "finish_callback": lambda: True,
+                        "reset_callback": lambda: True,
+                    }
+                    ) 
+
+                    
+        if module_count == ModuleCount.ALL:
+            place_important('south_modules', _place_module, lambda x, a,b,c: x.dir_ == Direction.SOUTH and not x.enemy_id and _get_place_module_requirements(x, a, Direction.SOUTH))
+            place_important('north_modules', _place_module, lambda x, a,b,c: x.dir_ == Direction.NORTH and not x.enemy_id and _get_place_module_requirements(x, a, Direction.NORTH))
+            place_important('west_modules', _place_module, lambda x, a,b,c: x.dir_ == Direction.WEST and not x.enemy_id and _get_place_module_requirements(x, a, Direction.WEST))
+            place_important('east_modules', _place_module, lambda x, a,b,c: x.dir_ == Direction.EAST and not x.enemy_id and _get_place_module_requirements(x, a, Direction.EAST))
+            
+        place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
+        if randomize_shop:
+            place_unimportant(4, _place_generic_shop, lambda e, p, i, l: not e.enemy_id and _get_placement_restriction(e, p, "BONES", shops_placement_option))
+        place_unimportant(3, _place_shotgun)
+        place_unimportant(9, _place_outfit)
+        place_unimportant(165, _place_gearbit)
+        return [e["names"] for e in layers]
+    else:
+        place_important("north_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.NORTH and not x.enemy_id)
+        place_important("east_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.EAST and not x.enemy_id)
+        place_important("west_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.WEST and not x.enemy_id)
+        place_important("south_modules", _place_module, lambda x, a,b,c: x.dir_ == Direction.SOUTH and not x.enemy_id)
+        place_important("dash_shops", _place_dash_shop, lambda x, a,b,c: not x.enemy_id)
+        place_unimportant(16, _place_tablet, lambda x, a,b,c: not x.enemy_id)
+        place_unimportant(4, _place_generic_shop, lambda x, a,b,c: not x.enemy_id)
+        place_important("keys", _place_key)
+        place_important("dash_shops", _place_dash_shop)
+        place_important("lasers", _place_laser)
+        place_unimportant(3, _place_shotgun)
+        place_unimportant(9, _place_outfit)
+        place_unimportant(165, _place_gearbit)
+
+        return []
+
+###############################################################
+# MAIN RANDO LOGIC
+###############################################################
+
+def main(random_doors: bool = False, random_enemies: bool = False, output: bool = True, random_seed: str | None = None, 
+         output_folder_name: str = "out", 
+         list_of_enemies=BASE_LIST_OF_ENEMIES, enemy_weights=BASE_ENEMY_WEIGHTS, protect_list=BASE_ENEMY_PROTECT_POOL, 
+         module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE, limit_one_module_per_room : bool = True, module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE, module_count: ModuleCount = ModuleCount.ALL,
+         key_count:  KeyCount = KeyCount.MINIMUM,
+         randomize_pistol: bool = False,
+         randomize_shop: bool = False,
+         preset: Preset | None = None
+         ):
+    print("Seed: " + str(random_seed))
     random.seed(random_seed)
 
-    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON))
+    if not random_doors:
+        Inventory.set_module_requirements(4 if module_count == ModuleCount.MINIMUM else 8)
+        Inventory.set_key_requirements(key_count)
+        Inventory.set_lasers_requirements(1)
+    else:
+        Inventory.set_module_requirements(8)
+        Inventory.set_key_requirements(KeyCount.ALL)
+        Inventory.set_lasers_requirements(2)
+
+    fake_levels = LevelHolder(CoolJSON.load(GRAPH_JSON if not module_placement==ItemPlacementRestriction.MODULES_EXTENDED or random_doors else GRAPH_LIMITED_JSON))
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
+
+    for level in fake_levels:
+        for o in level.fake_object_list:
+            o.extra_info["parent_room_name_real"] = level.name.split("/")[0]
+            o.extra_info["parent_room_name_fake"] = level.name 
+
+    module_door_mix_data: dict = {
+         "rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance": 3,
+        "rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1": int(module_count / 4),
+         "rm_EC_ThePlaza/2": 3,
+         "rm_EC_EastLoop/1": int(module_count /4),
+         "rm_WA_Vale/1": 3,
+         "rm_WA_EntSwitch": int(module_count / 4),
+         "rm_CH_ACorner": 1,
+         "rm_CH_BDirkDemolition": 1,
+         "rm_SX_TowerSouth/1": int(module_count / 4)
+    }
+    key_mix_data: dict = {}
 
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
+        fake_levels.is_randomized = True
         prepare_and_merge_randomized_doors(fake_levels, intermediary_door_levels)
     else:
-        fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT2_JSON))
+        fake_levels.is_randomized = False
+
+        path: str
+        if module_door_option == ModuleDoorOptions.DISABLED:
+            path = CONNECT_MODULE_DOOR_DISABLED_JSON
+        else:
+            path = CONNECT2_JSON
+
+        connections_data = CoolJSON.load(path)
+
+        if module_door_option == ModuleDoorOptions.MIX:
+            module_door_mix_data = _mix_fake_module_doors(connections_data)
+        print("Module door Mix data")
+        print(module_door_mix_data)
+
+        if key_count == KeyCount.MINIMUM:
+            key_mix_data =_mix_fake_key_doors(connections_data, fake_levels, key_count)
+        print("Key door mix data")
+        print(key_mix_data)
+            
+            
+        fake_levels.connect_levels_from_list(connections_data)
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_EC_TempleIshVault").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_WA_TowerEnter").fake_object_list[0].type = RandomizerType.PYLON
     fake_levels.find_by_name("rm_SX_TowerSouth/3").fake_object_list[0].type = RandomizerType.PYLON
 
-    place_all_items(fake_levels)
+    layers = place_all_items(fake_levels, module_placement, 
+                             limit_one_module_per_room,
+                    mod_door_mix_data=module_door_mix_data,
+                    module_count=module_count,
+                    key_count=key_count,
+                    key_door_mix_data=key_mix_data,
+                    key_placement_option=module_placement,
+                    laser_placement_option=module_placement,
+                    shops_placement_option=module_placement,
+                    pistol_placement_option=module_placement,
+                    randomize_pistol=randomize_pistol,
+                    randomize_shop=randomize_shop,
+                    random_doors=random_doors,
+                    mod_door_option=module_door_option
+                    )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
 
@@ -770,6 +1426,11 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
         fake_level.convert_fake_objects_into_real()
         found = real_levels.find_by_name(fake_level.name.split("/")[0] + ".lvl")
         found.object_list += fake_level.real_object_list
+        
+        
+    #####  
+    # REAL LEVEL CHANGES
+    #####
 
     manual_changes = CoolJSON.load(MANUAL_JSON)
     for level in manual_changes:
@@ -781,9 +1442,219 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
             real_levels.find_by_name(level["name"]).object_list += level["object_list"]
 
     if random_enemies:
-        randomize_enemies(real_levels)
+        randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
+
+    if not random_doors:
+        if module_door_option == ModuleDoorOptions.DISABLED:
+            _manual_disable_module_doors(real_levels)
+        elif module_door_option == ModuleDoorOptions.MIX:
+            _manual_mix_real_module_doors(real_levels, module_door_mix_data)
+        
+        if key_count == KeyCount.MINIMUM: 
+            _manual_mix_real_key_doors(real_levels, key_mix_data)
+
+        if randomize_pistol:
+            _remove_intro_death_cutscene(real_levels)
+
+    # Apply presets #
+
+    p: Preset = Preset.get_preset_from_name(preset)
+    if p:
+        try: 
+            p.execute_changes()
+        except FileNotFoundError as e:
+            raise FileNotFoundError("Save file to apply preset to does not exist")
 
     Inventory.reset()
 
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
+
+    return layers
+
+        
+def _mix_fake_key_doors(connections_data: list, level_data: list, max_key_count: KeyCount):
+    mix_data: dict = {}
+    def _mix_key_doors_connections(levels_to_change: list, high_door_count = max_key_count):
+        nonlocal connections_data
+        nonlocal mix_data
+        for name in levels_to_change:
+            for level in connections_data:
+                if level['requirements']['keys'] != 0 and level["from"].startswith(name):
+                    to_place: int = high_door_count
+                    level['requirements']['keys'] = to_place
+                    mix_data[level["from"].split("/")[0]] = to_place
+                    break
+
+    def _mix_key_doors_checks(checks: list, high_door_count = max_key_count):
+        nonlocal level_data
+        nonlocal mix_data
+
+        for name in checks:
+            level: FakeLevel
+            for level in level_data:
+                if level.name.startswith(name):
+                    obj: HLDObj
+                    for obj in level.fake_object_list:
+                        if obj.requirements['keys'] > 0:
+                            to_place: int = high_door_count
+                            obj.requirements['keys'] = to_place
+                            mix_data[level.name.split("/")[0]] = to_place
+
+    # These doors lead to transitions so the connections have to be edited
+    north_key_door_levels = ["rm_NX_TitanVista"]
+    east_key_door_levels = ["rm_EB_MeltyMashArena"]
+    west_key_door_levels = ["rm_WC_CrystalLake", "rm_WA_Deadwood"]
+
+    # These doors don't leave to transition so the checks have to be edited
+    key_required_checks = ["rm_EC_PlazaAccessLAB", "rm_WB_BigBattle", "rm_CH_Bfps", "rm_EC_BigBogLAB"]
+
+    _mix_key_doors_connections(north_key_door_levels)
+    _mix_key_doors_connections(west_key_door_levels)
+    _mix_key_doors_connections(east_key_door_levels)
+
+    _mix_key_doors_checks(key_required_checks)
+
+    return mix_data
+
+def _mix_fake_module_doors(level_data: list):
+    mix_data: dict = {}
+    def _mix_doors_in_level(levels_to_change: list, x_door_count = 3, high_door_count = 3):
+        nonlocal level_data
+        nonlocal mix_data
+
+        count = max(2, len(levels_to_change))
+        choices = []
+            
+        choices = [2 for i in range(count)]
+        choices[0] = high_door_count
+        
+
+        for name in levels_to_change:
+            for level in level_data:
+                if level['requirements']['modules'] != 0 and (level['from'] == name) and \
+                ((name != "rm_NX_MoonCourtyard/3") or (name == "rm_NX_MoonCourtyard/3" and level['to'] in ["rm_NX_CathedralEntrance", "rm_NL_GapOpening/1"])): # Because north has a level with 2 module doors
+                    to_place = random.choice(choices)
+                    choices.remove(to_place)
+                    level['requirements']['modules'] = to_place
+
+                    if name != "rm_NX_MoonCourtyard/3":
+                        mix_data[level["from"]] = to_place
+                    else:
+                        mix_data[level["from"] + ":" + level["to"]] = to_place
+
+    north_module_door_levels = ["rm_NX_MoonCourtyard/3"]
+    west_module_door_levels = ["rm_WA_EntSwitch", "rm_WA_Vale/1"]
+    east_module_door_levels = ["rm_EC_ThePlaza/2", "rm_EC_EastLoop/1"]
+    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner"]
+
+    _mix_doors_in_level(north_module_door_levels)
+    _mix_doors_in_level(west_module_door_levels)
+    _mix_doors_in_level(east_module_door_levels)
+    _mix_doors_in_level(south_module_door_levels)
+
+    return mix_data
+
+    
+def _remove_intro_death_cutscene(real_levels: LevelHolder):
+    obj_list = real_levels.find_by_name(HLDLevel.Names.RM_IN_HALUCINATIONDEATH).object_list
+    to_remove =[]
+    for obj in obj_list:
+        if obj.type == HLDType.SICKAREA:
+            to_remove.append(obj)
+            
+    for o in to_remove:
+        obj_list.remove(o)
+
+    return
+
+def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict):
+    def _change_key_door_in_level(level_name: str, count: int):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == HLDType.DRIFTERVAULTDOOR:
+                if count == 0:
+                    to_remove.append(obj)
+                else:
+                    obj.attrs['c'] = count
+        for o in to_remove:
+            obj_list.remove(o)
+
+    levels = [HLDLevel.Names.RM_NX_TITANVISTA, HLDLevel.Names.RM_EB_MELTYMASHARENA, HLDLevel.Names.RM_WC_CRYSTALLAKE, HLDLevel.Names.RM_WA_DEADWOOD, HLDLevel.Names.RM_EC_PLAZAACCESSLAB, HLDLevel.Names.RM_WB_BIGBATTLE, HLDLevel.Names.RM_CH_BFPS, HLDLevel.Names.RM_EC_BIGBOGLAB, HLDLevel.Names.RM_C_CENTRAL]
+    mix_data["rm_C_Central"] = 1 # Don't lock out the horde room
+
+    for l in levels:
+        name = l.replace(".lvl", "")
+        _change_key_door_in_level(l, mix_data[name])
+    return
+
+
+def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
+    def _change_mod_door_in_level(level_name: str, count: int, skip: int =0):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == HLDType.MODULEDOOR:
+                if skip > 0: 
+                    skip -= 1
+                    continue
+
+                if count == 0:
+                    to_remove.append(obj)
+                else:
+                    obj.attrs['c'] = count
+
+            # East manual changes in Plaza
+            if level_name == HLDLevel.Names.RM_EC_THEPLAZA:
+                special_remove_ids = [
+                    3548, 4248, 1682, # Remove the blocks to PlazaToLoop
+                    5404, 7128, 7095, 1702, 95, 5193, 93, 7830]  # Remove the blocks below the warp pad
+                if obj.uid in special_remove_ids:
+                    to_remove.append(obj)
+        for o in to_remove:
+            obj_list.remove(o)
+
+    _change_mod_door_in_level(HLDLevel.Names.RM_WA_ENTSWITCH, mix_data["rm_WA_EntSwitch"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_WA_VALE, mix_data["rm_WA_Vale/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_EC_THEPLAZA, mix_data["rm_EC_ThePlaza/2"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_EC_EASTLOOP, mix_data["rm_EC_EastLoop/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION, mix_data["rm_CH_BDirkDemolition"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER, mix_data["rm_CH_ACorner"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH, mix_data["rm_SX_TowerSouth/1"])
+    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NL_GapOpening/1"]) # skip is kinda buggy so ordering matters here
+    _change_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD, mix_data["rm_NX_MoonCourtyard/3:rm_NX_CathedralEntrance"], 1)
+
+    return
+
+    
+def _manual_disable_module_doors(real_levels: LevelHolder):
+    def _remove_mod_door_in_level(level_name: str):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name).object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == "ModuleDoor":
+                to_remove.append(obj)
+
+            # East manual changes in Plaza
+            if level_name == HLDLevel.Names.RM_EC_THEPLAZA:
+                special_remove_ids = [
+                    3548, 4248, 1682, # Remove the blocks to PlazaToLoop
+                    5404, 7128, 7095, 1702, 95, 5193, 93, 7830]  # Remove the blocks below the warp pad
+                if obj.uid in special_remove_ids:
+                    to_remove.append(obj)
+        for o in to_remove:
+            obj_list.remove(o)
+
+    _remove_mod_door_in_level(HLDLevel.Names.RM_WA_ENTSWITCH)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_WA_VALE)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_NX_MOONCOURTYARD)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_EC_THEPLAZA)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_EC_EASTLOOP)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER)
+    _remove_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH)
+

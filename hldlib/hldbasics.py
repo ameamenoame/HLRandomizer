@@ -1,6 +1,7 @@
 from hldlib.hldlevel import HLDLevel
 from typing import Iterable
 import os
+import platform
 
 
 class HLDBasics:
@@ -10,6 +11,16 @@ class HLDBasics:
             for file_name in file_names:
                 if file_name.lower() == "hlddir.txt":
                     with open(os.path.join(dir_path, file_name)) as hld_dir_file:
+                        return hld_dir_file.readline().rstrip()
+        raise ValueError("No hldDir.txt found.")
+
+    @staticmethod
+    def find_save_path() -> str:
+        for dir_path, dir_names, file_names in os.walk("."):
+            for file_name in file_names:
+                if file_name.lower() == "hlddir.txt":
+                    with open(os.path.join(dir_path, file_name)) as hld_dir_file:
+                        hld_dir_file.readline() # Skip first line
                         return hld_dir_file.readline().rstrip()
         raise ValueError("No hldDir.txt found.")
 
@@ -31,8 +42,7 @@ class HLDBasics:
     @staticmethod
     def omega_load(path: str):
         loaded: list[HLDLevel] = []
-        for level_path, dir_, level_name in HLDBasics.get_levels(path, ("North", "East", "West", "South", "Central",
-                                                                        "Intro", "Abyss",)):
+        for level_path, dir_, level_name in HLDBasics.get_levels(path, HLDBasics.DIRS):
             lvl = HLDLevel.from_file(level_path)
             loaded.append(lvl)
         return loaded
@@ -46,3 +56,5 @@ class HLDBasics:
         "Intro",
         "Abyss",
     )
+if platform.system() in ('Linux', 'Darwin'):
+    HLDBasics.DIRS = tuple(dir_.lower() for dir_ in HLDBasics.DIRS)
