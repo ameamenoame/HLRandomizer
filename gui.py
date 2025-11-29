@@ -11,6 +11,7 @@ import shutil
 from save_edit import autofill_path
 import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
+import platform
 
 def _append_if_missing(filepath, text):
     try:
@@ -467,7 +468,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.subwindow = Toplevel(self.root, padx=20, pady=10)
         self.subwindow.title("Generating")
-        self.subwindow.iconbitmap("icon.ico")
+        # .ico icons don't work on other platforms, skip for now
+        if platform.system() == "Windows":
+            self.subwindow.iconbitmap("icon.ico")
 
         self.progressbar = ttk.Progressbar(self.subwindow, orient=HORIZONTAL, length=200, mode='indeterminate')
         self.progressbar.grid(column=0, row=0, sticky=EW, columnspan=4)
@@ -751,7 +754,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             child.grid_configure(padx=15, pady=5)
 
 root = Tk()
-root.iconbitmap("icon.ico")
+# .ico icons don't work on other platforms, skip for now
+if platform.system() == "Windows":
+    root.iconbitmap("icon.ico")
 
 try:
     PATH_TO_HLD = HLDBasics.find_path()
