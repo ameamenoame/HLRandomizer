@@ -1,6 +1,7 @@
 from hldlib.hldlevel import HLDLevel
 from typing import Iterable
 import os
+import platform
 
 
 class HLDBasics:
@@ -41,8 +42,7 @@ class HLDBasics:
     @staticmethod
     def omega_load(path: str):
         loaded: list[HLDLevel] = []
-        for level_path, dir_, level_name in HLDBasics.get_levels(path, ("North", "East", "West", "South", "Central",
-                                                                        "Intro", "Abyss",)):
+        for level_path, dir_, level_name in HLDBasics.get_levels(path, HLDBasics.DIRS):
             lvl = HLDLevel.from_file(level_path)
             loaded.append(lvl)
         return loaded
@@ -56,3 +56,5 @@ class HLDBasics:
         "Intro",
         "Abyss",
     )
+if platform.system() in ('Linux', 'Darwin'):
+    HLDBasics.DIRS = tuple(dir_.lower() for dir_ in HLDBasics.DIRS)
