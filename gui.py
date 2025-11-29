@@ -241,7 +241,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     self.random_seed.set("")
                     raise e
 
-        if success: messagebox.showinfo(message=f"Randomization successful! Close this dialog and press 'Push to HLD' to save the randomized levels to Hyper Light Drifter.\n\nSeed: " + str(self.random_seed.get()), title="Success")
+        return success
 
     def do_del(self):
         """
@@ -267,12 +267,13 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         folder_to_push = self.OUT_FOLDER_NAME
         if folder_to_push not in os.listdir(OUTPUT_PATH):
             messagebox.showerror(message="Output folder not found.")
+            return False
         else:
             start_time = time()
             shutil.copytree(os.path.join(OUTPUT_PATH, folder_to_push), self.PATH_TO_HLD, dirs_exist_ok=True)
             end_time = time()
             print(f"Done in {end_time-start_time:.2f} s")
-            messagebox.showinfo(message="Randomized levels saved to Hyper Light Drifter")
+            return True
 
     def do_revert(self):
         folder_to_push = "backup"
@@ -363,6 +364,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     def open_link(self, url: str):
         import webbrowser
         webbrowser.open_new(url)
+
+    def randomize(self):
+        success = self.do_gen() and self.do_push()
+        if success: messagebox.showinfo(message=f"Randomization successful!\n\nSeed: " + str(self.random_seed.get()), title="Success")
+        else: messagebox.showerror(message=f"Randomization error!\n\nSeed: " + str(self.random_seed.get()), title="Error")
 
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
@@ -528,18 +534,20 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
 
 
-        # ttk.Separator(root, orient='horizontal').grid(column=0, row=7, sticky=EW, columnspan=8)
-
         # Bottom buttons #
         bottom_frame = Frame(root)
-        bottom_frame.grid(column=0, row=8, sticky=NE)
+        bottom_frame.grid(column=0, row=8, sticky=NSEW)
 
 
-        ttk.Button(bottom_frame, text="Randomize", command=self.do_gen).grid(column=0, row=0)
-        ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=1,row=0)
-        ttk.Button(bottom_frame, text="Check solution", command=self.show_solution).grid(column=2, row=0)
-        ttk.Button(bottom_frame, text="Revert to normal", command=self.do_revert).grid(column=3, row=0)
-        ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
+        # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
+        ttk.Button(bottom_frame, text="Check solution", command=self.show_solution).grid(column=1, row=0)
+        ttk.Button(bottom_frame, text="Revert game to normal", command=self.do_revert).grid(column=0, row=0)
+        # ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
+        ttk.Button(bottom_frame, 
+                   text="Generate", 
+                   padding=10,
+                   command= self.randomize).grid(column=3, row=0, sticky=NE)
+        bottom_frame.grid_columnconfigure(3, weight=1)
 
 
         root.grid_columnconfigure(0, weight=1)
