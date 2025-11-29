@@ -347,7 +347,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         solution = check_solution(self.layers)
         messagebox.showinfo(message=solution, title="Solution")
 
-        
     def set_weekly_seed(self):
         import datetime
         import hashlib
@@ -358,8 +357,12 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             digest = hashlib.md5(data).digest()
             return base64.urlsafe_b64encode(digest)[:12].decode()
 
-        seed =  short_base64_hash_week()
+        seed = short_base64_hash_week()
         self.random_seed.set(seed)
+
+    def open_link(self, url: str):
+        import webbrowser
+        webbrowser.open_new(url)
 
     def __init__(self, root, path):
         root.title("Hyper Light Drifter Randomizer")
@@ -370,11 +373,34 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             setup_frame.grid(column=0, row=0, sticky=NE)
             ttk.Button(setup_frame, text="Set up Randomizer", command=self.do_install).grid(column=0, row=0, sticky=W, pady=5)
             ttk.Label(setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
+            return
 
-        mainframe = ttk.Frame(root)
-        mainframe.grid(column=0, row=1, sticky=NSEW)
+            
+        # Header #
 
-        ttk.Label(mainframe, text="Settings", justify=CENTER, font=("TkHeadingFont", 20)).grid(column=0, row=2, sticky=N, padx=20)
+        header_frame = ttk.Frame(root)
+        header_frame.grid(column=0, row=1, sticky=NSEW,padx=10)
+
+        ttk.Label(header_frame, text="Settings", justify=LEFT, font=("TkHeadingFont", 20)).grid(column=0, row=0, sticky=NW)
+        header_frame.grid_columnconfigure(0, weight=1)
+
+        sr_link = ttk.Label(header_frame, text="Speedrun Discord", justify=RIGHT, 
+                                font=("TkDefaultFont", 10, "underline"),
+                                foreground="blue",
+                                cursor="hand2",
+                            )
+        sr_link.grid(column=4, row=0, sticky=E)
+        sr_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/gXFaGQd"))
+
+        hm_link = ttk.Label(header_frame, text="Heart Machine Discord", justify=RIGHT,
+                                font=("TkDefaultFont", 10, "underline"),
+                                foreground="blue",
+                                cursor="hand2",
+                            )
+        hm_link.grid(column=3, row=0, sticky=E)
+        hm_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/heartmachine"))
+
+
 
         seed_frame = Frame(root)
         seed_frame.grid(column=0, row=2, sticky=NSEW)
@@ -386,6 +412,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         ttk.Button(seed_frame, text="Clear", command=lambda: self.random_seed.set("")).grid(column=2, row=3, sticky=NE, pady=5, padx=5)
         ttk.Button(seed_frame, text="Try weekly seed", command=self.set_weekly_seed).grid(column=1, row=4, sticky=NW, pady=5, padx=5)
+
+
+        # Options settings #
 
         options_frame = Frame(root)
         options_frame.grid(column=0, row=3, sticky=NSEW)
@@ -409,8 +438,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         ttk.Checkbutton(options_frame, text='Randomize pistol for NG', 
 	    variable=self.random_pistol,
 	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
-
-
 
         
         # Progression settings #
@@ -445,7 +472,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.module_count_label.grid(column=0, row =10, sticky=E, padx=5, pady=5)
         self.module_count_list.grid(column=1, row=10, sticky=W)
 
-        # Enemy pool listbox
+        # Enemy settings #
         self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()
         self.enemy_choicesvar = StringVar(value=self.enemy_choices)
 
@@ -502,7 +529,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         ttk.Separator(root, orient='horizontal').grid(column=0, row=7, sticky=EW, columnspan=8)
 
-        # Bottom buttons
+        # Bottom buttons #
         bottom_frame = Frame(root)
         bottom_frame.grid(column=0, row=8, sticky=NE)
 
