@@ -7,3 +7,4 @@ hlddir.txt
 hlr-release*
 dist/
 build/
+.venv
