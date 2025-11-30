@@ -1052,14 +1052,11 @@ def place_all_items(levels: LevelHolder,
                             count)
             next_layer["reset_callback"]()
 
-        _place_module_in_dir("west_modules", Direction.WEST)
-        _place_module_in_dir("north_modules", Direction.NORTH)
-        _place_module_in_dir("east_modules", Direction.EAST)
-        _place_module_in_dir("south_modules", Direction.SOUTH)
-
-        # random.shuffle(directions)
-        # for d in directions:
-        #     _place_module_in_dir(glue_on_direction("modules", d), d)
+        directions = [Direction.WEST, Direction.NORTH, Direction.EAST, Direction.SOUTH]
+        random.shuffle(directions)
+        print("Module placement order: " + str(directions))
+        for d in directions:
+            _place_module_in_dir(glue_on_direction("modules", d), d)
 
 
     def _place_keys(next_layer):
