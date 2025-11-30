@@ -623,7 +623,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         module_settings_list.grid(column=1, row=6, sticky=W, columnspan=3)
         module_settings_list.state(["readonly"])
 
-        self.limit_one_module_per_room = BooleanVar(value=True)
+        self.limit_one_module_per_room = BooleanVar(value=False)
         ttk.Checkbutton(progression_frame, text='Limit 1 module per room', 
 	    variable=self.limit_one_module_per_room,
 	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
