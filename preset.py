@@ -2,6 +2,7 @@ from enum import Enum
 from hldlib import HLDObj, HLDLevel, HLDType, HLDBasics
 from hldlib.hldbasics import ModuleCount
 from save_edit import *
+import random
 
 
 DEFAULT_SAVE_EDIT_NUMBER: int = 3
@@ -16,6 +17,7 @@ class PresetType(str, Enum):
     GUNSLINGER = "Gunslinger"
     BITBOUND = "Bitbound"
     NAKED = "Naked"
+    RANDOM_START = "Random start"
 
 
 class Preset:
@@ -55,6 +57,8 @@ class Preset:
             return PresetBitbound
         elif name == PresetType.NAKED:
             return PresetNaked
+        elif name == PresetType.RANDOM_START:
+            return PresetRandomStart
         return Preset
 
     @classmethod
@@ -197,3 +201,30 @@ class PresetNaked(Preset):
         super().set_options(options)
         options.random_shops.set(True)
         options.random_pistol.set(True)
+
+class PresetRandomStart(Preset):
+    description = "Random starting room and shops. Go back to the drifter's house to get map to unlock warping. Might softlock because there is no logic."
+
+    @classmethod
+    def execute_changes(cls):
+        cls.set_save_data_field("gameName", "RandomStart")
+        cls.set_save_data_field("checkRoom", random.choice(
+            [46, 79, 47, 48, 49, 50, 60, 61, 62, 84, 85, 88, 89, 90, 91, 92, 93, 94, 95,
+ 67, 64, 171, 172, 173, 174, 175, 177, 181, 182, 183, 184, 185, 178, 187,
+ 188, 189, 190, 191, 193, 194, 195, 196, 176, 179, 198, 199, 200, 69, 70,
+ 100, 101, 102, 103, 104, 96, 106, 107, 108, 109, 116, 117, 118, 119, 120,
+ 98, 121, 68, 65, 209, 210, 211, 212, 213, 214, 215, 217, 218, 219, 220,
+ 225, 226, 227, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 71,
+ 63, 128, 130, 137, 146, 147, 148, 149, 150, 158, 139, 140, 141, 142, 143,
+ 144, 152, 154, 155, 156, 157, 160, 161, 162, 163, 164, 165, 129, 132, 133,
+ 134, 135, 229, 230, 231, 232, 233, 234, 235, 236, 222, 223, 87, 86, 123,
+ 111, 112, 113, 114, 97, 53, 72, 66]
+        ))
+        cls.set_save_data_field("checkX", 0)
+        cls.set_save_data_field("checkY", 0)
+        cls.set_save_data_field("warp", "4+")
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.random_shops.set(True)
