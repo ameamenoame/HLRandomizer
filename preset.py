@@ -99,7 +99,7 @@ class PresetVagabond(Preset):
     @classmethod
     def set_options(cls, options):
         super().set_options(options)
-        options.randon_enemies.set(True)
+        options.random_enemies.set(True)
 
 class PresetGunslinger(Preset):
     description = "Gun-focused fighting. Starts with all guns, grenade, and the effects of fuchsia + yellow + orange cloaks (more ammo from sword slashes, faster movement, faster grenade recharge) "
@@ -123,7 +123,7 @@ class PresetGunslinger(Preset):
     @classmethod
     def set_options(cls, options):
         super().set_options(options)
-        options.randon_enemies.set(True)
+        options.random_enemies.set(True)
 
     
 class PresetSpeedrun(Preset):
@@ -183,7 +183,7 @@ class PresetSeeker(Preset):
 
 
 class PresetNaked(Preset):
-    description = "Starts with nothing. Not even pistol. Shops are randomized. Only works for NG."
+    description = "Starts with nothing, not even pistol. Shops are randomized. Must go into teleporter straight into town at the starting campfire. Pistol and chain dashing is required to finish the game. Only works for NG."
 
     @classmethod
     def execute_changes(cls):
