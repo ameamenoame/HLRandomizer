@@ -1,8 +1,37 @@
 from hldlib.hldlevel import HLDLevel
 from typing import Iterable
+from enum import Enum
 import os
 import platform
 
+class ItemPlacementRestriction(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize" # Module placements unchanged
+    FREE = "Free (252 checks)" # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    KEY_ITEMS = "Key items (63 checks)" # Module can only appear at key item places - outfits, keys, weapons
+    KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)" 
+    MODULES_EXTENDED = "Modules Extended (39 checks)" # Only place where modules would be plus special key / outfit checks
+    # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
+
+class ModuleDoorOptions(str, Enum):
+    def __str__(self):
+        return self.value
+    NONE = "Don't randomize"
+    MIX = "Mix"
+    DISABLED = "Disabled"
+
+class ModuleCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 16
+    ALL = 32
+
+class KeyCount(int, Enum):
+    def __str__(self):
+        return str(self.value)
+    MINIMUM = 1
+    ALL = 16
 
 class HLDBasics:
     @staticmethod

@@ -124,8 +124,6 @@ obj,RecessingScenery,9005,321,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLa
 obj,RecessingScenery,9006,305,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
 obj,RecessingScenery,9007,289,438,0,1,9004,caseScript,3,0,-999999,0,++,0=spr_WLabBlock16b,1=0,2=0,3=0,k=0,p=-4,fp=0,4=0,5=0,f=0,l=0,
 obj,Teleporter,9008,241,351,0,-999999,++,r=rm_C_DrifterWorkshop,d=9009,t=1,i=0,
-Room,Central,rm_C_DrifterWorkshop,
-obj,Teleporter,9009,220,160,0,-999999,++,r=rm_IN_01_brokenshallows,d=9008,t=1,i=0,
 """
     NO_PISTOL_RANDO_MANUAL_CHANGE = """
 Room,Intro,rm_IN_01_brokenshallows,
@@ -535,10 +533,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.progressbar.grid_remove()
         self.subwindow.destroy()
 
-    def _set_preset_description_text(self, a, b,c):
-        p: Preset | None = Preset.get_preset_from_name(self.preset_optionsvar.get())
-        self.preset_description_label["text"] = p.description + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset." \
-            if p else "No preset selected"
+    def _on_preset_selection(self, a, b,c):
+        p: Preset = Preset.get_preset_from_name(self.preset_optionsvar.get())
+        self.preset_description_label["text"] = p.description + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset."
+        p.set_options(self)
 
     def __init__(self, root, path):
         self.root = root
@@ -648,17 +646,20 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.module_count_list.grid(column=1, row=10, sticky=W)
 
         # Enemy settings #
-        self.enemy_choices = BASE_LIST_OF_ENEMIES.copy()
-        self.enemy_choicesvar = StringVar(value=self.enemy_choices)
 
         self.enemy_data = [{
            "name": e,
            "weight": 1.0,
            "enabled": True,
            "protected": False
-        } for e in self.enemy_choices]
+        } for e in BASE_LIST_OF_ENEMIES]
         for e in self.enemy_data:
-            if e["name"] == "Birdman": e["protected"] = True
+            # Sensible defaults
+            if e["name"] in ["Birdman", "slime", "spider", "Dirkommander"]: e["protected"] = True
+            if e["name"] in ["Dirkommander"]: e["enabled"] = False
+
+        self.enemy_choices = [e["name"] if e["enabled"] else ("(DISABLED) " + e["name"]) for e in self.enemy_data]
+        self.enemy_choicesvar = StringVar(value=self.enemy_choices)
         
         enemy_pool_frame = ttk.LabelFrame(root, height=90, text="Enemies")
         enemy_pool_frame.grid(column=0, row=5, sticky=EW)
@@ -697,7 +698,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         protect_pool_frame.grid(column=2, row=1, sticky=NW)
         ttk.Label(protect_pool_frame,text="Protect pool").grid(column=0, row=0, sticky=NW)
 
-        self.enemy_protect_pool = BASE_ENEMY_PROTECT_POOL.copy()
+        self.enemy_protect_pool = [e["name"] for e in self.enemy_data if e['protected']]
         self.enemy_protect_poolvar = StringVar(value=self.enemy_protect_pool)
         self.protect_list = Listbox(protect_pool_frame, listvariable=self.enemy_protect_poolvar)
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
@@ -722,7 +723,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.preset_list.state(["readonly"])
         self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
         self.preset_description_label.grid(column=1, row=2, sticky=NW)
-        self.preset_optionsvar.trace('w', self._set_preset_description_text)
+        self.preset_optionsvar.trace('w', self._on_preset_selection)
 
         for child in preset_frame.winfo_children(): 
             child.grid_configure(padx=5, pady=5)
