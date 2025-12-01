@@ -946,7 +946,7 @@ class ItemTracker:
                 save_path: str,
                 track_dash_shop: bool = False,
                 track_pistol: bool = False,
-                save_edit_number: int = 0
+                save_edit_number: int = 3
                  ):
 
         self.window = Toplevel(parent)
@@ -1018,14 +1018,15 @@ class ItemTracker:
             i+=1
         
         
-        ttk.Label(self.window, text="Tracking save " + str(save_edit_number)).grid(row=1, column=0, pady=5, padx=5)
+        self.save_edit_number = save_edit_number
+        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number)).grid(row=1, column=0, pady=5, padx=5)
         
         MainRandomizerUI.center_subwindow(parent, self.window)
         self.window.transient(parent)
         self.window.grab_set()
         
-        self.poll_save(save_path, save_edit_number)
-        self.poll_job = self.RepeatingTimer(15.0, lambda: self.poll_save(save_path, save_edit_number))
+        self.poll_save(save_path, self.save_edit_number)
+        self.poll_job = self.RepeatingTimer(15.0, lambda: self.poll_save(save_path, self.save_edit_number))
         self.poll_job.start()
 
         def _on_close():
