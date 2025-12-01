@@ -13,6 +13,7 @@ import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
 import platform
 import getpass
+from PIL import Image, ImageTk
 
 def _append_if_missing(filepath, text):
     try:
@@ -452,27 +453,30 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         root.event_generate('<<GenerationComplete>>')
 
+
+    @staticmethod
+    def center_subwindow(parent, subwindow):
+        parent.update_idletasks()  # Ensure parent dimensions are accurate
+        subwindow.update_idletasks() # Ensure subwindow dimensions are accurate
+
+        # Get parent window's position and dimensions
+        parent_x = parent.winfo_x()
+        parent_y = parent.winfo_y()
+        parent_width = parent.winfo_width()
+        parent_height = parent.winfo_height()
+
+        # Get subwindow's dimensions
+        subwindow_width = subwindow.winfo_width()
+        subwindow_height = subwindow.winfo_height()
+
+        # Calculate subwindow's position to center it
+        x = parent_x + (parent_width - subwindow_width) // 2
+        y = parent_y + (parent_height - subwindow_height) // 2
+
+        # Set the subwindow's geometry
+        subwindow.geometry(f"{subwindow_width}x{subwindow_height}+{x}+{y}")
+
     def randomize(self):
-        def center_subwindow(parent, subwindow):
-            parent.update_idletasks()  # Ensure parent dimensions are accurate
-            subwindow.update_idletasks() # Ensure subwindow dimensions are accurate
-
-            # Get parent window's position and dimensions
-            parent_x = parent.winfo_x()
-            parent_y = parent.winfo_y()
-            parent_width = parent.winfo_width()
-            parent_height = parent.winfo_height()
-
-            # Get subwindow's dimensions
-            subwindow_width = subwindow.winfo_width()
-            subwindow_height = subwindow.winfo_height()
-
-            # Calculate subwindow's position to center it
-            x = parent_x + (parent_width - subwindow_width) // 2
-            y = parent_y + (parent_height - subwindow_height) // 2
-
-            # Set the subwindow's geometry
-            subwindow.geometry(f"{subwindow_width}x{subwindow_height}+{x}+{y}")
 
         self.subwindow = Toplevel(self.root, padx=20, pady=10)
         self.subwindow.title("Generating")
@@ -487,7 +491,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.subwindow.transient(self.root)
         self.subwindow.grab_set()
 
-        center_subwindow(self.root, self.subwindow)
+        self.center_subwindow(self.root, self.subwindow)
         self.progressbar.grid()
         self.progressbar.start()
 
@@ -537,6 +541,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         p: Preset = Preset.get_preset_from_name(self.preset_optionsvar.get())
         self.preset_description_label["text"] = p.description + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset."
         p.set_options(self)
+
+    def show_tracker(self):
+        self.tracker = ItemTracker(
+            self.root,
+            HLDBasics.find_save_path(),
+            self.random_shops,
+            self.random_pistol
+        )
 
     def __init__(self, root, path):
         self.root = root
@@ -730,11 +742,13 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
         # Bottom buttons #
-        bottom_frame = Frame(root)
+        bottom_frame = ttk.Frame(root)
         bottom_frame.grid(column=0, row=9, sticky=NSEW)
 
 
+
         # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
+        ttk.Button(bottom_frame, text="Item tracker", command=self.show_tracker).grid(column=2, row=0)
         ttk.Button(bottom_frame, text="Check solution", command=self.show_solution).grid(column=1, row=0)
         ttk.Button(bottom_frame, text="Revert game to normal", command=self.do_revert).grid(column=0, row=0)
         # ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
@@ -764,7 +778,98 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         for child in root.winfo_children(): 
             child.grid_configure(padx=15, pady=5)
 
+
+class ItemTracker:
+    class ToggleImage(ttk.Label):
+        def __init__(self, master, img_on_path, img_off_path, initial_state=True):
+            super().__init__(master)
+
+             # Load and resize images to fixed size
+            img_on  = Image.open(img_on_path).resize((40, 40), Image.LANCZOS)
+            img_off = Image.open(img_off_path).resize((40, 40), Image.LANCZOS)
+
+            # Load images
+            self.img_on  = ImageTk.PhotoImage(img_on)
+            self.img_off = ImageTk.PhotoImage(img_off)
+
+            self.state = initial_state
+            self.update_image()
+
+            # Bind click toggle
+            self.bind("<Button-1>", self.toggle)
+
+        def toggle(self, event=None):
+            self.state = not self.state
+            self.update_image()
+
+        def update_image(self):
+            if self.state:
+                self.config(image=self.img_on)
+            else:
+                self.config(image=self.img_off)
+
+    def __init__(self, 
+                parent,
+                save_path: str,
+                track_dash_shop: bool = False,
+                track_pistol: bool = False,
+                 ):
+
+        self.window = Toplevel(parent)
+        self.window.title("Item Tracker")
+
+
+        # .ico icons don't work on other platforms, skip for now
+        if platform.system() == "Windows":
+            self.window.iconbitmap("icon.ico")
+
+        self.window.wm_attributes('-transparentcolor','#ffffff')
+        self.window.wm_attributes('-topmost', True)
+
+        row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
+        row.grid()
+
+        path_on = os.path.join("assets", "module_icon2.png")
+        path_off= os.path.join("assets", "module_icon.png")
+        laser_on = os.path.join("assets", "laser.png")
+        laser_off = os.path.join("assets", "laser_off.png")
+        key_on = os.path.join("assets", "key.png")
+        key_off = os.path.join("assets", "key_off.png")
+
+        img_paths = [
+            (path_off, path_on),
+            (path_off, path_on),
+            (path_off, path_on),
+            (path_off, path_on),
+        ]
+
+        equip_paths = [
+            (laser_off, laser_on),
+            (key_off, key_on),
+        ]
+
+        i = 0
+        for direction in ["North", "East", "West", "South"]:
+            widget = ttk.Label(row, text=direction)
+            widget.grid(row=0, column=i, padx=5,pady=5)
+            i+=1
+
+        # Create each toggle image
+        for col, (on_path, off_path) in enumerate(img_paths):
+            widget = self.ToggleImage(row, on_path, off_path, initial_state=True)
+            widget.grid(row=1, column=col, padx=5)
+
+        for col, (on_path, off_path) in enumerate(equip_paths):
+            widget = self.ToggleImage(row, on_path, off_path, initial_state=True)
+            widget.grid(row=2, column=col, padx=5, pady=10)
+
+        MainRandomizerUI.center_subwindow(parent, self.window)
+        self.window.transient(parent)
+        self.window.grab_set()
+
+
 root = Tk()
+
 # .ico icons don't work on other platforms, skip for now
 if platform.system() == "Windows":
     root.iconbitmap("icon.ico")
