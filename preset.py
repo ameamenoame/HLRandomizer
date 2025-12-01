@@ -225,9 +225,9 @@ class PresetRandomStart(Preset):
  134, 135, 229, 230, 231, 232, 233, 234, 235, 236, 222, 223, 87, 86, 123,
  111, 112, 113, 114, 97, 53, 72, 66]
         ))
-        cls.set_save_data_field("checkX", 0)
-        cls.set_save_data_field("checkY", 0)
-        cls.set_save_data_field("warp", "4+")
+        cls.set_save_data_field("checkX", -50) # Force spawnwarp
+        cls.set_save_data_field("checkY", -50)
+        cls.set_save_data_field("warp", "4+") # Unlock the blocks in town
 
     @classmethod
     def set_options(cls, options):
