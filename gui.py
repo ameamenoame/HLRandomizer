@@ -7,6 +7,7 @@ from hldlib import HLDBasics, HLDLevel
 from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ItemPlacementRestriction, ModuleCount, ModuleDoorOptions
 from solution import check_solution
 from random import randrange
+from save_edit import *
 import shutil
 from save_edit import autofill_path
 import os
@@ -780,8 +781,31 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
 class ItemTracker:
+    class RepeatingTimer:
+        def __init__(self, interval, function, *args, **kwargs):
+            self.interval = interval
+            self.function = function
+            self.args = args
+            self.kwargs = kwargs
+            self._stop_event = threading.Event()
+            self._timer = None
+
+        def _run(self):
+            if not self._stop_event.is_set():
+                self.function(*self.args, **self.kwargs)
+                self.start()  # schedule next call
+
+        def start(self):
+            self._timer = threading.Timer(self.interval, self._run)
+            self._timer.start()
+
+        def stop(self):
+            self._stop_event.set()
+            if self._timer:
+                self._timer.cancel()
+
     class ToggleImage(ttk.Label):
-        def __init__(self, master, img_on_path, img_off_path, initial_state=True):
+        def __init__(self, master, img_on_path, img_off_path, initial_state=False):
             super().__init__(master)
 
              # Load and resize images to fixed size
@@ -808,11 +832,69 @@ class ItemTracker:
             else:
                 self.config(image=self.img_off)
 
+    def poll_save(self, save_path, save_edit_number):
+        print("Polling save...")
+
+        metadata = SaveMetadata(None, save_path)
+        savedata_map = savedata_load(metadata, [0, save_edit_number])
+
+        if self.has_key(savedata_map):
+            self.toggle_item("key", True)
+        else:
+            self.toggle_item("key", False)
+
+        if self.has_laser(savedata_map):
+            self.toggle_item("laser", True)
+        else:
+            self.toggle_item("laser", False)
+
+        if self.has_dash(savedata_map):
+            self.toggle_item("dash", True)
+        else:
+            self.toggle_item("dash", False)
+
+        if self.has_pistol(savedata_map):
+            self.toggle_item("pistol", True)
+        else:
+            self.toggle_item("pistol", False)
+
+    @staticmethod
+    def has_laser(savedata_map):
+        return "21" in savedata_map["sc"].value or "23" in savedata_map["sc"].value
+
+    @staticmethod 
+    def has_key(savedata_map):
+        return savedata_map["drifterkey"].value > 0
+
+    @staticmethod 
+    def has_dash(savedata_map):
+        return "4" in savedata_map["skill"].value
+
+    @staticmethod 
+    def has_pistol(savedata_map):
+        return "1" in savedata_map["sc"].value.split("+")
+
+    def toggle_item(self, name: str, state: bool = True):
+        if name == "laser":
+            self.laser.state = state
+            self.laser.update_image()
+        elif name == "key":
+            self.key.state = state
+            self.key.update_image()
+        elif name == "dash":
+            self.dash.state = state
+            self.dash.update_image()
+        elif name == "pistol":
+            self.pistol.state = state
+            self.pistol.update_image()
+        return
+
     def __init__(self, 
                 parent,
                 save_path: str,
                 track_dash_shop: bool = False,
                 track_pistol: bool = False,
+                save_edit_number: int = 1
                  ):
 
         self.window = Toplevel(parent)
@@ -829,24 +911,26 @@ class ItemTracker:
         row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
         row.grid()
 
-        path_on = os.path.join("assets", "module_icon2.png")
-        path_off= os.path.join("assets", "module_icon.png")
+        path_on = os.path.join("assets", "module_icon_on.png")
+        path_off= os.path.join("assets", "module_icon_off.png")
         laser_on = os.path.join("assets", "laser.png")
         laser_off = os.path.join("assets", "laser_off.png")
         key_on = os.path.join("assets", "key.png")
         key_off = os.path.join("assets", "key_off.png")
 
+        pistol_on = os.path.join("assets", "pistol_on.png")
+        pistol_off = os.path.join("assets", "pistol_off.png")
+
+        dash_on = os.path.join("assets", "dash_on.png")
+        dash_off = os.path.join("assets", "dash_off.png")
+
         img_paths = [
-            (path_off, path_on),
-            (path_off, path_on),
-            (path_off, path_on),
-            (path_off, path_on),
+            (path_on, path_off),
+            (path_on, path_off),
+            (path_on, path_off),
+            (path_on, path_off),
         ]
 
-        equip_paths = [
-            (laser_off, laser_on),
-            (key_off, key_on),
-        ]
 
         i = 0
         for direction in ["North", "East", "West", "South"]:
@@ -856,16 +940,33 @@ class ItemTracker:
 
         # Create each toggle image
         for col, (on_path, off_path) in enumerate(img_paths):
-            widget = self.ToggleImage(row, on_path, off_path, initial_state=True)
+            widget = self.ToggleImage(row, on_path, off_path)
             widget.grid(row=1, column=col, padx=5)
 
-        for col, (on_path, off_path) in enumerate(equip_paths):
-            widget = self.ToggleImage(row, on_path, off_path, initial_state=True)
-            widget.grid(row=2, column=col, padx=5, pady=10)
+
+        self.laser = self.ToggleImage(row, laser_on, laser_off)
+        self.laser.grid(row=2, column=0, padx=5, pady=20)
+
+        self.key = self.ToggleImage(row, key_on, key_off)
+        self.key.grid(row=2, column=1, padx=5, pady=20)
+
+        self.dash = self.ToggleImage(row, dash_on, dash_off)
+        self.dash.grid(row=2, column=2, padx=5, pady=20)
+
+        self.pistol = self.ToggleImage(row, pistol_on, pistol_off)
+        self.pistol.grid(row=2, column=3, padx=5, pady=20)
 
         MainRandomizerUI.center_subwindow(parent, self.window)
         self.window.transient(parent)
         self.window.grab_set()
+
+        self.poll_job = self.RepeatingTimer(15.0, lambda: self.poll_save(save_path, save_edit_number))
+        self.poll_job.start()
+
+        def _on_close():
+            self.poll_job.stop()
+            self.window.destroy()
+        self.window.protocol("WM_DELETE_WINDOW", _on_close)
 
 
 root = Tk()
