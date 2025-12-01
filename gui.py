@@ -805,12 +805,12 @@ class ItemTracker:
                 self._timer.cancel()
 
     class ToggleImage(ttk.Label):
-        def __init__(self, master, img_on_path, img_off_path, initial_state=False):
+        def __init__(self, master, img_on_path, img_off_path, width=40, height=40, initial_state=False):
             super().__init__(master)
 
              # Load and resize images to fixed size
-            img_on  = Image.open(img_on_path).resize((40, 40), Image.LANCZOS)
-            img_off = Image.open(img_off_path).resize((40, 40), Image.LANCZOS)
+            img_on  = Image.open(img_on_path).resize((width, height), Image.LANCZOS)
+            img_off = Image.open(img_off_path).resize((width, height), Image.LANCZOS)
 
             # Load images
             self.img_on  = ImageTk.PhotoImage(img_on)
@@ -858,6 +858,27 @@ class ItemTracker:
         else:
             self.toggle_item("pistol", False)
 
+        def toggle_if_have(item: str, arg):
+            val = False
+            if item.startswith("pylon"):
+                val = self.has_pylon(savedata_map, arg)
+
+            if val:
+                self.toggle_item(item, True)
+            else:
+                self.toggle_item(item, False)
+
+        toggle_if_have("pylon_north", "north")
+        toggle_if_have("pylon_east", "east")
+        toggle_if_have("pylon_west", "west")
+        toggle_if_have("pylon_south", "south")
+
+        if self.has_modules(savedata_map, None):
+            self.toggle_item("all_modules", True)
+        else:
+            self.toggle_item("all_modules", False)
+            
+
     @staticmethod
     def has_laser(savedata_map):
         return "21" in savedata_map["sc"].value or "23" in savedata_map["sc"].value
@@ -874,19 +895,50 @@ class ItemTracker:
     def has_pistol(savedata_map):
         return "1" in savedata_map["sc"].value.split("+")
 
+    @staticmethod 
+    def has_pylon(savedata_map, dir):
+        val = None
+        if dir == "east":
+            val = 2
+        elif dir == "north":
+            val = 1
+        elif dir == "west":
+            val = 0
+        elif dir == "south":
+            val = 3
+        return str(val) in savedata_map["wellMap"].value
+
+    @staticmethod 
+    def has_modules(savedata_map, dir):
+        return savedata_map["mapMod"].value.count(">") >= 16
+
     def toggle_item(self, name: str, state: bool = True):
+        obj = None
         if name == "laser":
-            self.laser.state = state
-            self.laser.update_image()
+            obj = self.laser
         elif name == "key":
-            self.key.state = state
-            self.key.update_image()
+            obj = self.key
         elif name == "dash":
-            self.dash.state = state
-            self.dash.update_image()
+            obj = self.dash
         elif name == "pistol":
-            self.pistol.state = state
-            self.pistol.update_image()
+            obj = self.pistol
+        elif name == "pylon_north":
+            obj = self.wells["well_north"]
+        elif name == "pylon_east":
+            obj = self.wells["well_east"]
+        elif name == "pylon_west":
+            obj = self.wells["well_west"]
+        elif name == "pylon_south":
+            obj = self.wells["well_south"]
+        elif name == "all_modules":
+            obj = self.modules
+            for o in obj.values():
+                o.state = state
+                o.update_image()
+            return
+
+        obj.state = state
+        obj.update_image()
         return
 
     def __init__(self, 
@@ -894,12 +946,11 @@ class ItemTracker:
                 save_path: str,
                 track_dash_shop: bool = False,
                 track_pistol: bool = False,
-                save_edit_number: int = 1
+                save_edit_number: int = 0
                  ):
 
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
-
 
         # .ico icons don't work on other platforms, skip for now
         if platform.system() == "Windows":
@@ -931,17 +982,16 @@ class ItemTracker:
             (path_on, path_off),
         ]
 
-
         i = 0
         for direction in ["North", "East", "West", "South"]:
             widget = ttk.Label(row, text=direction)
             widget.grid(row=0, column=i, padx=5,pady=5)
             i+=1
 
-        # Create each toggle image
+        self.modules = {}
         for col, (on_path, off_path) in enumerate(img_paths):
-            widget = self.ToggleImage(row, on_path, off_path)
-            widget.grid(row=1, column=col, padx=5)
+            self.modules[direction[col]] = self.ToggleImage(row, on_path, off_path)
+            self.modules[direction[col]].grid(row=1, column=col, padx=5)
 
 
         self.laser = self.ToggleImage(row, laser_on, laser_off)
@@ -956,10 +1006,25 @@ class ItemTracker:
         self.pistol = self.ToggleImage(row, pistol_on, pistol_off)
         self.pistol.grid(row=2, column=3, padx=5, pady=20)
 
+        i = 0
+        self.wells = {}
+        for direction in ["north", "east", "west", "south"]:
+            self.wells[f"well_{direction}"] = self.ToggleImage(row,
+                                    os.path.join("assets", f"well_{direction}.png"),
+                                    os.path.join("assets", "well_off.png"),
+                                    height=75
+                                      )
+            self.wells[f"well_{direction}"].grid(row=3, column=i, padx=5,pady=5)
+            i+=1
+        
+        
+        ttk.Label(self.window, text="Tracking save " + str(save_edit_number)).grid(row=1, column=0, pady=5, padx=5)
+        
         MainRandomizerUI.center_subwindow(parent, self.window)
         self.window.transient(parent)
         self.window.grab_set()
-
+        
+        self.poll_save(save_path, save_edit_number)
         self.poll_job = self.RepeatingTimer(15.0, lambda: self.poll_save(save_path, save_edit_number))
         self.poll_job.start()
 
@@ -967,7 +1032,6 @@ class ItemTracker:
             self.poll_job.stop()
             self.window.destroy()
         self.window.protocol("WM_DELETE_WINDOW", _on_close)
-
 
 root = Tk()
 
