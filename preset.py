@@ -164,6 +164,11 @@ class PresetBitbound(Preset):
 
         cls.set_save_data_field("gameName", "Bitbound")
 
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.random_shops.set(True)
+
 class PresetSeeker(Preset):
     description = "Recommended for beginners to the randomizer. Starts with the sky blue companion that helps track secrets and yellow + ochre cloak effects (faster movement and +1 health). Note: Only works on newer patches."
 
