@@ -1570,6 +1570,7 @@ def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
             if level_name == HLDLevel.Names.RM_EC_THEPLAZA:
                 special_remove_ids = [
                     3548, 4248, 1682, # Remove the blocks to PlazaToLoop
+                    4425, 3237, 4186, 10, 6444, # Remove the blocks to the lake
                     5404, 7128, 7095, 1702, 95, 5193, 93, 7830]  # Remove the blocks below the warp pad
                 if obj.uid in special_remove_ids:
                     to_remove.append(obj)
