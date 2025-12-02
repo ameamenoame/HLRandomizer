@@ -8,3 +8,4 @@ hlr-release*
 dist/
 build/
 .venv
+node_modules
