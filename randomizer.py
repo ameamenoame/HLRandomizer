@@ -1485,7 +1485,9 @@ def _mix_fake_module_doors(level_data: list):
             
         choices = [2 for i in range(count)]
         choices[0] = high_door_count
-        
+
+        if len(levels_to_change) >= 3: # If in south
+            choices[1] = 0
 
         for name in levels_to_change:
             for level in level_data:
@@ -1503,7 +1505,7 @@ def _mix_fake_module_doors(level_data: list):
     north_module_door_levels = ["rm_NX_MoonCourtyard/3"]
     west_module_door_levels = ["rm_WA_EntSwitch", "rm_WA_Vale/1"]
     east_module_door_levels = ["rm_EC_ThePlaza/2", "rm_EC_EastLoop/1"]
-    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner", "rm_SX_TowerSouth/4"]
+    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner"]
 
     _mix_doors_in_level(north_module_door_levels)
     _mix_doors_in_level(west_module_door_levels)
