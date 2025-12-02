@@ -159,16 +159,19 @@ class Inventory:
         cls.full["west_modules"] = count
         cls.full["south_modules"] = count
         cls.current = dict(cls.full)
+        cls.temporary = dict(cls.full)
 
     @classmethod
     def set_key_requirements(cls, count: KeyCount = KeyCount.ALL):
         cls.full["keys"] = count
         cls.current = dict(cls.full)
+        cls.temporary = dict(cls.full)
 
     @classmethod
     def set_lasers_requirements(cls, count: int = 2):
         cls.full["lasers"] = count
         cls.current = dict(cls.full)
+        cls.temporary = dict(cls.full)
 
     @classmethod
     def pick_up_item(cls, obj: FakeObject):
@@ -1401,7 +1404,7 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
     if not random_doors:
         if module_door_option == ModuleDoorOptions.DISABLED:
             _manual_disable_module_doors(real_levels)
-        elif module_door_option == ModuleDoorOptions.MIX:
+        else:
             _manual_mix_real_module_doors(real_levels, module_door_mix_data)
         
         if key_count == KeyCount.MINIMUM: 
@@ -1500,7 +1503,7 @@ def _mix_fake_module_doors(level_data: list):
     north_module_door_levels = ["rm_NX_MoonCourtyard/3"]
     west_module_door_levels = ["rm_WA_EntSwitch", "rm_WA_Vale/1"]
     east_module_door_levels = ["rm_EC_ThePlaza/2", "rm_EC_EastLoop/1"]
-    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner"]
+    south_module_door_levels = ["rm_SX_TowerSouth/1", "rm_CH_BDirkDemolition", "rm_CH_ACorner", "rm_SX_TowerSouth/4"]
 
     _mix_doors_in_level(north_module_door_levels)
     _mix_doors_in_level(west_module_door_levels)
