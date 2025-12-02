@@ -586,6 +586,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         hm_link.grid(column=3, row=0, sticky=E)
         hm_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/heartmachine"))
 
+        kb_link = ttk.Label(header_frame, text="Knowledge Base", justify=RIGHT, 
+                                font=("TkDefaultFont", 10, "underline"),
+                                foreground="blue",
+                                cursor="hand2",
+                            )
+        kb_link.grid(column=5, row=0, sticky=E)
+        kb_link.bind("<Button-1>", lambda e: self.open_link("https://ameamenoame.github.io/HLRandomizer/#/"))
+
 
         # Seed settings #
         seed_frame = ttk.LabelFrame(root, text="Seed")
