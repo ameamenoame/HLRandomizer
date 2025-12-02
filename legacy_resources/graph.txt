@@ -365,8 +365,8 @@ Room,North,rm_NL_GapHallway/1,
 Room,North,rm_NL_GapHallway/2,
 Check,1104,792,3357,0,0,0,0,0,0,0,0,0, ENEMY GEARBIT,
 Room,North,rm_NL_GapHallway/3,
-Check,1072,208,,0,0,0,0,0,0,0,0,0,GEARBOX,
-Check,976,208,,0,0,0,0,0,0,0,0,1,"BONES,-8,5",KEY
+Check,1072,208,,0,0,0,0,0,0,0,0,1,"BONES,-8,5",KEY,
+Check,976,208,,0,0,0,0,0,0,0,0,0,GEARBOX,
 Room,North,rm_NL_RisingArena/1,
 Room,North,rm_NL_RisingArena/2,
 Check,608,112,,0,0,0,0,0,0,0,0,0,TABLET, 4
