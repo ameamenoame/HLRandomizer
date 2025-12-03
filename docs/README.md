@@ -51,6 +51,10 @@ Useful tip: Skip the intro by pressing /skip or by holding all the face buttons 
 
 # Options
 
+Randomize rooms:
+- Randomizes room transitions.
+- Note that using room rando will disable the effect of all other randomize options including item location pool except for enemy randomizer.
+
 Randomize pistol for NG option:
 - Does not give pistol on start for NG drifter.
 - Pistol's location is randomized in the world.
