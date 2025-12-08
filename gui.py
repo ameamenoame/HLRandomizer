@@ -1,6 +1,6 @@
 import threading
 from tkinter import *
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, scrolledtext
 from time import time
 from preset import PresetType, Preset
 from hldlib import HLDBasics, HLDLevel
@@ -309,6 +309,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.enemy_choicesvar.set(self.enemy_choices)
         return
 
+    def on_key_count_spinbox_changed(self):
+        return
+
     def onspinboxreturn(self, _a):
         self.current_weightvar.set(self.spinbox.get())
         self.onspinboxchanged()
@@ -316,7 +319,16 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def show_solution(self):
         solution = check_solution(self.layers)
-        messagebox.showinfo(message=solution, title="Solution")
+        subwindow = Toplevel(self.root, padx=20, pady=10)
+        subwindow.title("Solution")
+        # .ico icons don't work on other platforms, skip for now
+        if platform.system() == "Windows":
+            self.subwindow.iconbitmap("icon.ico")
+
+        text = scrolledtext.ScrolledText(subwindow)
+        text.grid()
+        text.insert(INSERT, solution)
+        text.configure(state='disabled')
 
     def set_weekly_seed(self):
         import datetime
@@ -359,6 +371,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root,
         results,
         use_chain_logic,
+        key_count: int,
     ):
         def do_gen(
             random_seed,
@@ -378,6 +391,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_count_optionsvar,
             preset,
             use_chain_logic,
+            key_count: int,
         ):
             """
             Starts the randomized level files creation sequence
@@ -448,6 +462,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         randomize_shop=random_shops,
                         preset=preset,
                         use_chain_logic=use_chain_logic,
+                        key_count=key_count
                     )
                     success = True
                     break
@@ -502,6 +517,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_count_optionsvar,
             preset,
             use_chain_logic,
+            key_count,
         )
 
         # Definitely not thread safe
@@ -581,6 +597,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 root,
                 self.results,
                 self.use_chain_logic.get(),
+                int(self.key_countvar.get()),
             ],
         )
         self.t.daemon = True
@@ -812,6 +829,21 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_count_label.grid(column=0, row=10, sticky=E, padx=5, pady=5)
         self.module_count_list.grid(column=1, row=10, sticky=W)
+
+
+        ttk.Label(progression_frame, text="Key count").grid(column=0, row=11, sticky=NE, padx=5, pady=5)
+        self.key_countvar = StringVar(value="1")
+        self.key_count_spinbox = ttk.Spinbox(
+            progression_frame,
+            from_=0,
+            to=16,
+            textvariable=self.key_countvar,
+            width=5,
+            command=self.on_key_count_spinbox_changed,
+            increment=1,
+        )
+        self.key_count_spinbox.grid(column=1, row=11, sticky=W)
+
 
         # Enemy settings #
 

@@ -38,6 +38,7 @@ class KeyCount(int, Enum):
     def __str__(self):
         return str(self.value)
 
+    NONE = 0
     MINIMUM = 1
     ALL = 16
 

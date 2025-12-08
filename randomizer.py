@@ -1586,7 +1586,7 @@ def main(
     limit_one_module_per_room: bool = True,
     module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE,
     module_count: ModuleCount = ModuleCount.ALL,
-    key_count: KeyCount = KeyCount.MINIMUM,
+    key_count: int = KeyCount.MINIMUM,
     randomize_pistol: bool = False,
     randomize_shop: bool = False,
     preset: Preset | None = None,
@@ -1654,8 +1654,7 @@ def main(
         print("Module door Mix data")
         print(module_door_mix_data)
 
-        if key_count == KeyCount.MINIMUM:
-            key_mix_data = _mix_fake_key_doors(connections_data, fake_levels, key_count)
+        key_mix_data = _mix_fake_key_doors(connections_data, fake_levels, key_count)
         print("Key door mix data")
         print(key_mix_data)
 
@@ -1724,8 +1723,7 @@ def main(
         else:
             _manual_mix_real_module_doors(real_levels, module_door_mix_data)
 
-        if key_count == KeyCount.MINIMUM:
-            _manual_mix_real_key_doors(real_levels, key_mix_data)
+        _manual_mix_real_key_doors(real_levels, key_mix_data, key_count)
 
         if randomize_pistol:
             _remove_intro_death_cutscene(real_levels)
@@ -1748,7 +1746,7 @@ def main(
 
 
 def _mix_fake_key_doors(
-    connections_data: list, level_data: list, max_key_count: KeyCount
+    connections_data: list, level_data: list, max_key_count: int
 ):
     mix_data: dict = {}
 
@@ -1762,7 +1760,7 @@ def _mix_fake_key_doors(
                 if level["requirements"]["keys"] != 0 and level["from"].startswith(
                     name
                 ):
-                    to_place: int = high_door_count
+                    to_place: int = min(high_door_count,level["requirements"]["keys"])
                     level["requirements"]["keys"] = to_place
                     mix_data[level["from"].split("/")[0]] = to_place
                     break
@@ -1778,7 +1776,7 @@ def _mix_fake_key_doors(
                     obj: HLDObj
                     for obj in level.fake_object_list:
                         if obj.requirements["keys"] > 0:
-                            to_place: int = high_door_count
+                            to_place: int = min(high_door_count, obj.requirements["keys"])
                             obj.requirements["keys"] = to_place
                             mix_data[level.name.split("/")[0]] = to_place
 
@@ -1875,7 +1873,7 @@ def _remove_intro_death_cutscene(real_levels: LevelHolder):
     return
 
 
-def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict):
+def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict, max_key_count: int = KeyCount.MINIMUM):
     def _change_key_door_in_level(level_name: str, count: int):
         obj: HLDObj
         obj_list = real_levels.find_by_name(level_name).object_list
@@ -1900,7 +1898,7 @@ def _manual_mix_real_key_doors(real_levels: LevelHolder, mix_data: dict):
         HLDLevel.Names.RM_EC_BIGBOGLAB,
         HLDLevel.Names.RM_C_CENTRAL,
     ]
-    mix_data["rm_C_Central"] = 1  # Don't lock out the horde room
+    mix_data["rm_C_Central"] = min(max_key_count, 12)  # Don't lock out the horde room
 
     for l in levels:
         name = l.replace(".lvl", "")
