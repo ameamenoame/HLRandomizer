@@ -20,7 +20,10 @@ class HLDObj:
 
     @classmethod
     def from_line(cls, line: str):
-        match_obj = re.search(r"obj,(?P<type>.*?),(?P<uid>.*?),(?P<x>.*?),(?P<y>.*?),(?P<layer>.*?),(?P<middle_string>.*?),\+\+,(?P<attrs>.*)", line)
+        match_obj = re.search(
+            r"obj,(?P<type>.*?),(?P<uid>.*?),(?P<x>.*?),(?P<y>.*?),(?P<layer>.*?),(?P<middle_string>.*?),\+\+,(?P<attrs>.*)",
+            line,
+        )
         type = match_obj.group("type")
         uid = int(match_obj.group("uid"))
         x = int(match_obj.group("x"))
@@ -32,7 +35,15 @@ class HLDObj:
         for pair in [pair for pair in str_to_attrs.split(",") if "=" in pair]:
             a = pair.split("=")
             attrs[a[0]] = cls._int_float_str_convert(a[1])
-        return cls(type=type, x=x, y=y, uid=uid, layer=layer, middle_string=middle_string, attrs=attrs)
+        return cls(
+            type=type,
+            x=x,
+            y=y,
+            uid=uid,
+            layer=layer,
+            middle_string=middle_string,
+            attrs=attrs,
+        )
 
     def get_line(self, uid: int = None) -> str:
         attrs_to_str = ",".join([f"{key}={value}" for key, value in self.attrs.items()])
@@ -43,8 +54,12 @@ class HLDObj:
 
     @staticmethod
     def _int_float_str_convert(val: str) -> int | float | str:
-        try: return int(val)
-        except: pass
-        try: return float(val)
-        except: pass
+        try:
+            return int(val)
+        except:
+            pass
+        try:
+            return float(val)
+        except:
+            pass
         return val

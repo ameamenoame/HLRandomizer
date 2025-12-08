@@ -4,7 +4,19 @@ from tkinter import ttk, messagebox
 from time import time
 from preset import PresetType, Preset
 from hldlib import HLDBasics, HLDLevel
-from randomizer import main, OUTPUT_PATH, BACKUP_FOLDER_NAME, ITEMLESS_FOLDER_NAME, DOORLESS_FOLDER_NAME, Inventory, BASE_LIST_OF_ENEMIES, BASE_ENEMY_PROTECT_POOL, ItemPlacementRestriction, ModuleCount, ModuleDoorOptions
+from randomizer import (
+    main,
+    OUTPUT_PATH,
+    BACKUP_FOLDER_NAME,
+    ITEMLESS_FOLDER_NAME,
+    DOORLESS_FOLDER_NAME,
+    Inventory,
+    BASE_LIST_OF_ENEMIES,
+    BASE_ENEMY_PROTECT_POOL,
+    ItemPlacementRestriction,
+    ModuleCount,
+    ModuleDoorOptions,
+)
 from solution import check_solution
 from random import randrange
 from save_edit import *
@@ -16,6 +28,7 @@ import platform
 import getpass
 from PIL import Image, ImageTk
 
+
 def _append_if_missing(filepath, text):
     try:
         with open(filepath, "r") as f:
@@ -26,18 +39,19 @@ def _append_if_missing(filepath, text):
     if text not in contents:
         with open(filepath, "a") as f:
             f.writelines(text)
-        return True 
-    return False 
+        return True
+    return False
+
 
 def _delete_if_exists(filepath, text):
     try:
         with open(filepath, "r") as f:
             contents = f.read()
     except FileNotFoundError:
-        return False  
+        return False
 
     if text not in contents:
-        return False 
+        return False
 
     updated = contents.replace(text, "")
 
@@ -46,6 +60,7 @@ def _delete_if_exists(filepath, text):
 
     return True
 
+
 class GamePathSetup:
     def set_path(self, *args):
         try:
@@ -53,7 +68,12 @@ class GamePathSetup:
             save_path = self.save_path.get().strip()
             with open("hlddir.txt", "w") as f:
                 f.write("\n".join([path, save_path]))
-            messagebox.showinfo(message="Game path set to " + path + "\nPlease close the randomizer and open it again to start the randomizer.", title="Success")
+            messagebox.showinfo(
+                message="Game path set to "
+                + path
+                + "\nPlease close the randomizer and open it again to start the randomizer.",
+                title="Success",
+            )
             self.root.destroy()
         except:
             messagebox.showerror(message="Could not set game path.")
@@ -73,13 +93,20 @@ class GamePathSetup:
             game_path = f"/Users/{username}/Library/Application Support/Steam/SteamApps/common/HyperLightDrifter/HyperLightDrifter.app/Contents/Resources"
         else:
             # defaulting to Windows
-            game_path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\HyperLightDrifter"
+            game_path = (
+                "C:\\Program Files (x86)\\Steam\\steamapps\\common\\HyperLightDrifter"
+            )
         self.game_path = StringVar(value=game_path)
         game_path_entry = ttk.Entry(mainframe, textvariable=self.game_path, width=64)
         game_path_entry.grid(column=2, row=1, sticky=(W, E))
 
-        ttk.Label(mainframe, text="Please specify the path to the game on disk (default is on the C drive but if you changed the installation location copy the path to it here)").grid(column=2, row=0, sticky=W)
-        ttk.Button(mainframe, text="Set path", command=self.set_path, width=50).grid(column=1, row=4, sticky=NSEW, columnspan=2)
+        ttk.Label(
+            mainframe,
+            text="Please specify the path to the game on disk (default is on the C drive but if you changed the installation location copy the path to it here)",
+        ).grid(column=2, row=0, sticky=W)
+        ttk.Button(mainframe, text="Set path", command=self.set_path, width=50).grid(
+            column=1, row=4, sticky=NSEW, columnspan=2
+        )
 
         ttk.Label(mainframe, text="Specify save path").grid(column=2, row=2, sticky=W)
         self.save_path = StringVar(value=autofill_path(None))
@@ -89,7 +116,7 @@ class GamePathSetup:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         mainframe.columnconfigure(2, weight=1)
-        for child in mainframe.winfo_children(): 
+        for child in mainframe.winfo_children():
             child.grid_configure(padx=5, pady=5)
 
 
@@ -150,15 +177,30 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         Makes a backup of HLD levels and makes itemless and doorless copies of levels
         """
 
-        ITEMS = [",ModuleSocket", ",LibrarianTablet", ",DrifterBones_Outfit", "=GearbitCrate", ",DrifterBones_Key",
-                 ",DrifterBones_Weapon", "=Gearbit",
-                 ",NoCombat", ",NoShoot", ",Upgrade", "spr_NPC_teddy_idleSup", "spr_NPC_Fatso",
-                 "spr_NPC_akashecary_idleGrind", "spr_NPC_seanguin_idleThink", "spr_NPC_beau_idleTap"]
+        ITEMS = [
+            ",ModuleSocket",
+            ",LibrarianTablet",
+            ",DrifterBones_Outfit",
+            "=GearbitCrate",
+            ",DrifterBones_Key",
+            ",DrifterBones_Weapon",
+            "=Gearbit",
+            ",NoCombat",
+            ",NoShoot",
+            ",Upgrade",
+            "spr_NPC_teddy_idleSup",
+            "spr_NPC_Fatso",
+            "spr_NPC_akashecary_idleGrind",
+            "spr_NPC_seanguin_idleThink",
+            "spr_NPC_beau_idleTap",
+        ]
         DOORS = ["j,door,", "j,Televator", "j,Teleporter", ",h=128,cs=3,"]
         start_time = time()
         levels = HLDBasics.omega_load(self.PATH_TO_HLD)
 
-        def _remove_and_dump(levels: list[HLDLevel], objects_to_exclude: list[str], output_folder: str):
+        def _remove_and_dump(
+            levels: list[HLDLevel], objects_to_exclude: list[str], output_folder: str
+        ):
             for level in levels:
                 objs_to_remove = []
                 for obj in level.object_list:
@@ -169,19 +211,24 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 level.dump_level(os.path.join(OUTPUT_PATH, output_folder, level.dir_))
 
         # REAL BACKUP
-        for level_path, dir_, level_name in HLDBasics.get_levels(self.PATH_TO_HLD, HLDBasics.DIRS):
-            os.makedirs(path_to_save := os.path.join(OUTPUT_PATH, BACKUP_FOLDER_NAME, dir_), exist_ok=True)
+        for level_path, dir_, level_name in HLDBasics.get_levels(
+            self.PATH_TO_HLD, HLDBasics.DIRS
+        ):
+            os.makedirs(
+                path_to_save := os.path.join(OUTPUT_PATH, BACKUP_FOLDER_NAME, dir_),
+                exist_ok=True,
+            )
             shutil.copy(level_path, path_to_save)
         # FAKE BACKUP
         # _remove_and_dump(levels, ["DO NOT EXCLUDE ANYTHING"], BACKUP_FOLDER_NAME)
         _remove_and_dump(levels, ITEMS, ITEMLESS_FOLDER_NAME)
         _remove_and_dump(levels, DOORS, DOORLESS_FOLDER_NAME)
 
-
         end_time = time()
         print(f"Done in {end_time-start_time:.2f} s")
-        messagebox.showinfo(message=f"Setup finished. You can now start randomization.", title="Done")
-
+        messagebox.showinfo(
+            message=f"Setup finished. You can now start randomization.", title="Done"
+        )
 
     def do_del(self):
         """
@@ -198,32 +245,34 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             print(f"Done in {end_time-start_time:.2f} s")
             messagebox.showinfo(message="Generated files deleted")
 
-
     def do_revert(self):
         folder_to_push = "backup"
         if folder_to_push not in os.listdir(OUTPUT_PATH):
             messagebox.showerror(message="Output folder not found.")
         else:
             start_time = time()
-            shutil.copytree(os.path.join(OUTPUT_PATH, folder_to_push), self.PATH_TO_HLD, dirs_exist_ok=True)
+            shutil.copytree(
+                os.path.join(OUTPUT_PATH, folder_to_push),
+                self.PATH_TO_HLD,
+                dirs_exist_ok=True,
+            )
             end_time = time()
             print(f"Done in {end_time-start_time:.2f} s")
             messagebox.showinfo(message="Reverted Hyper Light Drifter to normal")
 
-            
     def disable_enemy(self):
         current_index = self.enemy_list.curselection()
-        if current_index != (): 
+        if current_index != ():
             i = current_index[0]
             if self.enemy_data[i]["enabled"]:
-                self.enemy_choices[i] = "(DISABLED) " +  self.enemy_data[i]["name"] 
+                self.enemy_choices[i] = "(DISABLED) " + self.enemy_data[i]["name"]
             self.enemy_data[i]["enabled"] = False
             self.enemy_choicesvar.set(self.enemy_choices)
             return
 
     def enable_enemy(self):
         current_index = self.enemy_list.curselection()
-        if current_index != (): 
+        if current_index != ():
             i = current_index[0]
             if not self.enemy_data[i]["enabled"]:
                 self.enemy_choices[i] = self.enemy_data[i]["name"]
@@ -233,7 +282,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def protect_enemy(self):
         current_index = self.enemy_list.curselection()
-        if current_index != (): 
+        if current_index != ():
             i = current_index[0]
             self.enemy_data[i]["protected"] = not self.enemy_data[i]["protected"]
             if not self.enemy_data[i]["protected"]:
@@ -245,14 +294,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def onenemyselect(self, _b):
         current_index = self.enemy_list.curselection()
-        if current_index != (): 
+        if current_index != ():
             i = current_index[0]
             self.current_weightvar.set(str(self.enemy_data[i]["weight"]))
         return
 
     def onspinboxchanged(self):
         current_index = self.enemy_list.curselection()
-        if current_index != (): 
+        if current_index != ():
             i = current_index[0]
             weightnum = float(self.current_weightvar.get())
             self.enemy_data[i]["weight"] = weightnum
@@ -261,7 +310,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         return
 
     def onspinboxreturn(self, _a):
-        self.current_weightvar.set(self.spinbox.get()) 
+        self.current_weightvar.set(self.spinbox.get())
         self.onspinboxchanged()
         self.enemy_list.focus()
 
@@ -273,6 +322,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         import datetime
         import hashlib
         import base64
+
         def short_base64_hash_week():
             year, week, _ = datetime.date.today().isocalendar()
             data = f"{year}-{week}".encode()
@@ -284,9 +334,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def open_link(self, url: str):
         import webbrowser
+
         webbrowser.open_new(url)
 
-        
     @staticmethod
     def thread_do_work(
         random_seed,
@@ -308,7 +358,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         PATH_TO_HLD,
         root,
         results,
-        use_chain_logic
+        use_chain_logic,
     ):
         def do_gen(
             random_seed,
@@ -328,13 +378,12 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_count_optionsvar,
             preset,
             use_chain_logic,
-                ):
+        ):
             """
             Starts the randomized level files creation sequence
             Leave random seed empty if you don't wish to use a seed
             At the end creates a folder named 'randomized' in 'game_files'
             """
-
 
             output = True
             output_folder_name = OUT_FOLDER_NAME
@@ -362,26 +411,31 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             bound = 1000000000000
             count = 0
             while count < 1000:
-                count+=1
+                count += 1
                 try:
                     if not using_preset_seed:
                         random_seed = str(randrange(-bound, bound))
 
                     final_enemy_list = []
                     for e in enemy_data:
-                        if not e["enabled"]: continue
+                        if not e["enabled"]:
+                            continue
                         final_enemy_list.append(e["name"])
                     final_enemy_weights = []
                     for e in enemy_data:
-                        if not e["enabled"]: continue
+                        if not e["enabled"]:
+                            continue
                         final_enemy_weights.append(e["weight"])
-
 
                     layers = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
-                        output_folder_name=output_folder_name if output_folder_name else OUT_FOLDER_NAME,
+                        output_folder_name=(
+                            output_folder_name
+                            if output_folder_name
+                            else OUT_FOLDER_NAME
+                        ),
                         random_seed=random_seed if random_seed else None,
                         list_of_enemies=final_enemy_list,
                         enemy_weights=final_enemy_weights,
@@ -393,7 +447,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         randomize_pistol=random_pistol,
                         randomize_shop=random_shops,
                         preset=preset,
-                        use_chain_logic=use_chain_logic
+                        use_chain_logic=use_chain_logic,
                     )
                     success = True
                     break
@@ -402,11 +456,13 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         print("Retrying!")
                         Inventory.reset()
                     else:
-                        print(f"We've encountered an '{e}' error. Try again or try another seed if seed used.")
-                        break 
+                        print(
+                            f"We've encountered an '{e}' error. Try again or try another seed if seed used."
+                        )
+                        break
 
             return (success, random_seed, layers)
-    
+
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
             Pushes selected levels to HLD installation folder
@@ -419,7 +475,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 return False
             else:
                 start_time = time()
-                shutil.copytree(os.path.join(OUTPUT_PATH, folder_to_push), PATH_TO_HLD, dirs_exist_ok=True)
+                shutil.copytree(
+                    os.path.join(OUTPUT_PATH, folder_to_push),
+                    PATH_TO_HLD,
+                    dirs_exist_ok=True,
+                )
                 end_time = time()
                 print(f"Done in {end_time-start_time:.2f} s")
                 return True
@@ -445,24 +505,19 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         )
 
         # Definitely not thread safe
-        results['success']= gen_result[0]
-        results['final_seed'] = gen_result[1]
-        results['layers'] = gen_result[2]
-        
+        results["success"] = gen_result[0]
+        results["final_seed"] = gen_result[1]
+        results["layers"] = gen_result[2]
 
-        if results['success']:
-            do_push(
-                OUT_FOLDER_NAME,
-                PATH_TO_HLD
-            )
+        if results["success"]:
+            do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
 
-        root.event_generate('<<GenerationComplete>>')
-
+        root.event_generate("<<GenerationComplete>>")
 
     @staticmethod
     def center_subwindow(parent, subwindow):
         parent.update_idletasks()  # Ensure parent dimensions are accurate
-        subwindow.update_idletasks() # Ensure subwindow dimensions are accurate
+        subwindow.update_idletasks()  # Ensure subwindow dimensions are accurate
 
         # Get parent window's position and dimensions
         parent_x = parent.winfo_x()
@@ -489,7 +544,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         if platform.system() == "Windows":
             self.subwindow.iconbitmap("icon.ico")
 
-        self.progressbar = ttk.Progressbar(self.subwindow, orient=HORIZONTAL, length=200, mode='indeterminate')
+        self.progressbar = ttk.Progressbar(
+            self.subwindow, orient=HORIZONTAL, length=200, mode="indeterminate"
+        )
         self.progressbar.grid(column=0, row=0, sticky=EW, columnspan=4)
         self.subwindow.grid_rowconfigure(0, weight=1)
 
@@ -500,33 +557,33 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.progressbar.grid()
         self.progressbar.start()
 
-        self.results = {
-            'success': False,
-            'final_seed': ""
-        }
-        self.t = threading.Thread(target=MainRandomizerUI.thread_do_work, args=[
-            self.random_seed.get(),
-            self.enemy_data,
-            self.random_pistol.get(),
-            self.random_shops.get(),
-            self.OUT_FOLDER_NAME,
-            self.NO_PISTOL_RANDO_MANUAL_CHANGE,
-            self.PISTOL_RANDO_MANUAL_CHANGE,
-            self.SHOP_RANDO_MANUAL_CHANGE,
-            self.random_doors.get(),
-            self.random_enemies.get(),
-            self.enemy_protect_pool,
-            self.module_optionsvar.get(),
-            self.limit_one_module_per_room.get(),
-            self.module_door_optionsvar.get(),
-            int(self.module_count_optionsvar.get()),
-            self.preset_optionsvar.get(),
-            self.PATH_TO_HLD,
-            root,
-            self.results,
-            self.use_chain_logic.get()
-        ])
-        self.t.daemon=True
+        self.results = {"success": False, "final_seed": ""}
+        self.t = threading.Thread(
+            target=MainRandomizerUI.thread_do_work,
+            args=[
+                self.random_seed.get(),
+                self.enemy_data,
+                self.random_pistol.get(),
+                self.random_shops.get(),
+                self.OUT_FOLDER_NAME,
+                self.NO_PISTOL_RANDO_MANUAL_CHANGE,
+                self.PISTOL_RANDO_MANUAL_CHANGE,
+                self.SHOP_RANDO_MANUAL_CHANGE,
+                self.random_doors.get(),
+                self.random_enemies.get(),
+                self.enemy_protect_pool,
+                self.module_optionsvar.get(),
+                self.limit_one_module_per_room.get(),
+                self.module_door_optionsvar.get(),
+                int(self.module_count_optionsvar.get()),
+                self.preset_optionsvar.get(),
+                self.PATH_TO_HLD,
+                root,
+                self.results,
+                self.use_chain_logic.get(),
+            ],
+        )
+        self.t.daemon = True
         self.t.start()
 
         # self.subwindow.protocol("WM_DELETE_WINDOW", lambda: True)
@@ -535,25 +592,33 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def gen_finish(self, e):
         self.progressbar.stop()
-        if self.results['success']: 
+        if self.results["success"]:
             self.random_seed.set(self.results["final_seed"])
-            messagebox.showinfo(message=f"Generation successful!\n\nSeed: " + str(self.results['final_seed']), title="Success")
-            self.layers = self.results['layers']
-        else: messagebox.showerror(message=f"Could not generate seed. Try again or try another seed if a seed was set.", title="Error")
+            messagebox.showinfo(
+                message=f"Generation successful!\n\nSeed: "
+                + str(self.results["final_seed"]),
+                title="Success",
+            )
+            self.layers = self.results["layers"]
+        else:
+            messagebox.showerror(
+                message=f"Could not generate seed. Try again or try another seed if a seed was set.",
+                title="Error",
+            )
         self.progressbar.grid_remove()
         self.subwindow.destroy()
 
-    def _on_preset_selection(self, a, b,c):
+    def _on_preset_selection(self, a, b, c):
         p: Preset = Preset.get_preset_from_name(self.preset_optionsvar.get())
-        self.preset_description_label["text"] = p.description + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset."
+        self.preset_description_label["text"] = (
+            p.description
+            + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset."
+        )
         p.set_options(self)
 
     def show_tracker(self):
         self.tracker = ItemTracker(
-            self.root,
-            HLDBasics.find_save_path(),
-            self.random_shops,
-            self.random_pistol
+            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol
         )
 
     def __init__(self, root, path):
@@ -561,45 +626,69 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.title("Hyper Light Drifter Randomizer")
         self.PATH_TO_HLD = path
 
-        if not os.path.isdir('game_files'):
+        if not os.path.isdir("game_files"):
             self.setup_frame = ttk.Frame(root)
             self.setup_frame.grid(column=0, row=0, sticky=NE)
-            ttk.Button(self.setup_frame, text="Set up Randomizer", command=lambda: self.do_install() or self.setup_frame.grid_forget()).grid(column=0, row=0, sticky=W, pady=5)
-            ttk.Label(self.setup_frame, text="(Do this once if you haven't)").grid(column=1, row=0, sticky=W)
-            
+            ttk.Button(
+                self.setup_frame,
+                text="Set up Randomizer",
+                command=lambda: self.do_install() or self.setup_frame.grid_forget(),
+            ).grid(column=0, row=0, sticky=W, pady=5)
+            ttk.Label(self.setup_frame, text="(Do this once if you haven't)").grid(
+                column=1, row=0, sticky=W
+            )
+
         # Header #
 
         header_frame = ttk.Frame(root)
-        header_frame.grid(column=0, row=1, sticky=NSEW,padx=10)
+        header_frame.grid(column=0, row=1, sticky=NSEW, padx=10)
 
-        ttk.Label(header_frame, text="Settings", justify=LEFT, font=("TkHeadingFont", 20)).grid(column=0, row=0, sticky=NW)
+        ttk.Label(
+            header_frame, text="Settings", justify=LEFT, font=("TkHeadingFont", 20)
+        ).grid(column=0, row=0, sticky=NW)
         header_frame.grid_columnconfigure(0, weight=1)
 
-        sr_link = ttk.Label(header_frame, text="Speedrun Discord", justify=RIGHT, 
-                                font=("TkDefaultFont", 10, "underline"),
-                                foreground="blue",
-                                cursor="hand2",
-                            )
+        sr_link = ttk.Label(
+            header_frame,
+            text="Speedrun Discord",
+            justify=RIGHT,
+            font=("TkDefaultFont", 10, "underline"),
+            foreground="blue",
+            cursor="hand2",
+        )
         sr_link.grid(column=4, row=0, sticky=E)
-        sr_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/gXFaGQd"))
+        sr_link.bind(
+            "<Button-1>", lambda e: self.open_link("https://discord.gg/gXFaGQd")
+        )
 
-        hm_link = ttk.Label(header_frame, text="Heart Machine Discord", justify=RIGHT,
-                                font=("TkDefaultFont", 10, "underline"),
-                                foreground="blue",
-                                cursor="hand2",
-                            )
+        hm_link = ttk.Label(
+            header_frame,
+            text="Heart Machine Discord",
+            justify=RIGHT,
+            font=("TkDefaultFont", 10, "underline"),
+            foreground="blue",
+            cursor="hand2",
+        )
         hm_link.grid(column=3, row=0, sticky=E)
-        hm_link.bind("<Button-1>", lambda e: self.open_link("https://discord.gg/heartmachine"))
+        hm_link.bind(
+            "<Button-1>", lambda e: self.open_link("https://discord.gg/heartmachine")
+        )
 
-        kb_link = ttk.Label(header_frame, text="Knowledge Base", justify=RIGHT, 
-                                font=("TkDefaultFont", 10, "underline"),
-                                foreground="blue",
-                                cursor="hand2",
-                            )
+        kb_link = ttk.Label(
+            header_frame,
+            text="Knowledge Base",
+            justify=RIGHT,
+            font=("TkDefaultFont", 10, "underline"),
+            foreground="blue",
+            cursor="hand2",
+        )
         kb_link.grid(column=5, row=0, sticky=E)
-        kb_link.bind("<Button-1>", lambda e: self.open_link("https://ameamenoame.github.io/HLRandomizer/#/"))
+        kb_link.bind(
+            "<Button-1>",
+            lambda e: self.open_link("https://ameamenoame.github.io/HLRandomizer/#/"),
+        )
 
-        for child in header_frame.winfo_children(): 
+        for child in header_frame.winfo_children():
             child.grid_configure(padx=2, pady=5)
 
         # Seed settings #
@@ -607,142 +696,208 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         seed_frame.grid(column=0, row=2, sticky=EW)
 
         self.random_seed = StringVar(value=None)
-        ttk.Label(seed_frame, text="Seed (leave empty for a random seed)").grid(column=0, row=3, pady=5, padx=5)
+        ttk.Label(seed_frame, text="Seed (leave empty for a random seed)").grid(
+            column=0, row=3, pady=5, padx=5
+        )
         seed_entry = ttk.Entry(seed_frame, textvariable=self.random_seed, width=30)
         seed_entry.grid(column=1, row=3, sticky=EW, pady=5, padx=5)
 
-        ttk.Button(seed_frame, text="Clear", command=lambda: self.random_seed.set("")).grid(column=2, row=3, sticky=NE, pady=5, padx=5)
-        ttk.Button(seed_frame, text="Try weekly seed", command=self.set_weekly_seed).grid(column=1, row=4, sticky=NW, pady=5, padx=5)
-
+        ttk.Button(
+            seed_frame, text="Clear", command=lambda: self.random_seed.set("")
+        ).grid(column=2, row=3, sticky=NE, pady=5, padx=5)
+        ttk.Button(
+            seed_frame, text="Try weekly seed", command=self.set_weekly_seed
+        ).grid(column=1, row=4, sticky=NW, pady=5, padx=5)
 
         # Options settings #
 
         options_frame = ttk.LabelFrame(root, text="Options")
         options_frame.grid(column=0, row=3, sticky=EW)
-        
+
         self.random_doors = BooleanVar(value=False)
-        ttk.Checkbutton(options_frame, text='Randomize rooms', 
-	    variable=self.random_doors,
-	    onvalue=True, offvalue= False).grid(column=0, row=4, sticky=W, pady=5, padx=5)
+        ttk.Checkbutton(
+            options_frame,
+            text="Randomize rooms",
+            variable=self.random_doors,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=0, row=4, sticky=W, pady=5, padx=5)
 
         self.random_enemies = BooleanVar(value=True)
-        ttk.Checkbutton(options_frame, text='Randomize enemies', 
-	    variable=self.random_enemies,
-	    onvalue=True, offvalue= False).grid(column=0, row=5, sticky=W, pady=5, padx=5)
+        ttk.Checkbutton(
+            options_frame,
+            text="Randomize enemies",
+            variable=self.random_enemies,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=0, row=5, sticky=W, pady=5, padx=5)
 
         self.random_shops = BooleanVar(value=False)
-        ttk.Checkbutton(options_frame, text='Randomize shops (if unset, shops will stay in town)', 
-	    variable=self.random_shops,
-	    onvalue=True, offvalue= False).grid(column=1, row=4, sticky=W)
+        ttk.Checkbutton(
+            options_frame,
+            text="Randomize shops (if unset, shops will stay in town)",
+            variable=self.random_shops,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=4, sticky=W)
 
         self.random_pistol = BooleanVar(value=False)
-        ttk.Checkbutton(options_frame, text='Randomize pistol for NG', 
-	    variable=self.random_pistol,
-	    onvalue=True, offvalue= False).grid(column=1, row=5, sticky=W)
+        ttk.Checkbutton(
+            options_frame,
+            text="Randomize pistol for NG",
+            variable=self.random_pistol,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=5, sticky=W)
 
-        
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
         progression_frame.grid(column=0, row=4, sticky=EW)
 
         self.use_chain_logic = BooleanVar(value=True)
-        ttk.Checkbutton(progression_frame, text='Enable chain logic', 
-	    variable=self.use_chain_logic,
-	    onvalue=True, offvalue= False).grid(column=0, row=5, sticky=W, padx=5, pady=5)
+        ttk.Checkbutton(
+            progression_frame,
+            text="Enable chain logic",
+            variable=self.use_chain_logic,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=0, row=5, sticky=W, padx=5, pady=5)
 
-        ttk.Label(progression_frame, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
+        ttk.Label(
+            progression_frame, text="Progression item placement location pool"
+        ).grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
-        self.module_optionsvar = StringVar(value=ItemPlacementRestriction.MODULES_EXTENDED)
-        module_settings_list = ttk.Combobox(progression_frame, textvariable=self.module_optionsvar, values=module_options, width=32)
+        self.module_optionsvar = StringVar(
+            value=ItemPlacementRestriction.MODULES_EXTENDED
+        )
+        module_settings_list = ttk.Combobox(
+            progression_frame,
+            textvariable=self.module_optionsvar,
+            values=module_options,
+            width=32,
+        )
         module_settings_list.grid(column=1, row=6, sticky=W, columnspan=3)
         module_settings_list.state(["readonly"])
 
         self.limit_one_module_per_room = BooleanVar(value=False)
-        ttk.Checkbutton(progression_frame, text='Limit 1 module per room', 
-	    variable=self.limit_one_module_per_room,
-	    onvalue=True, offvalue= False).grid(column=1, row=7, sticky=W)
+        ttk.Checkbutton(
+            progression_frame,
+            text="Limit 1 module per room",
+            variable=self.limit_one_module_per_room,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=7, sticky=W)
 
         self.module_door_label = ttk.Label(progression_frame, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
         self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
-        self.module_door_list = ttk.Combobox(progression_frame, textvariable=self.module_door_optionsvar, values=module_door_options)
+        self.module_door_list = ttk.Combobox(
+            progression_frame,
+            textvariable=self.module_door_optionsvar,
+            values=module_door_options,
+        )
         self.module_door_list.state(["readonly"])
         self.module_door_label.grid(column=0, row=9, sticky=E, padx=5, pady=5)
-        self.module_door_list.grid(column=1, row= 9, sticky=W)
+        self.module_door_list.grid(column=1, row=9, sticky=W)
 
         self.module_count_label = ttk.Label(progression_frame, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
         self.module_count_optionsvar = StringVar(value=ModuleCount.MINIMUM)
-        self.module_count_list = ttk.Combobox(progression_frame, textvariable=self.module_count_optionsvar, values=module_count_options)
+        self.module_count_list = ttk.Combobox(
+            progression_frame,
+            textvariable=self.module_count_optionsvar,
+            values=module_count_options,
+        )
         self.module_count_list.state(["readonly"])
 
-        self.module_count_label.grid(column=0, row =10, sticky=E, padx=5, pady=5)
+        self.module_count_label.grid(column=0, row=10, sticky=E, padx=5, pady=5)
         self.module_count_list.grid(column=1, row=10, sticky=W)
 
         # Enemy settings #
 
-        self.enemy_data = [{
-           "name": e,
-           "weight": 1.0,
-           "enabled": True,
-           "protected": False
-        } for e in BASE_LIST_OF_ENEMIES]
+        self.enemy_data = [
+            {"name": e, "weight": 1.0, "enabled": True, "protected": False}
+            for e in BASE_LIST_OF_ENEMIES
+        ]
         for e in self.enemy_data:
             # Sensible defaults
-            if e["name"] in ["Birdman", "slime", "spider", "Dirkommander"]: e["protected"] = True
-            if e["name"] in ["Dirkommander"]: e["enabled"] = False
+            if e["name"] in ["Birdman", "slime", "spider", "Dirkommander"]:
+                e["protected"] = True
+            if e["name"] in ["Dirkommander"]:
+                e["enabled"] = False
 
-        self.enemy_choices = [e["name"] if e["enabled"] else ("(DISABLED) " + e["name"]) for e in self.enemy_data]
+        self.enemy_choices = [
+            e["name"] if e["enabled"] else ("(DISABLED) " + e["name"])
+            for e in self.enemy_data
+        ]
         self.enemy_choicesvar = StringVar(value=self.enemy_choices)
-        
+
         enemy_pool_frame = ttk.LabelFrame(root, height=90, text="Enemies")
         enemy_pool_frame.grid(column=0, row=5, sticky=EW)
 
-        ttk.Label(enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")).grid(column=0, row=0, sticky=NE)
-        self.enemy_list = Listbox(enemy_pool_frame, listvariable=self.enemy_choicesvar, width=27)
+        ttk.Label(
+            enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")
+        ).grid(column=0, row=0, sticky=NE)
+        self.enemy_list = Listbox(
+            enemy_pool_frame, listvariable=self.enemy_choicesvar, width=27
+        )
         self.enemy_list.configure(exportselection=False)
         self.enemy_list.grid(column=1, row=0, sticky=W, rowspan=2)
-        self.enemy_list.bind('<<ListboxSelect>>', self.onenemyselect)
+        self.enemy_list.bind("<<ListboxSelect>>", self.onenemyselect)
 
-        s = ttk.Scrollbar(enemy_pool_frame, orient=VERTICAL, command=self.enemy_list.yview)
+        s = ttk.Scrollbar(
+            enemy_pool_frame, orient=VERTICAL, command=self.enemy_list.yview
+        )
         self.enemy_list.configure(yscrollcommand=s.set)
         s.grid(column=1, row=0, sticky=(N, S, E), rowspan=2)
-
 
         # Weight spinbox
         weight_frame = ttk.Frame(enemy_pool_frame)
         weight_frame.grid(column=2, row=0)
         ttk.Label(weight_frame, text="Weight").grid(column=0, row=0, sticky=NW)
-        self.current_weightvar= StringVar()
-        self.spinbox = ttk.Spinbox(weight_frame, from_=0.0, to=100.0, textvariable=self.current_weightvar, width=5, command=self.onspinboxchanged, increment=.1)
+        self.current_weightvar = StringVar()
+        self.spinbox = ttk.Spinbox(
+            weight_frame,
+            from_=0.0,
+            to=100.0,
+            textvariable=self.current_weightvar,
+            width=5,
+            command=self.onspinboxchanged,
+            increment=0.1,
+        )
         self.spinbox.grid(column=1, row=0, sticky=NW, padx=5)
         self.spinbox.bind("<Return>", self.onspinboxreturn)
-
 
         # Pool edit buttons
         buttons_frame = ttk.Frame(enemy_pool_frame)
         buttons_frame.grid(column=0, row=6, columnspan=2)
-        ttk.Button(buttons_frame, text="Enable", command=self.enable_enemy).grid(column=0,row=0,)
-        ttk.Button(buttons_frame, text="Disable", command=self.disable_enemy).grid(column=1,row=0, padx=5)
-        ttk.Button(buttons_frame, text="Toggle rando protection", command=self.protect_enemy).grid(column=2,row=0, padx=5)
-
+        ttk.Button(buttons_frame, text="Enable", command=self.enable_enemy).grid(
+            column=0,
+            row=0,
+        )
+        ttk.Button(buttons_frame, text="Disable", command=self.disable_enemy).grid(
+            column=1, row=0, padx=5
+        )
+        ttk.Button(
+            buttons_frame, text="Toggle rando protection", command=self.protect_enemy
+        ).grid(column=2, row=0, padx=5)
 
         # Protect pool
         protect_pool_frame = ttk.Frame(enemy_pool_frame)
         protect_pool_frame.grid(column=2, row=1, sticky=NW)
-        ttk.Label(protect_pool_frame,text="Protect pool").grid(column=0, row=0, sticky=NW)
+        ttk.Label(protect_pool_frame, text="Protect pool").grid(
+            column=0, row=0, sticky=NW
+        )
 
-        self.enemy_protect_pool = [e["name"] for e in self.enemy_data if e['protected']]
+        self.enemy_protect_pool = [e["name"] for e in self.enemy_data if e["protected"]]
         self.enemy_protect_poolvar = StringVar(value=self.enemy_protect_pool)
-        self.protect_list = Listbox(protect_pool_frame, listvariable=self.enemy_protect_poolvar)
+        self.protect_list = Listbox(
+            protect_pool_frame, listvariable=self.enemy_protect_poolvar
+        )
         self.protect_list.grid(column=1, row=0, sticky=W, rowspan=2)
 
-
-        for child in enemy_pool_frame.winfo_children(): 
+        for child in enemy_pool_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
-
-
-
 
         # PRESETS #
         preset_frame = ttk.LabelFrame(root, text="Presets")
@@ -752,43 +907,44 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         preset_options = [e.value for e in PresetType]
         self.preset_optionsvar = StringVar(value=PresetType.NONE)
-        self.preset_list = ttk.Combobox(preset_frame, textvariable=self.preset_optionsvar, values=preset_options)
+        self.preset_list = ttk.Combobox(
+            preset_frame, textvariable=self.preset_optionsvar, values=preset_options
+        )
         self.preset_list.grid(column=1, row=1, sticky=NW)
         self.preset_list.state(["readonly"])
         self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
         self.preset_description_label.grid(column=1, row=2, sticky=NW)
-        self.preset_optionsvar.trace('w', self._on_preset_selection)
+        self.preset_optionsvar.trace("w", self._on_preset_selection)
 
-        for child in preset_frame.winfo_children(): 
+        for child in preset_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
-
 
         # Bottom buttons #
         bottom_frame = ttk.Frame(root)
         bottom_frame.grid(column=0, row=9, sticky=NSEW)
 
-
-
         # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
-        ttk.Button(bottom_frame, text="Item tracker", command=self.show_tracker).grid(column=2, row=0)
-        ttk.Button(bottom_frame, text="Check solution", command=self.show_solution).grid(column=1, row=0)
-        ttk.Button(bottom_frame, text="Revert game to normal", command=self.do_revert).grid(column=0, row=0)
+        ttk.Button(bottom_frame, text="Item tracker", command=self.show_tracker).grid(
+            column=2, row=0
+        )
+        ttk.Button(
+            bottom_frame, text="Check solution", command=self.show_solution
+        ).grid(column=1, row=0)
+        ttk.Button(
+            bottom_frame, text="Revert game to normal", command=self.do_revert
+        ).grid(column=0, row=0)
         # ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
-        ttk.Button(bottom_frame, 
-                   text="Generate", 
-                   padding=10,
-                   command= self.randomize).grid(column=3, row=0, sticky=NE)
+        ttk.Button(
+            bottom_frame, text="Generate", padding=10, command=self.randomize
+        ).grid(column=3, row=0, sticky=NE)
         bottom_frame.grid_columnconfigure(3, weight=1)
 
-        for child in bottom_frame.winfo_children(): 
+        for child in bottom_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
-
-        
 
         # Frames configurations #
 
         root.bind("<<GenerationComplete>>", self.gen_finish)
-
 
         root.grid_columnconfigure(0, weight=1)
         root.grid_columnconfigure(1, weight=1)
@@ -797,7 +953,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         root.grid_rowconfigure(3, weight=1)
         root.grid_rowconfigure(4, weight=1)
         root.grid_rowconfigure(5, weight=1)
-        for child in root.winfo_children(): 
+        for child in root.winfo_children():
             child.grid_configure(padx=15, pady=5)
 
 
@@ -826,15 +982,23 @@ class ItemTracker:
                 self._timer.cancel()
 
     class ToggleImage(ttk.Label):
-        def __init__(self, master, img_on_path, img_off_path, width=40, height=40, initial_state=False):
+        def __init__(
+            self,
+            master,
+            img_on_path,
+            img_off_path,
+            width=40,
+            height=40,
+            initial_state=False,
+        ):
             super().__init__(master)
 
-             # Load and resize images to fixed size
-            img_on  = Image.open(img_on_path).resize((width, height), Image.LANCZOS)
+            # Load and resize images to fixed size
+            img_on = Image.open(img_on_path).resize((width, height), Image.LANCZOS)
             img_off = Image.open(img_off_path).resize((width, height), Image.LANCZOS)
 
             # Load images
-            self.img_on  = ImageTk.PhotoImage(img_on)
+            self.img_on = ImageTk.PhotoImage(img_on)
             self.img_off = ImageTk.PhotoImage(img_off)
 
             self.state = initial_state
@@ -898,25 +1062,24 @@ class ItemTracker:
             self.toggle_item("all_modules", True)
         else:
             self.toggle_item("all_modules", False)
-            
 
     @staticmethod
     def has_laser(savedata_map):
         return "21" in savedata_map["sc"].value or "23" in savedata_map["sc"].value
 
-    @staticmethod 
+    @staticmethod
     def has_key(savedata_map):
         return savedata_map["drifterkey"].value > 0
 
-    @staticmethod 
+    @staticmethod
     def has_dash(savedata_map):
         return "4" in savedata_map["skill"].value
 
-    @staticmethod 
+    @staticmethod
     def has_pistol(savedata_map):
         return "1" in savedata_map["sc"].value.split("+")
 
-    @staticmethod 
+    @staticmethod
     def has_pylon(savedata_map, dir):
         val = None
         if dir == "east":
@@ -929,7 +1092,7 @@ class ItemTracker:
             val = 3
         return str(val) in savedata_map["wellMap"].value
 
-    @staticmethod 
+    @staticmethod
     def has_modules(savedata_map, dir):
         return savedata_map["mapMod"].value.count(">") >= 16
 
@@ -962,13 +1125,14 @@ class ItemTracker:
         obj.update_image()
         return
 
-    def __init__(self, 
-                parent,
-                save_path: str,
-                track_dash_shop: bool = False,
-                track_pistol: bool = False,
-                save_edit_number: int = 3
-                 ):
+    def __init__(
+        self,
+        parent,
+        save_path: str,
+        track_dash_shop: bool = False,
+        track_pistol: bool = False,
+        save_edit_number: int = 3,
+    ):
 
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
@@ -977,14 +1141,14 @@ class ItemTracker:
         if platform.system() == "Windows":
             self.window.iconbitmap("icon.ico")
 
-        self.window.wm_attributes('-transparentcolor','#ffffff')
-        self.window.wm_attributes('-topmost', True)
+        self.window.wm_attributes("-transparentcolor", "#ffffff")
+        self.window.wm_attributes("-topmost", True)
 
         row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
         row.grid()
 
         path_on = os.path.join("assets", "module_icon_on.png")
-        path_off= os.path.join("assets", "module_icon_off.png")
+        path_off = os.path.join("assets", "module_icon_off.png")
         laser_on = os.path.join("assets", "laser.png")
         laser_off = os.path.join("assets", "laser_off.png")
         key_on = os.path.join("assets", "key.png")
@@ -1006,14 +1170,13 @@ class ItemTracker:
         i = 0
         for direction in ["North", "East", "West", "South"]:
             widget = ttk.Label(row, text=direction)
-            widget.grid(row=0, column=i, padx=5,pady=5)
-            i+=1
+            widget.grid(row=0, column=i, padx=5, pady=5)
+            i += 1
 
         self.modules = {}
         for col, (on_path, off_path) in enumerate(img_paths):
             self.modules[direction[col]] = self.ToggleImage(row, on_path, off_path)
             self.modules[direction[col]].grid(row=1, column=col, padx=5)
-
 
         self.laser = self.ToggleImage(row, laser_on, laser_off)
         self.laser.grid(row=2, column=0, padx=5, pady=20)
@@ -1030,30 +1193,36 @@ class ItemTracker:
         i = 0
         self.wells = {}
         for direction in ["north", "east", "west", "south"]:
-            self.wells[f"well_{direction}"] = self.ToggleImage(row,
-                                    os.path.join("assets", f"well_{direction}.png"),
-                                    os.path.join("assets", "well_off.png"),
-                                    height=75
-                                      )
-            self.wells[f"well_{direction}"].grid(row=3, column=i, padx=5,pady=5)
-            i+=1
-        
-        
+            self.wells[f"well_{direction}"] = self.ToggleImage(
+                row,
+                os.path.join("assets", f"well_{direction}.png"),
+                os.path.join("assets", "well_off.png"),
+                height=75,
+            )
+            self.wells[f"well_{direction}"].grid(row=3, column=i, padx=5, pady=5)
+            i += 1
+
         self.save_edit_number = save_edit_number
-        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number)).grid(row=1, column=0, pady=5, padx=5)
-        
+        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number)).grid(
+            row=1, column=0, pady=5, padx=5
+        )
+
         MainRandomizerUI.center_subwindow(parent, self.window)
         self.window.transient(parent)
         self.window.grab_set()
-        
+
         self.poll_save(save_path, self.save_edit_number)
-        self.poll_job = self.RepeatingTimer(15.0, lambda: self.poll_save(save_path, self.save_edit_number))
+        self.poll_job = self.RepeatingTimer(
+            15.0, lambda: self.poll_save(save_path, self.save_edit_number)
+        )
         self.poll_job.start()
 
         def _on_close():
             self.poll_job.stop()
             self.window.destroy()
+
         self.window.protocol("WM_DELETE_WINDOW", _on_close)
+
 
 root = Tk()
 

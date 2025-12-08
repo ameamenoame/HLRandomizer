@@ -43,21 +43,47 @@ class HLDLevel:
                     bline.pop(0)
                     bline.pop(0)
                 room_settings[sketch[0]] = [sketch[1], sketch[2], sketch[3]]
-        if date is None or room_settings is None: raise ValueError("Corrupted Level")
-        return cls(date=date, layer_names=layer_names, room_settings=room_settings, object_list=object_list, name=name, dir_=dir_)
+        if date is None or room_settings is None:
+            raise ValueError("Corrupted Level")
+        return cls(
+            date=date,
+            layer_names=layer_names,
+            room_settings=room_settings,
+            object_list=object_list,
+            name=name,
+            dir_=dir_,
+        )
 
     def dump_level(self, path="") -> None:
         os.makedirs(path, exist_ok=True)
         with open(os.path.join(path, self.name), "w") as file:
             file.write(f"DATE,{self.date},")
-            file.write("\n\t " + "\n\t ".join([f"layerName,{key},{value}," for key, value in self.layer_names.items()]))
-            file.write("\n\t " + ",".join([f"{key},{value}" for key, value in self.room_settings.items() if key != "sketchalpha"])
-                       + f",sketchalpha,{','.join(list(map(str, self.room_settings['sketchalpha'])))},")
+            file.write(
+                "\n\t "
+                + "\n\t ".join(
+                    [
+                        f"layerName,{key},{value},"
+                        for key, value in self.layer_names.items()
+                    ]
+                )
+            )
+            file.write(
+                "\n\t "
+                + ",".join(
+                    [
+                        f"{key},{value}"
+                        for key, value in self.room_settings.items()
+                        if key != "sketchalpha"
+                    ]
+                )
+                + f",sketchalpha,{','.join(list(map(str, self.room_settings['sketchalpha'])))},"
+            )
             file.write("".join([obj.get_line() for obj in self.object_list]))
 
     class Names(str, Enum):
         def __str__(self):
             return self.value
+
         RM_NC_CLIFFCAMPFIRE = "rm_NC_CliffCampfire.lvl"
         RM_NC_CRUSHARENA = "rm_NC_CrushArena.lvl"
         RM_NC_NPCHATCHERY = "rm_NC_NPCHatchery.lvl"

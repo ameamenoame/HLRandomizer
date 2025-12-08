@@ -4,6 +4,7 @@ from enum import Enum
 class HLDType(str, Enum):
     def __str__(self):
         return self.value
+
     REGION = "Region"
     WAYPOINT = "WayPoint"
     AMBIENCE = "Ambience"
