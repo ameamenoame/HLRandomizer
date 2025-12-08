@@ -1600,7 +1600,7 @@ def main(
             4 if module_count == ModuleCount.MINIMUM else 8
         )
         Inventory.set_key_requirements(key_count)
-        Inventory.set_lasers_requirements(1)
+        Inventory.set_lasers_requirements(1 if use_chain_logic else 2)
     else:
         Inventory.set_module_requirements(8)
         Inventory.set_key_requirements(KeyCount.ALL)
