@@ -90,9 +90,16 @@ const rng = mulberry32(seed);
 
 // ---------- Options ----------
 const options = [
-  "White Outfit","Blue Outfit","Yellow Outfit","Fuschia Outfit","Orange Outfit","Green/Blue Outfit",
-  "Kill a boss without healing",
+  "White Outfit","Blue Outfit","Yellow Outfit","Fuschia Outfit","Orange Outfit","Green/Blue Outfit", "Ochre Outfit",
+  "Kill a main boss without healing",
+  "Kill a main boss without dashing",
   "Kill a boss 1 second right after dying",
+  "Do 3 cough skips",
+  "Talk to every NPC",
+  "Do 2 twirl skips",
+  "Archer intro skip",
+  "Hit all laser triggers",
+  "Kill the East boss using Grumpshrooms",
   "Pink Outfit","2 Outfits","3 Outfits","3 Keys in East","3 Keys in North","3 Keys in West",
   "3 Keys in South","1 Key in each area","2 Keys in 3 areas","6 Keys","8 Keys","3 Monoliths in East",
   "3 Monoliths in North","3 Monoliths in West","3 Monoliths in South","1 Monolith in each area",
@@ -101,7 +108,7 @@ const options = [
   "3 Modules in West","5 Modules in West","7 Modules in West","3 Modules in South","5 Modules in South",
   "7 Modules in South","2 Modules in each area","3 Modules in 3 areas","8 Modules","10 Modules",
   "12 Modules","South Pillar","2 Pillars","3 Pillars","12 bits in East","12 bits in North",
-  "12 bits in West","12 bits in South","Diamond Shotgun","Railgun","Beat the Waterfall Arena",
+  "12 bits in West","12 bits in South","Diamond Shotgun","Impact Railgun","Beat the Waterfall Arena",
   "Bullet Deflect Upgrade","Bullet Absorb Upgrade","2 Sword Upgrades","2 Dash Upgrades",
   "2 Grenade Upgrades","Beat Soccer Kid","Kill North Boss","Kill West Boss","Kill Archer",
   "Kill 3 Bosses","Kill 2 Bosses in South","No Sword upgrades","No Dash upgrades",
