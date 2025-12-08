@@ -42,7 +42,7 @@ def _scan_directory_lines(
 
 
 
-def check_solution(layers, path=Path("game_files") / "randomized"):
+def check_solution(layers, path=os.path.join("game_files", "randomized")):
 	return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
 	north_solution = ""
@@ -96,6 +96,7 @@ HLDLevel.Names.RM_EC_PLAZAACCESSLAB: 8,
 				text = text.replace("\n", "")
 				text += " (Behind pistol check)\n"
    
+			area = area.upper()
 			if area.startswith("N") or area.startswith("I"):
 				north_solution += text
 			elif area.startswith("E"):
