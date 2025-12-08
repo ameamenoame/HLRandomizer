@@ -91,6 +91,8 @@ const rng = mulberry32(seed);
 // ---------- Options ----------
 const options = [
   "White Outfit","Blue Outfit","Yellow Outfit","Fuschia Outfit","Orange Outfit","Green/Blue Outfit",
+  "Kill a boss without healing",
+  "Kill a boss 1 second right after dying",
   "Pink Outfit","2 Outfits","3 Outfits","3 Keys in East","3 Keys in North","3 Keys in West",
   "3 Keys in South","1 Key in each area","2 Keys in 3 areas","6 Keys","8 Keys","3 Monoliths in East",
   "3 Monoliths in North","3 Monoliths in West","3 Monoliths in South","1 Monolith in each area",
