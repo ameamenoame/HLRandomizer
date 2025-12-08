@@ -126,11 +126,11 @@ Below are some bingo goals in the Bingosync format that you can use for playing 
 }
 
 .grid-cell {
-    aspect-ratio: 1 / 1;
-    border: 1px solid #888;
-    border-radius: 6px;
-    cursor: pointer;
-    user-select: none;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;       /* stays square */
+    border: 1px solid #777;
+    border-radius: 5px;
 
     display: flex;
     justify-content: center;
@@ -139,11 +139,22 @@ Below are some bingo goals in the Bingosync format that you can use for playing 
     padding: 4px;
     text-align: center;
 
-    font-size: min(3.2vw, 18px);
+    /* Prevent text from changing cell size */
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Auto-scale text but never expand the box */
+    font-size: min(2.2vw, 13px);
     line-height: 1.1;
 
+    cursor: pointer;
+    user-select: none;
     transition: background-color 0.15s, color 0.15s;
+
+    -webkit-line-clamp: 3;    /* limit to 3 lines or adjust */
+    -webkit-box-orient: vertical;
 }
+
 
 .grid-off {
     background-color: #f8f8f8;
