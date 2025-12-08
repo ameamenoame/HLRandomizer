@@ -777,7 +777,7 @@ def place_all_items(levels: LevelHolder,
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = [random.choice([21, 23])]  if not random_doors else [21, 23]
+    lasers = [random.choice([21, 23])]  if not random_doors and use_chain_logic else [21, 23]
     shotguns = [2, 41, 43]; random.shuffle(shotguns)
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]; random.shuffle(shops)
     capes = [2, 3, 4, 5, 6, 7, 8, 9, 11]; random.shuffle(capes)
@@ -1239,6 +1239,7 @@ def place_all_items(levels: LevelHolder,
         layers.pop()
         print([l["names"] for l in layers])
         length = len(layers)
+        print("Using chain logic: " + str(use_chain_logic))
         for i in range(length):
             if i < length - 1 and use_chain_logic:
                 layers[i]["func"](layers[i+1]) # Get the next layer's locations
