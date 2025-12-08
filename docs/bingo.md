@@ -210,7 +210,7 @@ Below are some bingo goals in the Bingosync format that you can use for playing 
 /* star icon (hidden by default) */
 .grid-star {
     position: absolute;
-    top: 2px;
+    bottom: 2px;
     right: 4px;
     font-size: 18px;
     pointer-events: none; /* clicks shouldn't hit the star itself */
