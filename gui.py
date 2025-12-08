@@ -1173,9 +1173,6 @@ class ItemTracker:
         if platform.system() == "Windows":
             self.window.iconbitmap("icon.ico")
 
-        self.window.wm_attributes("-transparentcolor", "#ffffff")
-        self.window.wm_attributes("-topmost", True)
-
         row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
         row.grid()
 
