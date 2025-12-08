@@ -28,6 +28,7 @@ Basic setup:
 
 The default randomizer settings is recommended but if you're using enemy randomizer, you can change the enemy pool settings to your liking.
 
+
 Important differences to the base game on default settings:
 - There are only 16 modules.
 - There's only 1 key, all key doors have 1 key as requirement
@@ -35,13 +36,16 @@ Important differences to the base game on default settings:
 - Module doors are randomized and can require 1 or 3 modules.
 - The laser gun and the 1 key are required to finish the game according to logic.
 	
+
 Randomization:
 - Set seed, options to your liking
 - Press 'Generate'
 - If successful the changes should be in the game without having to restart the game.
 
+
 Un-randomize:
 - To revert the game to normal, press the 'Revert to normal' button in the bottom left corner.
+
 
 Check solution:
 - If you are stuck, you should check out the Logic section first to find out how the randomizer places progression items. 
