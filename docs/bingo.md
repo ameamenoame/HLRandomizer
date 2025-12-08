@@ -4,7 +4,9 @@
 
 ## Weekly Bingo Board
 
-This is an interactive bingo board that's updated weekly.
+This is an interactive bingo board that's updated weekly. 
+
+Tile features: Left click to toggle. Right click to mark a star. +/- to increment / decrement the tile's counter.
 
 <p id="seed-label"></p>
 
@@ -17,8 +19,6 @@ This is an interactive bingo board that's updated weekly.
 <div id="grid-wrapper">
   <div id="grid"></div>
 </div>
-
-
 
 
 ## BingoSync
@@ -196,6 +196,20 @@ Below are some bingo goals in the Bingosync format that you can use for playing 
 .grid-btn:hover {
     background: #e6e6e6;
 }
+/* star icon (hidden by default) */
+.grid-star {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 18px;
+    pointer-events: none; /* clicks shouldn't hit the star itself */
+    opacity: 0.85;
+    display: none;
+}
+.grid-cell.star-on .grid-star {
+    display: block;
+}
+
 
 </style>
 
@@ -376,10 +390,22 @@ cell.addEventListener("click", () => {
     cell.classList.toggle("grid-off");
 });
 
+const star = document.createElement("div");
+star.className = "grid-star";
+star.textContent = "★";
+
+// disable browser context menu
+cell.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    cell.classList.toggle("star-on");
+});
+
+
 // Compose cell
 cell.appendChild(text);
 cell.appendChild(counter);
 cell.appendChild(controls);
+cell.appendChild(star);
 
 grid.appendChild(cell);
     });
