@@ -307,7 +307,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         preset,
         PATH_TO_HLD,
         root,
-        results
+        results,
+        use_chain_logic
     ):
         def do_gen(
             random_seed,
@@ -326,6 +327,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             module_door_optionsvar,
             module_count_optionsvar,
             preset,
+            use_chain_logic,
                 ):
             """
             Starts the randomized level files creation sequence
@@ -390,7 +392,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         module_count=module_count_optionsvar,
                         randomize_pistol=random_pistol,
                         randomize_shop=random_shops,
-                        preset=preset
+                        preset=preset,
+                        use_chain_logic=use_chain_logic
                     )
                     success = True
                     break
@@ -437,7 +440,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             limit_one_module_per_room,
             module_door_optionsvar,
             module_count_optionsvar,
-            preset
+            preset,
+            use_chain_logic,
         )
 
         # Definitely not thread safe
@@ -519,7 +523,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.preset_optionsvar.get(),
             self.PATH_TO_HLD,
             root,
-            self.results
+            self.results,
+            self.use_chain_logic.get()
         ])
         self.t.daemon=True
         self.t.start()
@@ -594,6 +599,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         kb_link.grid(column=5, row=0, sticky=E)
         kb_link.bind("<Button-1>", lambda e: self.open_link("https://ameamenoame.github.io/HLRandomizer/#/"))
 
+        for child in header_frame.winfo_children(): 
+            child.grid_configure(padx=2, pady=5)
 
         # Seed settings #
         seed_frame = ttk.LabelFrame(root, text="Seed")
@@ -637,6 +644,12 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
         progression_frame.grid(column=0, row=4, sticky=EW)
+
+        self.use_chain_logic = BooleanVar(value=True)
+        ttk.Checkbutton(progression_frame, text='Enable chain logic', 
+	    variable=self.use_chain_logic,
+	    onvalue=True, offvalue= False).grid(column=0, row=5, sticky=W, padx=5, pady=5)
+
         ttk.Label(progression_frame, text="Progression item placement location pool").grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(value=ItemPlacementRestriction.MODULES_EXTENDED)

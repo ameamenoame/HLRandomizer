@@ -773,6 +773,7 @@ def place_all_items(levels: LevelHolder,
                     pistol_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.KEY_ITEMS,
                     random_doors:bool = False,
                     mod_door_option: ModuleDoorOptions = ModuleDoorOptions.MIX,
+                    use_chain_logic: bool = True
                     ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -1239,8 +1240,8 @@ def place_all_items(levels: LevelHolder,
         print([l["names"] for l in layers])
         length = len(layers)
         for i in range(length):
-            if i < length - 1:
-                layers[i]["func"](layers[i+1])
+            if i < length - 1 and use_chain_logic:
+                layers[i]["func"](layers[i+1]) # Get the next layer's locations
             else:
                 layers[i]["func"](
                     {
@@ -1293,7 +1294,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
          key_count:  KeyCount = KeyCount.MINIMUM,
          randomize_pistol: bool = False,
          randomize_shop: bool = False,
-         preset: Preset | None = None
+         preset: Preset | None = None,
+         use_chain_logic: bool = True
          ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1374,7 +1376,8 @@ def main(random_doors: bool = False, random_enemies: bool = False, output: bool 
                     randomize_pistol=randomize_pistol,
                     randomize_shop=randomize_shop,
                     random_doors=random_doors,
-                    mod_door_option=module_door_option
+                    mod_door_option=module_door_option,
+                    use_chain_logic=use_chain_logic,
                     )
 
     real_levels = LevelHolder(HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS))
