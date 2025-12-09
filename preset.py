@@ -1,6 +1,7 @@
 from enum import Enum
+from tkinter import StringVar
 from hldlib import HLDObj, HLDLevel, HLDType, HLDBasics
-from hldlib.hldbasics import ModuleCount
+from hldlib.hldbasics import ItemPlacementRestriction, KeyCount, ModuleCount, ModuleDoorOptions
 from save_edit import *
 import random
 
@@ -18,6 +19,8 @@ class PresetType(str, Enum):
     BITBOUND = "Bitbound"
     NAKED = "Naked"
     RANDOM_START = "Random start"
+    BINGO = "Bingo"
+    CASUAL = "Casual"
 
 
 class Preset:
@@ -58,6 +61,10 @@ class Preset:
             return PresetNaked
         elif name == PresetType.RANDOM_START:
             return PresetRandomStart
+        elif name == PresetType.BINGO:
+            return PresetBingo
+        elif name == PresetType.CASUAL:
+            return PresetCasual
         return Preset
 
     @classmethod
@@ -68,6 +75,14 @@ class Preset:
         options.random_pistol.set(False)
         options.random_enemies.set(False)
         options.module_count_optionsvar.set(ModuleCount.MINIMUM)
+        options.limit_one_module_per_room.set(False)
+        options.even_item_distribution.set(False)
+        options.use_chain_logic.set(True)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.MODULES_EXTENDED
+        )
+        options.key_countvar.set(KeyCount.MINIMUM)
+        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
 
 
 class PresetNimble(Preset):
@@ -379,3 +394,52 @@ class PresetRandomStart(Preset):
     def set_options(cls, options):
         super().set_options(options)
         options.random_shops.set(True)
+
+
+class PresetBingo(Preset):
+    description = "Meant for playing bingo. Even item distribution and more checks."
+
+    @classmethod
+    def execute_changes(cls):
+        cls.set_save_data_field("gameName", "Bingo")
+
+        # Speedrun preset stuff
+        cls.set_save_data_field("cape", 3)
+        cls.set_save_data_field("compShell", 10)
+        cls.set_save_data_field("sword", 7)
+
+        cls.set_save_data_field("cCapes", "0+3+10+7+")
+        cls.set_save_data_field("cShells", "0+3+10+7+")
+        cls.set_save_data_field("cSwords", "0+3+10+7+")
+
+        cls.set_save_data_field("skill", "4+")
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.even_item_distribution.set(True)
+        options.random_enemies.set(True)
+        options.use_chain_logic.set(False)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.KEY_ITEMS
+        )
+        options.limit_one_module_per_room.set(True)
+        options.key_countvar.set(KeyCount.ALL)
+        options.module_count_optionsvar.set(ModuleCount.ALL)
+        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+
+class PresetCasual(Preset):
+    description = "Free item placements."
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.even_item_distribution.set(False)
+        options.random_enemies.set(True)
+        options.use_chain_logic.set(False)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.FREE
+        )
+        options.key_countvar.set(KeyCount.ALL)
+        options.module_count_optionsvar.set(ModuleCount.ALL)
+        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
