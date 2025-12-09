@@ -5,6 +5,7 @@ from time import time
 from preset import PresetType, Preset
 from hldlib import HLDBasics, HLDLevel
 from randomizer import (
+    VERSION_NUMBER,
     main,
     OUTPUT_PATH,
     BACKUP_FOLDER_NAME,
@@ -323,7 +324,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         subwindow.title("Solution")
         # .ico icons don't work on other platforms, skip for now
         if platform.system() == "Windows":
-            self.subwindow.iconbitmap("icon.ico")
+            subwindow.iconbitmap("icon.ico")
 
         text = scrolledtext.ScrolledText(subwindow)
         text.grid()
@@ -658,10 +659,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # Header #
 
         header_frame = ttk.Frame(root)
-        header_frame.grid(column=0, row=1, sticky=NSEW, padx=10)
+        header_frame.grid(column=0, row=1, sticky=NSEW, padx=10, columnspan=2)
 
         ttk.Label(
-            header_frame, text="Settings", justify=LEFT, font=("TkHeadingFont", 20)
+            header_frame, text=VERSION_NUMBER, justify=LEFT, font=("TkHeadingFont", 20)
         ).grid(column=0, row=0, sticky=NW)
         header_frame.grid_columnconfigure(0, weight=1)
 
@@ -710,14 +711,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Seed settings #
         seed_frame = ttk.LabelFrame(root, text="Seed")
-        seed_frame.grid(column=0, row=2, sticky=EW)
+        seed_frame.grid(column=0, row=2, sticky=(N,W,E))
 
         self.random_seed = StringVar(value=None)
         ttk.Label(seed_frame, text="Seed (leave empty for a random seed)").grid(
-            column=0, row=3, pady=5, padx=5
+            column=0, row=3, padx=5, sticky=(N,W,E)
         )
         seed_entry = ttk.Entry(seed_frame, textvariable=self.random_seed, width=30)
-        seed_entry.grid(column=1, row=3, sticky=EW, pady=5, padx=5)
+        seed_entry.grid(column=1, row=3, sticky=(N, E, W), padx=5)
 
         ttk.Button(
             seed_frame, text="Clear", command=lambda: self.random_seed.set("")
@@ -729,7 +730,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # Options settings #
 
         options_frame = ttk.LabelFrame(root, text="Options")
-        options_frame.grid(column=0, row=3, sticky=EW)
+        options_frame.grid(column=0, row=3, sticky=(N, W, E))
 
         self.random_doors = BooleanVar(value=False)
         ttk.Checkbutton(
@@ -769,7 +770,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
-        progression_frame.grid(column=0, row=4, sticky=EW)
+        progression_frame.grid(column=0, row=4, sticky=(N,W,E))
 
         self.use_chain_logic = BooleanVar(value=True)
         ttk.Checkbutton(
@@ -865,7 +866,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.enemy_choicesvar = StringVar(value=self.enemy_choices)
 
         enemy_pool_frame = ttk.LabelFrame(root, height=90, text="Enemies")
-        enemy_pool_frame.grid(column=0, row=5, sticky=EW)
+        enemy_pool_frame.grid(column=1, row=2, sticky=NSEW, rowspan=2)
 
         ttk.Label(
             enemy_pool_frame, text="Enemy pool", justify=CENTER, font=("TkHeadingFont")
@@ -933,7 +934,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # PRESETS #
         preset_frame = ttk.LabelFrame(root, text="Presets")
-        preset_frame.grid(column=0, row=8, sticky=NSEW, padx=5, pady=5)
+        preset_frame.grid(column=1, row=4, sticky=(N, W, E), padx=5, pady=5)
 
         ttk.Label(preset_frame, text="Preset").grid(column=0, row=1, sticky=NW)
 
@@ -953,7 +954,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Bottom buttons #
         bottom_frame = ttk.Frame(root)
-        bottom_frame.grid(column=0, row=9, sticky=NSEW)
+        bottom_frame.grid(column=0, row=9, sticky=NSEW, columnspan=2)
 
         # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
         ttk.Button(bottom_frame, text="Item tracker", command=self.show_tracker).grid(
@@ -1207,7 +1208,7 @@ class ItemTracker:
             self.modules[direction[col]] = self.ToggleImage(row, on_path, off_path)
             self.modules[direction[col]].grid(row=1, column=col, padx=5)
 
-        self.laser = self.ToggleImage(row, laser_on, laser_off)
+        self.laser = self.ToggleImage(row, laser_on, laser_off, height=20)
         self.laser.grid(row=2, column=0, padx=5, pady=20)
 
         self.key = self.ToggleImage(row, key_on, key_off)

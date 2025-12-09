@@ -15,6 +15,8 @@ import json
 import os
 import random
 
+VERSION_NUMBER = "v0.10"
+
 
 JSON_DIR = "jsons"
 # GRAPH_JSON =    path.abspath(os.path.join(path.dirname(__file__),JSON_DIR, "out_graph.json"))  # "jsons\\out_graph.json"
