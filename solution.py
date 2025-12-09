@@ -133,6 +133,10 @@ def check_solution(layers, path=os.path.join("game_files", "randomized")):
                 text = "Key found at " + level_name
                 text += "\n"
                 add_to_dir_solution(level_name, text, HLDObj.from_line(line))
+            case HLDType.LIBRARIANTABLET:
+                text = "Tablet found at " + level_name
+                text += "\n"
+                add_to_dir_solution(level_name, text, HLDObj.from_line(line))
             case "ModuleSocket":
                 text = "Module found at " + level_name
                 text += "\n"
