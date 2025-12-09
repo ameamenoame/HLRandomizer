@@ -327,9 +327,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             subwindow.iconbitmap("icon.ico")
 
         text = scrolledtext.ScrolledText(subwindow)
-        text.grid()
+        text.grid(sticky=NSEW)
         text.insert(INSERT, solution)
         text.configure(state='disabled')
+        subwindow.rowconfigure(0, weight=1)
 
     def set_weekly_seed(self):
         import datetime
@@ -373,6 +374,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results,
         use_chain_logic,
         key_count: int,
+        even_item_distribution: bool = False
     ):
         def do_gen(
             random_seed,
@@ -393,6 +395,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             preset,
             use_chain_logic,
             key_count: int,
+            even_item_distribution: bool = False
         ):
             """
             Starts the randomized level files creation sequence
@@ -463,7 +466,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         randomize_shop=random_shops,
                         preset=preset,
                         use_chain_logic=use_chain_logic,
-                        key_count=key_count
+                        key_count=key_count,
+                        even_item_distribution=even_item_distribution
                     )
                     success = True
                     break
@@ -519,6 +523,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             preset,
             use_chain_logic,
             key_count,
+            even_item_distribution=even_item_distribution
         )
 
         # Definitely not thread safe
@@ -599,6 +604,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 self.results,
                 self.use_chain_logic.get(),
                 int(self.key_countvar.get()),
+                self.even_item_distribution.get(),
             ],
         )
         self.t.daemon = True
@@ -845,6 +851,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         )
         self.key_count_spinbox.grid(column=1, row=11, sticky=W)
 
+        self.even_item_distribution = BooleanVar(value=False)
+        ttk.Checkbutton(
+            progression_frame,
+            text="Equal item distribution across regions",
+            variable=self.even_item_distribution,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=12, sticky=W, pady=5)
 
         # Enemy settings #
 

@@ -933,6 +933,7 @@ def place_all_items(
     random_doors: bool = False,
     mod_door_option: ModuleDoorOptions = ModuleDoorOptions.MIX,
     use_chain_logic: bool = True,
+    even_item_distribution: bool = False,
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -972,6 +973,7 @@ def place_all_items(
                 _place()
         else:
             for i in range(place_count):
+                if Inventory.current[inventory_key] <= 0: return
                 _place()
 
     def place_unimportant(
@@ -1051,16 +1053,19 @@ def place_all_items(
         return can_place
 
     def _get_placement_restriction(
-        empty_check,
-        parent_room,
+        empty_check: FakeObject,
+        parent_room: str,
         obj_type: str,
         restriction_type: ItemPlacementRestriction,
+        direction: Direction | None = None
     ):
         exclude_list = ["rm_C_Ven_Dash", "rm_PAX_Staging"]
         if not randomize_pistol:
             exclude_list.append("rm_IN_BackerTablet")
         if parent_room in exclude_list:
             return False  # Don't put important items in the dash shop
+
+        if direction and empty_check.dir_ != direction: return False
 
         if (
             restriction_type == ItemPlacementRestriction.KEY_ITEMS
@@ -1295,17 +1300,40 @@ def place_all_items(
 
     def _place_keys(next_layer):
         print("Place keys")
-        place_important(
-            "keys",
-            _place_key,
-            (
-                lambda e, p, i, l: _get_placement_restriction(
-                    e, p, "BONES", key_placement_option
+        if even_item_distribution and (key_count % 4 != 0):
+            raise IndexError("Cannot guarantee even key distribution with current key count: " + str(key_count))
+
+        if even_item_distribution:
+            per_region_amount = int(key_count / 4)
+            print("Per region amount " + str(per_region_amount))
+            directions = [Direction.WEST, Direction.NORTH, Direction.EAST, Direction.SOUTH]
+            random.shuffle(directions)
+            for d in directions:
+                print("placing keys in " + str(d))
+                place_important(
+                    "keys",
+                    _place_key,
+                    (
+                        lambda e, p, i, l: _get_placement_restriction(
+                            e, p, "BONES", key_placement_option, direction=d
+                        )
+                        and next_layer["req"](e, i, l, key_count)
+                    ),
+                    lambda _: next_layer["finish_callback"](),
+                    per_region_amount
                 )
-                and next_layer["req"](e, i, l, key_count)
-            ),
-            lambda _: next_layer["finish_callback"](),
-        )  # TODO: Need to separate bones into weapons / outfits/ keys
+        else:
+            place_important(
+                "keys",
+                _place_key,
+                (
+                    lambda e, p, i, l: _get_placement_restriction(
+                        e, p, "BONES", key_placement_option
+                    )
+                    and next_layer["req"](e, i, l, key_count)
+                ),
+                lambda _: next_layer["finish_callback"](),
+            )  # TODO: Need to separate bones into weapons / outfits/ keys
 
     def _place_lasers(next_layer):
         print("Place lasers")
@@ -1479,6 +1507,9 @@ def place_all_items(
         print([l["names"] for l in layers])
         length = len(layers)
         print("Using chain logic: " + str(use_chain_logic))
+
+        print("Even item distribution: " + str(even_item_distribution))
+
         for i in range(length):
             if i < length - 1 and use_chain_logic:
                 layers[i]["func"](layers[i + 1])  # Get the next layer's locations
@@ -1522,7 +1553,18 @@ def place_all_items(
                 and _get_place_module_requirements(x, a, Direction.EAST),
             )
 
-        place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
+
+
+        if even_item_distribution:
+            directions = [Direction.WEST, Direction.NORTH, Direction.EAST, Direction.SOUTH]
+            random.shuffle(directions)
+            per_region_tablet_amount = 4
+            for d in directions:
+                print("placing tablets in " + str(d))
+                place_unimportant(per_region_tablet_amount, _place_tablet, lambda x, a, b, c: not x.enemy_id and x.dir_ == d)
+        else:
+            place_unimportant(16, _place_tablet, lambda x, a, b, c: not x.enemy_id)
+
         if randomize_shop:
             place_unimportant(
                 4,
@@ -1593,6 +1635,7 @@ def main(
     randomize_shop: bool = False,
     preset: Preset | None = None,
     use_chain_logic: bool = True,
+    even_item_distribution: bool = False,
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1692,6 +1735,7 @@ def main(
         random_doors=random_doors,
         mod_door_option=module_door_option,
         use_chain_logic=use_chain_logic,
+        even_item_distribution=even_item_distribution
     )
 
     real_levels = LevelHolder(
