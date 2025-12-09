@@ -320,13 +320,18 @@ const options = [
 
   "Kill a main boss without healing",
   "Kill a main boss without dashing",
-  "Kill a boss 1 second right after dying",
+  "Kill a boss while dead",
 
   "Do 3 cough skips" ,
   "Talk to every NPC" ,
   "Do 2 twirl skips" ,
   "Archer intro skip" ,
   "Hit all laser triggers" ,
+  "Don't have more than 1 medkit",
+  "Do all dash challenges hitless",
+  "Have a leaper kill another enemy",
+  "See 4 Titans up close",
+//   "Kill a slime with the Impact Railgain"
 ];
 
 
