@@ -1347,6 +1347,7 @@ def place_all_items(
                 and next_layer["req"](e, i, l, len(lasers))
             ),
             lambda _: next_layer["finish_callback"](),
+            1
         )
 
     def _set_blocker_placed(key: str, val: bool = True):
@@ -1504,11 +1505,14 @@ def place_all_items(
         }
         print("Layers")
         layers.pop()
+        if not use_chain_logic:
+            random.shuffle(layers)
         print([l["names"] for l in layers])
         length = len(layers)
         print("Using chain logic: " + str(use_chain_logic))
 
         print("Even item distribution: " + str(even_item_distribution))
+
 
         for i in range(length):
             if i < length - 1 and use_chain_logic:
@@ -1522,6 +1526,19 @@ def place_all_items(
                         "reset_callback": lambda: True,
                     }
                 )
+
+
+        if not use_chain_logic:
+            place_important(
+                "lasers",
+                _place_laser,
+                (
+                    lambda e, p, i, l: _get_placement_restriction(
+                        e, p, "BONES", laser_placement_option
+                    )
+                )
+            )
+            
 
         if module_count == ModuleCount.ALL:
             place_important(
