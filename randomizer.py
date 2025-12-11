@@ -1207,7 +1207,7 @@ def place_all_items(
         check, inventory, layers, amount_to_place: int
     ):
         if not at_least_one_blocker_placed["dash_shops"]["value"]:
-            is_blocked = check.extra_info["parent_room_name_real"] in [
+            is_blocked = check.requirements["dash_shops"] > 0 or check.extra_info["parent_room_name_real"] in [
                 "rm_WA_Vale",
                 "rm_S_GauntletEnd",
                 "rm_EB_DeadOtterWalk",
@@ -1222,7 +1222,7 @@ def place_all_items(
 
     def _get_pistol_layer_requirement(check, inventory, layers, amount_to_place: int):
         if not at_least_one_blocker_placed["pistol"]["value"]:
-            is_blocked = check.extra_info["parent_room_name_real"] in [
+            is_blocked = check.requirements["pistol"] > 0 or check.extra_info["parent_room_name_real"] in [
                 "rm_IN_BackerTablet",
                 "rm_NL_GapHallway",
                 "rm_WC_CrystalLakeVault",
