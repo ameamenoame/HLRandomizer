@@ -1875,7 +1875,7 @@ def _mix_fake_module_doors(level_data: list):
         count = max(2, len(levels_to_change))
         choices = []
 
-        choices = [2 for i in range(count)]
+        choices = [1 for i in range(count)]
         choices[0] = high_door_count
 
         if len(levels_to_change) >= 3:  # If in south
