@@ -937,9 +937,7 @@ def place_all_items(
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-    lasers = (
-        [random.choice([21, 23])] if not random_doors and use_chain_logic else [21, 23]
-    )
+    lasers = [21, 23]
     random.shuffle(lasers)
     shotguns = [2, 41, 43]
     random.shuffle(shotguns)
