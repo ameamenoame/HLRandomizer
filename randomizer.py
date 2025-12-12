@@ -940,6 +940,7 @@ def place_all_items(
     lasers = (
         [random.choice([21, 23])] if not random_doors and use_chain_logic else [21, 23]
     )
+    random.shuffle(lasers)
     shotguns = [2, 41, 43]
     random.shuffle(shotguns)
     shops = ["UpgradeSword", "UpgradeWeapon", "UpgradeHealthPack", "UpgradeSpecial"]
@@ -1346,7 +1347,7 @@ def place_all_items(
                 )
                 and next_layer["req"](e, i, l, len(lasers))
             ),
-            lambda _: next_layer["finish_callback"](),
+            lambda _: next_layer["finish_callback"]()
         )
 
     def _set_blocker_placed(key: str, val: bool = True):
@@ -1578,6 +1579,9 @@ def place_all_items(
         place_unimportant(3, _place_shotgun)
         place_unimportant(9, _place_outfit)
         place_unimportant(165, _place_gearbit)
+
+        place_unimportant(1, _place_laser) # Second laser is invisible to logic
+
         return [e["names"] for e in layers]
     else:
         place_important(
@@ -1648,7 +1652,7 @@ def main(
             4 if module_count == ModuleCount.MINIMUM else 8
         )
         Inventory.set_key_requirements(key_count)
-        Inventory.set_lasers_requirements(1 if use_chain_logic else 2)
+        Inventory.set_lasers_requirements(1)
     else:
         Inventory.set_module_requirements(8)
         Inventory.set_key_requirements(KeyCount.ALL)
