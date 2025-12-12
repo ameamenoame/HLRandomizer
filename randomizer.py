@@ -1347,7 +1347,6 @@ def place_all_items(
                 and next_layer["req"](e, i, l, len(lasers))
             ),
             lambda _: next_layer["finish_callback"](),
-            1
         )
 
     def _set_blocker_placed(key: str, val: bool = True):
@@ -1526,19 +1525,6 @@ def place_all_items(
                         "reset_callback": lambda: True,
                     }
                 )
-
-
-        if not use_chain_logic:
-            place_important(
-                "lasers",
-                _place_laser,
-                (
-                    lambda e, p, i, l: _get_placement_restriction(
-                        e, p, "BONES", laser_placement_option
-                    )
-                )
-            )
-            
 
         if module_count == ModuleCount.ALL:
             place_important(
