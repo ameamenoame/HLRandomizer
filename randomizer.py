@@ -934,6 +934,8 @@ def place_all_items(
     mod_door_option: ModuleDoorOptions = ModuleDoorOptions.MIX,
     use_chain_logic: bool = True,
     even_item_distribution: bool = False,
+    outfit_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
+    shotguns_placement_option: ItemPlacementRestriction =ItemPlacementRestriction.FREE,
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -1574,9 +1576,15 @@ def place_all_items(
                 lambda e, p, i, l: not e.enemy_id
                 and _get_placement_restriction(e, p, "BONES", shops_placement_option),
             )
-        place_unimportant(3, _place_shotgun)
+        place_unimportant(3, _place_shotgun,
+                lambda e, p, i, l: not e.enemy_id
+                and _get_placement_restriction(e, p, "BONES", shotguns_placement_option),
+                          )
         place_unimportant(1, _place_laser) # Second laser is invisible to logic
-        place_unimportant(9, _place_outfit)
+        place_unimportant(9, _place_outfit, 
+                lambda e, p, i, l: not e.enemy_id
+                and _get_placement_restriction(e, p, "BONES", outfit_placement_option),
+                          )
         place_unimportant(164, _place_gearbit) # Full count: 165
 
 
@@ -1740,7 +1748,9 @@ def main(
         random_doors=random_doors,
         mod_door_option=module_door_option,
         use_chain_logic=use_chain_logic,
-        even_item_distribution=even_item_distribution
+        even_item_distribution=even_item_distribution,
+        outfit_placement_option=module_placement,
+        shotguns_placement_option=module_placement,
     )
 
     real_levels = LevelHolder(
