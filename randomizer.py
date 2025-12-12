@@ -1577,10 +1577,10 @@ def place_all_items(
                 and _get_placement_restriction(e, p, "BONES", shops_placement_option),
             )
         place_unimportant(3, _place_shotgun)
-        place_unimportant(9, _place_outfit)
-        place_unimportant(165, _place_gearbit)
-
         place_unimportant(1, _place_laser) # Second laser is invisible to logic
+        place_unimportant(9, _place_outfit)
+        place_unimportant(164, _place_gearbit) # Full count: 165
+
 
         return [e["names"] for e in layers]
     else:
