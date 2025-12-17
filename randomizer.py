@@ -1030,6 +1030,10 @@ def place_all_items(
 
         can_place: bool = False
 
+        exclude_list = ["rm_C_Ven_Dash", "rm_PAX_Staging"]
+        if parent_room.lower().startswith("rm_c_dregs") or parent_room in exclude_list:
+            return False  
+
         if (
             module_option == ItemPlacementRestriction.KEY_ITEMS
             or module_option == ItemPlacementRestriction.MODULES_EXTENDED
@@ -1061,10 +1065,8 @@ def place_all_items(
         direction: Direction | None = None
     ):
         exclude_list = ["rm_C_Ven_Dash", "rm_PAX_Staging"]
-        if not randomize_pistol:
-            exclude_list.append("rm_IN_BackerTablet")
-        if parent_room in exclude_list:
-            return False  # Don't put important items in the dash shop
+        if parent_room.lower().startswith("rm_c_dregs") or parent_room in exclude_list:
+            return False  
 
         if direction and empty_check.dir_ != direction: return False
 
