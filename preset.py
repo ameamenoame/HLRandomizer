@@ -20,7 +20,6 @@ class PresetType(str, Enum):
     NAKED = "Naked"
     RANDOM_START = "Random start"
     BINGO = "Bingo"
-    CASUAL = "Casual"
 
 
 class Preset:
@@ -63,8 +62,6 @@ class Preset:
             return PresetRandomStart
         elif name == PresetType.BINGO:
             return PresetBingo
-        elif name == PresetType.CASUAL:
-            return PresetCasual
         return Preset
 
     @classmethod
@@ -294,19 +291,3 @@ class PresetBingo(Preset):
         options.key_countvar.set(KeyCount.ALL)
         options.module_count_optionsvar.set(ModuleCount.ALL)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
-
-class PresetCasual(Preset):
-    description = "Free item placements."
-
-    @classmethod
-    def set_options(cls, options):
-        super().set_options(options)
-        options.even_item_distribution.set(False)
-        options.random_enemies.set(True)
-        options.use_chain_logic.set(False)
-        options.module_optionsvar.set(
-            ItemPlacementRestriction.FREE
-        )
-        options.key_countvar.set(KeyCount.ALL)
-        options.module_count_optionsvar.set(ModuleCount.ALL)
-        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
