@@ -1457,40 +1457,87 @@ def place_all_items(
                 "reset_callback": lambda: _set_blocker_placed("final_module", False),
             },
         )
-        layers.append(
-            {
-                "names": "modules_layer_1",
-                "func": lambda next: _place_module_in_all_dir(next, 2),
-                "req": lambda c, i, l, a: (
-                    _get_module_layer_requirement(
-                        c,
-                        i,
-                        l,
-                        a,
-                        check_amount=1,
-                        max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
-                    )
-                    if mod_door_option != ModuleDoorOptions.NONE
-                    else True
-                ),
-                "finish_callback": lambda: _set_blocker_placed(
-                    "modules_layer_1", False
-                ),
-                "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False),
-            },
-        )
+        if use_chain_logic:
+            layers.append(
+                {
+                    "names": "modules_layer_1",
+                    "func": lambda next: _place_module_in_all_dir(next, 2),
+                    "req": lambda c, i, l, a: (
+                        _get_module_layer_requirement(
+                            c,
+                            i,
+                            l,
+                            a,
+                            check_amount=1,
+                            max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
+                        )
+                        if mod_door_option != ModuleDoorOptions.NONE
+                        else True
+                    ),
+                    "finish_callback": lambda: _set_blocker_placed(
+                        "modules_layer_1", False
+                    ),
+                    "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+                },
+            )
 
-        layers.append(  # This layer is just to get the requirements lambda
-            {
-                "names": "modules_layer_0",
-                "func": lambda _: True,  #
-                "req": lambda c, i, l, a: True,
-                "finish_callback": lambda: _set_blocker_placed(
-                    "modules_layer_0", False
-                ),
-                "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False),
-            },
-        )
+            layers.append(  # This layer is just to get the requirements lambda
+                {
+                    "names": "modules_layer_0",
+                    "func": lambda _: True,  #
+                    "req": lambda c, i, l, a: True,
+                    "finish_callback": lambda: _set_blocker_placed(
+                        "modules_layer_0", False
+                    ),
+                    "reset_callback": lambda: _set_blocker_placed("modules_layer_0", False),
+                },
+            )
+        else:
+            layers.append(
+                {
+                    "names": "modules_layer_1",
+                    "func": lambda next: _place_module_in_all_dir(next, 1),
+                    "req": lambda c, i, l, a: (
+                        _get_module_layer_requirement(
+                            c,
+                            i,
+                            l,
+                            a,
+                            check_amount=1,
+                            max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
+                        )
+                        if mod_door_option != ModuleDoorOptions.NONE
+                        else True
+                    ),
+                    "finish_callback": lambda: _set_blocker_placed(
+                        "modules_layer_1", False
+                    ),
+                    "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+                },
+            )
+            layers.append(
+                {
+                    "names": "modules_layer_0",
+                    "func": lambda next: _place_module_in_all_dir(next, 1),
+                    "req": lambda c, i, l, a: (
+                        _get_module_layer_requirement(
+                            c,
+                            i,
+                            l,
+                            a,
+                            check_amount=1,
+                            max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
+                        )
+                        if mod_door_option != ModuleDoorOptions.NONE
+                        else True
+                    ),
+                    "finish_callback": lambda: _set_blocker_placed(
+                        "modules_layer_1", False
+                    ),
+                    "reset_callback": lambda: _set_blocker_placed("modules_layer_1", False),
+                },
+            )
+
 
         at_least_one_blocker_placed = {
             "modules": {"value": False, "can_still_place": True},
@@ -1504,9 +1551,10 @@ def place_all_items(
             "dash_shops": {"value": False, "can_still_place": True},
         }
         print("Layers")
-        layers.pop()
         if not use_chain_logic:
             random.shuffle(layers)
+
+
         print([l["names"] for l in layers])
         length = len(layers)
         print("Using chain logic: " + str(use_chain_logic))
