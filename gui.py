@@ -428,7 +428,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
             bound = 1000000000000
             count = 0
-            while count < 1000:
+            while count < 10:
                 count += 1
                 try:
                     if not using_preset_seed:
