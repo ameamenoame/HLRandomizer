@@ -82,7 +82,7 @@ class Preset:
             ItemPlacementRestriction.FREE
         )
         options.key_countvar.set(KeyCount.ALL)
-        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
+        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
 
 
 class PresetNimble(Preset):

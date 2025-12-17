@@ -814,7 +814,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_door_label = ttk.Label(progression_frame, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
-        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.NONE)
+        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
         self.module_door_list = ttk.Combobox(
             progression_frame,
             textvariable=self.module_door_optionsvar,
