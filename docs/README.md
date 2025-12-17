@@ -29,14 +29,6 @@ Basic setup:
 The default randomizer settings is recommended but if you're using enemy randomizer, you can change the enemy pool settings to your liking.
 
 
-Important differences to the base game on default settings:
-- There are only 16 modules.
-- There's only 1 key, all key doors have 1 key as requirement
-- There's only 1 laser gun (randomly chosen)
-- Module doors are randomized and can require 1 or 3 modules.
-- The laser gun and the 1 key are required to finish the game according to logic.
-	
-
 Randomization:
 - Set seed, options to your liking
 - Press 'Generate'
@@ -94,8 +86,6 @@ Enemy pool: Enables editing how enemies are randomized. Usage: click on an enemy
 # Check location pools
 The term 'check' will be referring to a location where an item appears in the base game but may contain another item or nothing in the randomizer. For example, a 'key check' would be referring to a check where in the base game that location would have contained a key but may contain any item in the randomizer.
 
-Generally the more checks there are, the more locations you will have to check (hence the name) to find progression items making the run longer to complete.
-
 Helpful info:
 - All base game module locations: https://steamcommunity.com/sharedfiles/filedetails/?id=658523495
 - All key locations: https://steamcommunity.com/sharedfiles/filedetails/?id=657710841
@@ -108,25 +98,9 @@ Helpful info:
      - West: https://docs.google.com/document/d/1Sy7dmVj5yCj4qF9o8YkQD9BtUTn8ObyO-24JWB6-a1Q/edit?usp=sharing
      - South: https://docs.google.com/document/d/1joqm0TAkUgh-ou-HAL7rYKSV1qKAtuqo8EyusIwif_Y/edit?usp=sharing
 
-## Modules Extended (39 checks)
-- Progression items can appear at the normal 32 module checks and some extra checks:
-	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood, south mimic route spiders room).
-	- All checks behind laser triggers (north bird rush module, east dash challenge, south scythe route big room, west slow lab)
-	- Most key checks. Excluded key checks: north bird cave / first crusher room / monolith room, east plaza access lab (same room as key door) / big bog lab, west thin forest, all south keys except exploding barrels room.
-	- Outfit checks. Excluded outfit checks: dash shop, horde room, north monolith room, east flame lab, pink drifter.
-	- Weapon checks. Excluded weapon checks: intro pistol check.
-	- No tablet checks.
-
-- The rationale for removing specific checks for this setting is to limit redundant checks that are not interesting to see or is already on a route to another check.
-
-## Key items (63 checks)
-- Progression items can appear at the normal 32 module checks and keys / outfits / weapons checks:
-	- All checks behind key doors.
-	- All checks behind laser triggers.
-	- All key checks.
-	- Outfit checks. Excluded outfit checks: dash shop, horde room, pink drifter.
-	- Weapon checks. 
-	- No tablet checks.
+## Free (252 checks)
+- Progression items can appear at all item checks including enemy drops.
+	- Excluded check locations: dash shop, horde room, monolith room.
 
 ## Key items + tablets (82 checks)
 - Progression items can appear at the normal 32 module checks and all keys / outfits / weapons / tablet checks:
@@ -137,9 +111,25 @@ Helpful info:
 	- Weapon checks. 
 	- All tablet checks.
 
-## Free (252 checks)
-- Progression items can appear at all item checks including enemy drops.
-	- Excluded check locations: dash shop, horde room, monolith room.
+## Key items (63 checks)
+- Progression items can appear at the normal 32 module checks and keys / outfits / weapons checks:
+	- All checks behind key doors.
+	- All checks behind laser triggers.
+	- All key checks.
+	- Outfit checks. Excluded outfit checks: dash shop, horde room, pink drifter.
+	- Weapon checks. 
+	- No tablet checks.
+
+## Modules Extended (39 checks)
+- Progression items can appear at the normal 32 module checks and some extra checks:
+	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood, south mimic route spiders room).
+	- All checks behind laser triggers (north bird rush module, east dash challenge, south scythe route big room, west slow lab)
+	- Most key checks. Excluded key checks: north bird cave / first crusher room / monolith room, east plaza access lab (same room as key door) / big bog lab, west thin forest, all south keys except exploding barrels room.
+	- Outfit checks. Excluded outfit checks: dash shop, horde room, north monolith room, east flame lab, pink drifter.
+	- Weapon checks. Excluded weapon checks: intro pistol check.
+	- No tablet checks.
+
+- The rationale for removing specific checks for this setting is to limit redundant checks that are not interesting to see or is already on a route to another check.
 
 # Presets
 
