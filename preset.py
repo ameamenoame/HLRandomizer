@@ -73,16 +73,16 @@ class Preset:
     ):  # Passes the entire tkinter window object. Should rework presets to be based on config files instead
         options.random_shops.set(False)
         options.random_pistol.set(False)
-        options.random_enemies.set(False)
-        options.module_count_optionsvar.set(ModuleCount.MINIMUM)
-        options.limit_one_module_per_room.set(False)
+        options.random_enemies.set(True)
+        options.module_count_optionsvar.set(ModuleCount.ALL)
+        options.limit_one_module_per_room.set(True)
         options.even_item_distribution.set(False)
-        options.use_chain_logic.set(True)
+        options.use_chain_logic.set(False)
         options.module_optionsvar.set(
-            ItemPlacementRestriction.MODULES_EXTENDED
+            ItemPlacementRestriction.FREE
         )
-        options.key_countvar.set(KeyCount.MINIMUM)
-        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.key_countvar.set(KeyCount.ALL)
+        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
 
 
 class PresetNimble(Preset):

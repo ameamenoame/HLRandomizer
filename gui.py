@@ -724,11 +724,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             column=0, row=3, padx=5, sticky=(N,W,E)
         )
         seed_entry = ttk.Entry(seed_frame, textvariable=self.random_seed, width=30)
-        seed_entry.grid(column=1, row=3, sticky=(N, E, W), padx=5)
+        seed_entry.grid(column=1, row=3, sticky=(N, E, W))
 
         ttk.Button(
             seed_frame, text="Clear", command=lambda: self.random_seed.set("")
-        ).grid(column=2, row=3, sticky=NE, pady=5, padx=5)
+        ).grid(column=2, row=3, sticky=NW, padx=5)
         ttk.Button(
             seed_frame, text="Try weekly seed", command=self.set_weekly_seed
         ).grid(column=1, row=4, sticky=NW, pady=5, padx=5)
@@ -778,7 +778,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         progression_frame = ttk.LabelFrame(root, text="Progression")
         progression_frame.grid(column=0, row=4, sticky=(N,W,E))
 
-        self.use_chain_logic = BooleanVar(value=True)
+        self.use_chain_logic = BooleanVar(value=False)
         ttk.Checkbutton(
             progression_frame,
             text="Enable chain logic",
@@ -792,7 +792,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         ).grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(
-            value=ItemPlacementRestriction.MODULES_EXTENDED
+            value=ItemPlacementRestriction.FREE
         )
         module_settings_list = ttk.Combobox(
             progression_frame,
@@ -803,7 +803,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         module_settings_list.grid(column=1, row=6, sticky=W, columnspan=3)
         module_settings_list.state(["readonly"])
 
-        self.limit_one_module_per_room = BooleanVar(value=False)
+        self.limit_one_module_per_room = BooleanVar(value=True)
         ttk.Checkbutton(
             progression_frame,
             text="Limit 1 module per room",
@@ -814,7 +814,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_door_label = ttk.Label(progression_frame, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
-        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
+        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.NONE)
         self.module_door_list = ttk.Combobox(
             progression_frame,
             textvariable=self.module_door_optionsvar,
@@ -826,7 +826,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_count_label = ttk.Label(progression_frame, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
-        self.module_count_optionsvar = StringVar(value=ModuleCount.MINIMUM)
+        self.module_count_optionsvar = StringVar(value=ModuleCount.ALL)
         self.module_count_list = ttk.Combobox(
             progression_frame,
             textvariable=self.module_count_optionsvar,
@@ -839,7 +839,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
         ttk.Label(progression_frame, text="Key count").grid(column=0, row=11, sticky=NE, padx=5, pady=5)
-        self.key_countvar = StringVar(value="1")
+        self.key_countvar = StringVar(value="16")
         self.key_count_spinbox = ttk.Spinbox(
             progression_frame,
             from_=0,
