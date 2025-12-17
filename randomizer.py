@@ -936,6 +936,7 @@ def place_all_items(
     even_item_distribution: bool = False,
     outfit_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
     shotguns_placement_option: ItemPlacementRestriction =ItemPlacementRestriction.FREE,
+    final_module_map: dict = {"count": 0},
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -968,14 +969,18 @@ def place_all_items(
             empty_check = levels.get_empty_object(lambda_filter)
             place_func(empty_check)
             after_each_place_callback(empty_check)
+            return empty_check
 
         if place_count == -1:
             while Inventory.current[inventory_key] > 0:
                 _place()
+            return []
         else:
+            c = []
             for i in range(place_count):
                 if Inventory.current[inventory_key] <= 0: return
-                _place()
+                c.append(_place())
+            return c
 
     def place_unimportant(
         i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True
@@ -1280,10 +1285,11 @@ def place_all_items(
         return True
 
     def _place_module_in_all_dir(next_layer, count: int = 1):
+        nonlocal final_module_map
         print("Place %d module" % count)
 
         def _place_module_in_dir(area, direction):
-            place_important(
+            placed_rooms = place_important(
                 area,
                 _place_module,
                 lambda empty_check, parent_room, inventory, levels: _get_place_module_requirements(
@@ -1294,12 +1300,18 @@ def place_all_items(
                 count,
             )
             next_layer["reset_callback"]()
+            return placed_rooms
+
+                
 
         directions = [Direction.WEST, Direction.NORTH, Direction.EAST, Direction.SOUTH]
         random.shuffle(directions)
         print("Module placement order: " + str(directions))
         for d in directions:
-            _place_module_in_dir(glue_on_direction("modules", d), d)
+            placed_rooms: list[FakeObject] = _place_module_in_dir(glue_on_direction("modules", d), d)
+            if placed_rooms != [] and final_module_map["count"] < 4:
+                final_module_map[placed_rooms[0].extra_info["parent_room_name_real"]] = 1
+                final_module_map["count"] += 1
 
     def _place_keys(next_layer):
         print("Place keys")
@@ -1781,6 +1793,8 @@ def main(
         0
     ].type = RandomizerType.PYLON
 
+    final_module_map = {"count": 0}
+
     layers = place_all_items(
         fake_levels,
         module_placement,
@@ -1801,6 +1815,7 @@ def main(
         even_item_distribution=even_item_distribution,
         outfit_placement_option=module_placement,
         shotguns_placement_option=module_placement,
+        final_module_map=final_module_map
     )
 
     real_levels = LevelHolder(
@@ -1825,6 +1840,8 @@ def main(
         for level in manual_changes2:
             real_levels.find_by_name(level["name"]).object_list += level["object_list"]
 
+            
+
     if random_enemies:
         randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
@@ -1838,6 +1855,9 @@ def main(
 
         if randomize_pistol:
             _remove_intro_death_cutscene(real_levels)
+
+
+    _decorate_final_modules(real_levels, final_module_map)
 
     # Apply presets #
 
@@ -2125,3 +2145,29 @@ def _manual_disable_module_doors(real_levels: LevelHolder):
     _remove_mod_door_in_level(HLDLevel.Names.RM_CH_BDIRKDEMOLITION)
     _remove_mod_door_in_level(HLDLevel.Names.RM_CH_ACORNER)
     _remove_mod_door_in_level(HLDLevel.Names.RM_SX_TOWERSOUTH)
+
+def _decorate_final_modules(real_levels: LevelHolder, final_module_map: dict):
+    def _decorate_module_in_level(level_name: str):
+        obj: HLDObj
+        obj_list = real_levels.find_by_name(level_name+".lvl").object_list
+        to_remove = []
+        for obj in obj_list:
+            if obj.type == HLDType.MODULESOCKET:
+                # Add decoration
+                decor = HLDObj(
+                    "Spawner",
+                    obj.x,
+                    obj.y,
+                    {}
+                )
+                decor.attrs["-1"] = "Snail"
+                decor.attrs["-2"] = 0
+                decor.attrs["-4"] = 1
+                decor.attrs["-5"] = 0
+                decor.attrs["-6"] = -1
+                decor.attrs["-7"] = 0
+                decor.attrs["-8"] = 0
+                obj_list.append(decor)
+                return
+    for key in final_module_map.keys():
+        if key != "count": _decorate_module_in_level(key)
