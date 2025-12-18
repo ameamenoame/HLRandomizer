@@ -1873,7 +1873,7 @@ def main(
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
 
-    return layers
+    return (layers,final_module_map)
 
 
 def _mix_fake_key_doors(

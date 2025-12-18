@@ -42,7 +42,7 @@ def _scan_directory_lines(
                 print(f"[ERROR] Could not read {full_path}: {e}")
 
 
-def check_solution(layers, path=os.path.join("game_files", "randomized")):
+def check_solution(layers, final_mod_map, path=os.path.join("game_files", "randomized")):
     return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
     north_solution = ""
@@ -139,6 +139,10 @@ def check_solution(layers, path=os.path.join("game_files", "randomized")):
             #     add_to_dir_solution(level_name, text, HLDObj.from_line(line))
             case "ModuleSocket":
                 text = "Module found at " + level_name
+
+                if level_name.replace('.lvl', "") in final_mod_map.keys():
+                    text += " (final module)"
+
                 text += "\n"
                 add_to_dir_solution(level_name, text, HLDObj.from_line(line))
             case HLDType.DRIFTERVAULTDOOR:

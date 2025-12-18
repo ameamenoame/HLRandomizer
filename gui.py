@@ -319,7 +319,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.enemy_list.focus()
 
     def show_solution(self):
-        solution = check_solution(self.layers)
+        solution = check_solution(self.layers, self.final_mod_map)
         subwindow = Toplevel(self.root, padx=20, pady=10)
         subwindow.title("Solution")
         # .ico icons don't work on other platforms, skip for now
@@ -423,6 +423,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             generate_all_jsons()
 
             layers = []
+            final_mod_map = None
 
             using_preset_seed = random_seed
 
@@ -445,7 +446,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                             continue
                         final_enemy_weights.append(e["weight"])
 
-                    layers = main(
+                    layers, final_mod_map = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
@@ -481,7 +482,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         )
                         break
 
-            return (success, random_seed, layers)
+            return (success, random_seed, layers, final_mod_map)
 
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
@@ -530,6 +531,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results["success"] = gen_result[0]
         results["final_seed"] = gen_result[1]
         results["layers"] = gen_result[2]
+        results["final_mod_map"] = gen_result[3]
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
@@ -624,6 +626,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 title="Success",
             )
             self.layers = self.results["layers"]
+            self.final_mod_map = self.results["final_mod_map"]
         else:
             messagebox.showerror(
                 message=f"Could not generate seed. Try again or try another seed if a seed was set.",
