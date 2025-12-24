@@ -2185,6 +2185,7 @@ def _decorate_final_modules(real_levels: LevelHolder, final_module_map: dict):
 
 def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolder):
     base_entrances = [
+        # EAST ENTRANCES
         {
         "from": "rm_EC_ThePlaza/2",
         "to": 'rm_EB_BogStreet/1'
@@ -2198,16 +2199,68 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
         "to": 'rm_EX_TowerEast',
         },
         {
+        "from": "rm_EC_ThePlaza/3",
+        "to": 'rm_EC_PlazaToLoop'
+        },
+
+
+        # NORTH ENTRANCES
+        {
         "from": "rm_NX_MoonCourtyard/2",
         "to": 'rm_NL_WarpRoom/1',
         },
         {
-        "from": "rm_SX_TowerSouth/1",
-        "to": 'rm_CH_ACorner',
+        "from": "rm_NX_MoonCourtyard/2",
+        "to": 'rm_NL_DropSpiralOpen/1',
         },
         {
-        "from": "rm_SX_TowerSouth/1",
-        "to": 'rm_CH_BDirkDemolition',
+        "from": "rm_NX_MoonCourtyard/3",
+        "to": 'rm_NX_CathedralEntrance',
+        },
+        {
+        "from": "rm_NX_MoonCourtyard/3",
+        "to": 'rm_NL_GapOpening/1',
+        },
+        {
+        "from": "rm_NX_TitanVista",
+        "to": 'rm_NX_NorthHall',
+        },
+
+        # West entrances
+        {
+        "from": "rm_WA_EntSwitch",
+        "to": 'rm_WB_TreeTreachery',
+        },
+        {
+        "from": "rm_WA_EntSwitch",
+        "to": 'rm_WC_MeadowoodCorner',
+        },
+        {
+        "from": "rm_WA_EntSwitch",
+        "to": 'rm_WC_ThinForest',
+        },
+        {
+        "from": "rm_WA_EntSwitch",
+        "to": 'rm_WT_SlowLab/1',
+        },
+
+
+        # South entrances
+        {
+        "from": "rm_CH_ACorner",
+        "to": 'rm_CH_BDirkDeluge',
+        },
+        {
+        "from": "rm_CH_ACorner",
+        "to": 'rm_CH_APillarBird',
+        },
+        {
+        "from": "rm_CH_BDirkDemolition",
+        "to": 'rm_CH_TABigOne/1',
+        },
+        {
+        "from": "rm_CH_BDirkDemolition",
+        "to": 'rm_CH_CTurnHall',
         },
         {
         "from": "rm_SX_TowerSouth/4",
@@ -2236,7 +2289,7 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
         for c in connections_data:
             if c["from"].lower() == e["from"].lower() and c["to"].lower() == e["to"].lower():
                 c["to"] = e["to_random"]["to"] 
-                print("Entrance %s will go into %s" % (c["from"], c['to'])) 
+                # print("Entrance %s will go into %s" % (c["from"], c['to'])) 
                 break
 
         # Exit
@@ -2244,16 +2297,12 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
             # The other way
             if c["from"].lower() == e["to_random"]["to"].lower() and c["to"].lower() == e["to_random"]["from"].lower():
                 c["to"] = e["from"]
-                print("Exit %s will go into %s" % (c["from"], c['to'])) 
+                # print("Exit %s will go into %s" % (c["from"], c['to'])) 
                 break
 
-    # APply to fake leves
-    for l in fake_levels:
-        pass
-
-    print("dungeno shuffled connections")
+    print("Shuffled dungeon entrances")
     for row in base_entrances:
-        print(f"{row['from']:<10} -> {row['to_random']['to']:<5}")
+        print(f"{row['from']:<10} -> {row['to_random']['to']:<5} (OG: {row['to']})")
 
     return base_entrances
 
