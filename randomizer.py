@@ -1711,6 +1711,7 @@ def main(
     preset: Preset | None = None,
     use_chain_logic: bool = True,
     even_item_distribution: bool = False,
+    random_dungeon_entrances: bool = True,
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1754,6 +1755,8 @@ def main(
     }
     key_mix_data: dict = {}
 
+    dungeon_entrance_mix_data:dict = {}
+
     if random_doors:
         intermediary_door_levels = get_randomized_doors(CoolJSON.load(DOOR_JSON))
         fake_levels.is_randomized = True
@@ -1777,6 +1780,10 @@ def main(
         key_mix_data = _mix_fake_key_doors(connections_data, fake_levels, key_count)
         print("Key door mix data")
         print(key_mix_data)
+
+        
+        if random_dungeon_entrances:
+            dungeon_entrance_mix_data = _randomize_dungeon_entrances(connections_data, fake_levels)
 
         fake_levels.connect_levels_from_list(connections_data)
 
@@ -1822,6 +1829,7 @@ def main(
         HLDBasics.omega_load(PATH_TO_DOORLESS if random_doors else PATH_TO_ITEMLESS)
     )
 
+
     for fake_level in fake_levels:
         fake_level.convert_fake_objects_into_real()
         found = real_levels.find_by_name(fake_level.name.split("/")[0] + ".lvl")
@@ -1840,8 +1848,9 @@ def main(
         for level in manual_changes2:
             real_levels.find_by_name(level["name"]).object_list += level["object_list"]
 
+    if random_dungeon_entrances:
+        _mix_real_dungeon_doors(dungeon_entrance_mix_data, real_levels)
             
-
     if random_enemies:
         randomize_enemies(real_levels, list_of_enemies, enemy_weights, protect_list)
 
@@ -2173,3 +2182,133 @@ def _decorate_final_modules(real_levels: LevelHolder, final_module_map: dict):
                 return
     for key in final_module_map.keys():
         if key != "count": _decorate_module_in_level(key)
+
+def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolder):
+    base_entrances = [
+        {
+        "from": "rm_EC_ThePlaza/2",
+        "to": 'rm_EB_BogStreet/1'
+        },
+        {
+        "from": "rm_EC_ThePlaza/2",
+        "to": 'rm_EB_BogStreet/2'
+        },
+        {
+        "from": "rm_EC_ThePlaza/2",
+        "to": 'rm_EX_TowerEast',
+        },
+        {
+        "from": "rm_NX_MoonCourtyard/2",
+        "to": 'rm_NL_WarpRoom/1',
+        },
+        {
+        "from": "rm_SX_TowerSouth/1",
+        "to": 'rm_CH_ACorner',
+        },
+        {
+        "from": "rm_SX_TowerSouth/1",
+        "to": 'rm_CH_BDirkDemolition',
+        },
+        {
+        "from": "rm_SX_TowerSouth/4",
+        "to": 'rm_CH_BGunPillars/1',
+        },
+        {
+        "from": "rm_SX_TowerSouth/1",
+        "to": 'rm_S_Gauntlet_Elevator',
+        },
+    ]
+
+    available_dungeon_entrances = []
+
+    for e in base_entrances:
+        available_dungeon_entrances.append(e)
+        e["to_random"] = None
+
+    random.shuffle(available_dungeon_entrances)
+
+    for e in base_entrances:
+        e["to_random"] = available_dungeon_entrances.pop()
+
+    # Apply to connections list
+    for e in base_entrances:
+        # Entrance
+        for c in connections_data:
+            if c["from"].lower() == e["from"].lower() and c["to"].lower() == e["to"].lower():
+                c["to"] = e["to_random"]["to"] 
+                print("Entrance %s will go into %s" % (c["from"], c['to'])) 
+                break
+
+        # Exit
+        for c in connections_data:
+            # The other way
+            if c["from"].lower() == e["to_random"]["to"].lower() and c["to"].lower() == e["to_random"]["from"].lower():
+                c["to"] = e["from"]
+                print("Exit %s will go into %s" % (c["from"], c['to'])) 
+                break
+
+    # APply to fake leves
+    for l in fake_levels:
+        pass
+
+    print("dungeno shuffled connections")
+    for row in base_entrances:
+        print(f"{row['from']:<10} -> {row['to_random']['to']:<5}")
+
+    return base_entrances
+
+def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
+    for i in mix_data:
+        # real_levels.object_list
+        real_level = real_levels.find_by_name(i["from"].split("/")[0] + ".lvl")
+        doors = [o for o in real_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
+
+        entrance_door = None
+
+        for d in doors:
+            if d.attrs["rm"].lower() == i["to"].split("/")[0].lower():
+                entrance_door = d
+                # d.attrs["rm"] = i["to_random"]["to"].split("/")[0]
+                break
+
+        exit_door = None
+
+        real_level = real_levels.find_by_name(i["to_random"]["to"].split("/")[0] + ".lvl")
+        doors = [o for o in real_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
+        for d in doors:
+            if d.attrs["rm"].lower() == i['to_random']["from"].lower().split("/")[0]:
+                exit_door = d
+                # d.attrs["rm"] = i["from"].split('/')[0]
+                break
+
+        
+        if exit_door.type == HLDType.TELEVATOR:
+            door = HLDObj(
+                type=HLDType.DOOR,
+                x=exit_door.x,
+                y=exit_door.y,
+                attrs={
+                    "rm": "<undefined>",
+                    "dr": 1,
+                    "ed": 0,
+                },
+                uid=COUNTER.use(),
+            )
+
+            entrance_door.attrs["rm"] = i["to_random"]["to"].split("/")[0]
+            entrance_door.attrs["dr"] = door.uid
+
+            
+            exit_door.attrs["rm"] = i["from"].split('/')[0]
+            exit_door.attrs["dr"] = entrance_door.uid
+
+            real_level.object_list.append(door)
+        else:
+            entrance_door.attrs["rm"] = i["to_random"]["to"].split("/")[0]
+            entrance_door.attrs["dr"] = exit_door.uid
+            exit_door.attrs["rm"] = i["from"].split('/')[0]
+            exit_door.attrs["dr"] = entrance_door.uid
+
+    
+        pass
+    return
