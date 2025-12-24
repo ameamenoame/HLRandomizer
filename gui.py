@@ -374,7 +374,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results,
         use_chain_logic,
         key_count: int,
-        even_item_distribution: bool = False
+        even_item_distribution: bool = False,
+        random_dungeon_entrances: bool = False
     ):
         def do_gen(
             random_seed,
@@ -395,7 +396,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             preset,
             use_chain_logic,
             key_count: int,
-            even_item_distribution: bool = False
+            even_item_distribution: bool = False,
+            random_dungeon_entrances: bool = False,
         ):
             """
             Starts the randomized level files creation sequence
@@ -468,7 +470,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         preset=preset,
                         use_chain_logic=use_chain_logic,
                         key_count=key_count,
-                        even_item_distribution=even_item_distribution
+                        even_item_distribution=even_item_distribution,
+                        random_dungeon_entrances=random_dungeon_entrances
                     )
                     success = True
                     break
@@ -524,7 +527,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             preset,
             use_chain_logic,
             key_count,
-            even_item_distribution=even_item_distribution
+            even_item_distribution=even_item_distribution,
+            random_dungeon_entrances=random_dungeon_entrances,
         )
 
         # Definitely not thread safe
@@ -607,6 +611,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 self.use_chain_logic.get(),
                 int(self.key_countvar.get()),
                 self.even_item_distribution.get(),
+                self.random_dungeon_entrances.get(),
             ],
         )
         self.t.daemon = True
@@ -776,6 +781,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             onvalue=True,
             offvalue=False,
         ).grid(column=1, row=5, sticky=W)
+
+        self.random_dungeon_entrances = BooleanVar(value=False)
+        ttk.Checkbutton(
+            options_frame,
+            text="Shuffle dungeon entrances",
+            variable=self.random_dungeon_entrances,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=0, row=6, sticky=W, padx=5, pady=5)
 
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
