@@ -15,7 +15,7 @@ import json
 import os
 import random
 
-VERSION_NUMBER = "v0.11"
+VERSION_NUMBER = "v0.12"
 
 
 JSON_DIR = "jsons"
