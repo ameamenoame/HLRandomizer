@@ -2308,27 +2308,45 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
 
 def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
     for i in mix_data:
-        # real_levels.object_list
-        real_level = real_levels.find_by_name(i["from"].split("/")[0] + ".lvl")
-        doors = [o for o in real_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
+        entrance_level = real_levels.find_by_name(i["from"].split("/")[0] + ".lvl")
+        doors = [o for o in entrance_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
 
         entrance_door = None
 
         for d in doors:
             if d.attrs["rm"].lower() == i["to"].split("/")[0].lower():
                 entrance_door = d
-                # d.attrs["rm"] = i["to_random"]["to"].split("/")[0]
                 break
 
         exit_door = None
 
-        real_level = real_levels.find_by_name(i["to_random"]["to"].split("/")[0] + ".lvl")
-        doors = [o for o in real_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
+        exit_level = real_levels.find_by_name(i["to_random"]["to"].split("/")[0] + ".lvl")
+        doors = [o for o in exit_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
         for d in doors:
             if d.attrs["rm"].lower() == i['to_random']["from"].lower().split("/")[0]:
                 exit_door = d
-                # d.attrs["rm"] = i["from"].split('/')[0]
                 break
+
+        if entrance_door.type == HLDType.TELEVATOR:
+            door = HLDObj(
+                type=HLDType.DOOR,
+                x=entrance_door.x,
+                y=entrance_door.y,
+                attrs={
+                    "rm": "<undefined>",
+                    "dr": 1,
+                    "ed": 0,
+                },
+                uid=COUNTER.use(),
+            )
+            exit_door.attrs["rm"] = i["from"].split('/')[0]
+            exit_door.attrs["dr"] = door.uid
+            entrance_level.object_list.append(door)
+        else:
+            exit_door.attrs["rm"] = i["from"].split('/')[0]
+            exit_door.attrs["dr"] = entrance_door.uid
+            
+            
 
         
         if exit_door.type == HLDType.TELEVATOR:
@@ -2347,17 +2365,7 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
             entrance_door.attrs["rm"] = i["to_random"]["to"].split("/")[0]
             entrance_door.attrs["dr"] = door.uid
 
-            
-            exit_door.attrs["rm"] = i["from"].split('/')[0]
-            exit_door.attrs["dr"] = entrance_door.uid
-
-            real_level.object_list.append(door)
+            exit_level.object_list.append(door)
         else:
             entrance_door.attrs["rm"] = i["to_random"]["to"].split("/")[0]
             entrance_door.attrs["dr"] = exit_door.uid
-            exit_door.attrs["rm"] = i["from"].split('/')[0]
-            exit_door.attrs["dr"] = entrance_door.uid
-
-    
-        pass
-    return
