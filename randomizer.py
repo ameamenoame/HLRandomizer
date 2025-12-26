@@ -1712,6 +1712,7 @@ def main(
     use_chain_logic: bool = True,
     even_item_distribution: bool = False,
     random_dungeon_entrances: bool = True,
+    shuffle_parallax: bool = False,
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1867,6 +1868,10 @@ def main(
 
 
     _decorate_final_modules(real_levels, final_module_map)
+
+    
+    if shuffle_parallax:
+        _shuffle_parallax(real_levels)
 
     # Apply presets #
 
@@ -2367,3 +2372,23 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
         else:
             entrance_door.attrs["rm"] = i["to_random"]["to"].split("/")[0]
             entrance_door.attrs["dr"] = exit_door.uid
+
+            
+def _shuffle_parallax(real_levels: LevelHolder):
+    unique_bgs = []
+
+    for level in real_levels:
+        for o in level.object_list:
+            if o.type == HLDType.PARALLAXOBJ:
+                if o.attrs['spr'] not in unique_bgs and (not "clooud" in o.attrs['spr'].lower() and not "cloud" in o.attrs['spr'].lower()):
+                    unique_bgs.append(o.attrs['spr'])
+                
+    unique_bgs.remove('spr_G_Well_FGblock')
+    unique_bgs.remove('bg_A_Prlx_Dig_1')
+    unique_bgs.remove('spr_LabPlatform')
+    unique_bgs.remove('bg_parallax_02')
+
+    for level in real_levels:
+        for o in level.object_list:
+            if o.type == HLDType.PARALLAXOBJ and (not "clooud" in o.attrs['spr'].lower() and not "cloud" in o.attrs['spr'].lower()):
+                o.attrs['spr'] = random.choice(unique_bgs)
