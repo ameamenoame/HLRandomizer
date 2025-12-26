@@ -66,6 +66,8 @@ Enemy pool: Enables editing how enemies are randomized. Usage: click on an enemy
 - Weight : set how likely this enemy can spawn (the higher the weight, the more often the enemy spawns)
 - Toggle rando protection: 'protect' an enemy - meaning don't randomize all the spots where that enemy would spawn (if dirks are protected, all base game spots where dirks would spawn will spawn dirks)
 
+Shuffle dungeon entrances: Randomizes entrances to dungeon paths in each region. This means you can, for example, go into the South Reaper path from the North 3-module door. Generally, dungeon entrances are near the warp pads in each region.
+
 # Chain Logic
 - If enabled, places items that can block progress in a chain with one another, making the seed more linear. Every seed will follow a standard progression logic. The player is expected to complete all 'layers' in this logic in order to complete the game. Though the layers don't change, each seed will mix the order in which these layers are done.
 - The first layer will always be: In each region, activate 1 or 2 modules to unlock the first unlockable module door (modules_layer_1)
