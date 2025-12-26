@@ -426,6 +426,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
             layers = []
             final_mod_map = None
+            dungeon_mix_data = None
 
             using_preset_seed = random_seed
 
