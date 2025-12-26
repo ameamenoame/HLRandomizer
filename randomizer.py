@@ -1882,7 +1882,7 @@ def main(
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
 
-    return (layers,final_module_map)
+    return (layers,final_module_map, dungeon_entrance_mix_data)
 
 
 def _mix_fake_key_doors(
@@ -2301,8 +2301,6 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
                 break
 
     print("Shuffled dungeon entrances")
-    for row in base_entrances:
-        print(f"{row['from']:<10} -> {row['to_random']['to']:<5} (OG: {row['to']})")
 
     return base_entrances
 

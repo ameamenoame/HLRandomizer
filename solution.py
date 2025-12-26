@@ -42,7 +42,7 @@ def _scan_directory_lines(
                 print(f"[ERROR] Could not read {full_path}: {e}")
 
 
-def check_solution(layers, final_mod_map, path=os.path.join("game_files", "randomized")):
+def check_solution(layers, final_mod_map, dungeon_mix_data, path=os.path.join("game_files", "randomized")):
     return_text = "Layers: " + "<-".join(layers) + "\n\n"
 
     north_solution = ""
@@ -183,4 +183,10 @@ def check_solution(layers, final_mod_map, path=os.path.join("game_files", "rando
     result[4] = "\nCentral" + result[4]
 
     return_text += "\n".join(result)
+
+    if dungeon_mix_data != {}:
+        return_text += "\n\nShuffled dungeon entrances\n"
+        for row in dungeon_mix_data:
+            return_text += f"{row['from']:<10} -> {row['to_random']['to']:<5} (OG: {row['to']})\n"
+
     return return_text

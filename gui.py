@@ -319,7 +319,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.enemy_list.focus()
 
     def show_solution(self):
-        solution = check_solution(self.layers, self.final_mod_map)
+        solution = check_solution(self.layers, self.final_mod_map, self.dungeon_mix_data)
         subwindow = Toplevel(self.root, padx=20, pady=10)
         subwindow.title("Solution")
         # .ico icons don't work on other platforms, skip for now
@@ -448,7 +448,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                             continue
                         final_enemy_weights.append(e["weight"])
 
-                    layers, final_mod_map = main(
+                    layers, final_mod_map, dungeon_mix_data = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
@@ -485,7 +485,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         )
                         break
 
-            return (success, random_seed, layers, final_mod_map)
+            return (success, random_seed, layers, final_mod_map, dungeon_mix_data)
 
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
@@ -536,6 +536,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results["final_seed"] = gen_result[1]
         results["layers"] = gen_result[2]
         results["final_mod_map"] = gen_result[3]
+        results["dungeon_mix_data"] = gen_result[4]
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
@@ -632,6 +633,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             )
             self.layers = self.results["layers"]
             self.final_mod_map = self.results["final_mod_map"]
+            self.dungeon_mix_data = self.results["dungeon_mix_data"]
         else:
             messagebox.showerror(
                 message=f"Could not generate seed. Try again or try another seed if a seed was set.",
