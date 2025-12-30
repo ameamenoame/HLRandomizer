@@ -8,8 +8,8 @@
 
 - Item randomization
 - Enemy randomization
-- Presets
 - Room randomization
+- Presets
 
 # Setup
 
@@ -54,12 +54,10 @@ Randomize rooms:
 Randomize pistol for NG option:
 - Does not give pistol on start for NG drifter.
 - Pistol's location is randomized in the world.
-- Pistol is required to finish the game and is expected to be acquired before the laser gun.
 - The monolith room now counts as a check.
 
 Randomize shops:
 - Randomize all the shops across the world.
-- The dash shop's chain dash upgrade is required to finish the game.
 
 Enemy pool: Enables editing how enemies are randomized. Usage: click on an enemy name in the list and change it with Enable / Disable or setting its weight in the Weight number entry on the right
 - Enable / Disable -> Allow / stop an enemy from spawning in
@@ -144,8 +142,7 @@ Presets: Start with certain cloaks and upgrades depending on the preset. The cur
 - Naked: Only works for NG. Starts with nothing, not even pistol. Shops are randomized. Must go into teleporter straight into town at the starting campfire. Pistol and chain dashing is required to finish the game. 
 - Random start: Random starting room and shops. Go back to the drifter's house to get map to unlock warping. Might softlock because there is no logic at the beginning but if you can get to a warp it's fine. If playing on NG drifter you should also turn on 'Randomize pistol' option to have pistol spawn in the world.
 
-Presets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset.
-<img width="1097" height="1036" alt="image" src="https://github.com/user-attachments/assets/e97707d8-8c1e-42f0-8bc4-d764f7892ec9" />
+Presets work by modifying an existing save file (IF YOU ALREADY HAVE A SAVE THERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file. After generation, open the save to play the preset.
 
 # Item tracker
 
