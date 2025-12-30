@@ -377,6 +377,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         even_item_distribution: bool = False,
         random_dungeon_entrances: bool = False,
         save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
+        shuffle_parallax: bool = False,
     ):
         def do_gen(
             random_seed,
@@ -399,7 +400,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             key_count: int,
             even_item_distribution: bool = False,
             random_dungeon_entrances: bool = False,
-            save_number: int = DEFAULT_SAVE_EDIT_NUMBER
+            save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
+            shuffle_parallax: bool = False
         ):
             """
             Starts the randomized level files creation sequence
@@ -475,7 +477,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         key_count=key_count,
                         even_item_distribution=even_item_distribution,
                         random_dungeon_entrances=random_dungeon_entrances,
-                        preset_save_number=save_number
+                        preset_save_number=save_number,
+                        shuffle_parallax=shuffle_parallax
                     )
                     success = True
                     break
@@ -533,7 +536,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             key_count,
             even_item_distribution=even_item_distribution,
             random_dungeon_entrances=random_dungeon_entrances,
-            save_number=save_number
+            save_number=save_number,
+            shuffle_parallax=shuffle_parallax
         )
 
         # Definitely not thread safe
@@ -618,7 +622,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 int(self.key_countvar.get()),
                 self.even_item_distribution.get(),
                 self.random_dungeon_entrances.get(),
-                int(self.save_numbervar.get()) - 1
+                int(self.save_numbervar.get()) - 1,
+                self.shuffle_parallax.get()
             ],
         )
         self.t.daemon = True
@@ -759,7 +764,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.random_doors = BooleanVar(value=False)
         ttk.Checkbutton(
             options_frame,
-            text="Randomize rooms",
+            text="Shuffle rooms",
             variable=self.random_doors,
             onvalue=True,
             offvalue=False,
@@ -768,7 +773,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.random_enemies = BooleanVar(value=True)
         ttk.Checkbutton(
             options_frame,
-            text="Randomize enemies",
+            text="Shuffle enemies",
             variable=self.random_enemies,
             onvalue=True,
             offvalue=False,
@@ -777,7 +782,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.random_shops = BooleanVar(value=False)
         ttk.Checkbutton(
             options_frame,
-            text="Randomize shops (if unset, shops will stay in town)",
+            text="Shuffle shops",
             variable=self.random_shops,
             onvalue=True,
             offvalue=False,
@@ -786,7 +791,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.random_pistol = BooleanVar(value=False)
         ttk.Checkbutton(
             options_frame,
-            text="Randomize pistol for NG",
+            text="Shuffle pistol for NG",
             variable=self.random_pistol,
             onvalue=True,
             offvalue=False,
@@ -800,6 +805,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             onvalue=True,
             offvalue=False,
         ).grid(column=0, row=6, sticky=W, padx=5, pady=5)
+
+        self.shuffle_parallax = BooleanVar(value=False)
+        ttk.Checkbutton(
+            options_frame,
+            text="Shuffle parallax",
+            variable=self.shuffle_parallax,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=6, sticky=W, pady=5)
 
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")

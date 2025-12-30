@@ -1850,7 +1850,7 @@ def main(
         for level in manual_changes2:
             real_levels.find_by_name(level["name"]).object_list += level["object_list"]
 
-    if random_dungeon_entrances:
+    if random_dungeon_entrances and dungeon_entrance_mix_data != {}:
         _mix_real_dungeon_doors(dungeon_entrance_mix_data, real_levels)
             
     if random_enemies:
@@ -1871,7 +1871,7 @@ def main(
     _decorate_final_modules(real_levels, final_module_map)
 
     
-    if True:
+    if shuffle_parallax:
         _shuffle_parallax(real_levels)
 
     # Apply presets #
