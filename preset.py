@@ -27,10 +27,6 @@ class Preset:
     real_levels = None
     description = "No preset selected"
 
-    def __init__(self, real_levels, edit_number: int = DEFAULT_SAVE_EDIT_NUMBER):
-        self.save_edit_number = edit_number
-        self.real_levels = real_levels
-
     @classmethod
     def execute_changes(cls):
         return

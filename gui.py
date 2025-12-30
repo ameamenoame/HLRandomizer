@@ -2,7 +2,7 @@ import threading
 from tkinter import *
 from tkinter import ttk, messagebox, scrolledtext
 from time import time
-from preset import PresetType, Preset
+from preset import PresetType, Preset, DEFAULT_SAVE_EDIT_NUMBER
 from hldlib import HLDBasics, HLDLevel
 from randomizer import (
     VERSION_NUMBER,
@@ -375,7 +375,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         use_chain_logic,
         key_count: int,
         even_item_distribution: bool = False,
-        random_dungeon_entrances: bool = False
+        random_dungeon_entrances: bool = False,
+        save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
     ):
         def do_gen(
             random_seed,
@@ -398,6 +399,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             key_count: int,
             even_item_distribution: bool = False,
             random_dungeon_entrances: bool = False,
+            save_number: int = DEFAULT_SAVE_EDIT_NUMBER
         ):
             """
             Starts the randomized level files creation sequence
@@ -472,7 +474,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         use_chain_logic=use_chain_logic,
                         key_count=key_count,
                         even_item_distribution=even_item_distribution,
-                        random_dungeon_entrances=random_dungeon_entrances
+                        random_dungeon_entrances=random_dungeon_entrances,
+                        preset_save_number=save_number
                     )
                     success = True
                     break
@@ -530,6 +533,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             key_count,
             even_item_distribution=even_item_distribution,
             random_dungeon_entrances=random_dungeon_entrances,
+            save_number=save_number
         )
 
         # Definitely not thread safe
@@ -614,6 +618,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 int(self.key_countvar.get()),
                 self.even_item_distribution.get(),
                 self.random_dungeon_entrances.get(),
+                int(self.save_numbervar.get()) - 1
             ],
         )
         self.t.daemon = True
@@ -647,9 +652,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         p: Preset = Preset.get_preset_from_name(self.preset_optionsvar.get())
         self.preset_description_label["text"] = (
             p.description
-            + "\n\nPresets work by modifying an existing save file at the bottom (4th) save file location (IF YOU ALREADY HAVE A SAVE HERE, YOU MAY LOSE SAVE DATA). To use presets, you must first create a new save file at the bottom save location. After generation, the save name will have the name of the preset. Open the save to play the preset."
+            + "\n\nPresets work by modifying an existing save file (YOU MAY LOSE SAVE DATA WHEN DOING THIS). To use presets, you must first create a new save file at a save slot (1-4). After generation, open the save to play the preset."
         )
         p.set_options(self)
+        self.save_num_label.grid()
+        self.save_number_picker.grid()
 
     def show_tracker(self):
         self.tracker = ItemTracker(
@@ -970,8 +977,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         preset_frame = ttk.LabelFrame(root, text="Presets")
         preset_frame.grid(column=1, row=4, sticky=(N, W, E), padx=5, pady=5)
 
-        ttk.Label(preset_frame, text="Preset").grid(column=0, row=1, sticky=NW)
 
+        # Preset picker
+        ttk.Label(preset_frame, text="Preset").grid(column=0, row=1, sticky=NW)
         preset_options = [e.value for e in PresetType]
         self.preset_optionsvar = StringVar(value=PresetType.NONE)
         self.preset_list = ttk.Combobox(
@@ -980,11 +988,24 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.preset_list.grid(column=1, row=1, sticky=NW)
         self.preset_list.state(["readonly"])
         self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
-        self.preset_description_label.grid(column=1, row=2, sticky=NW)
+        self.preset_description_label.grid(column=1, row=3, sticky=NW, columnspan=3)
         self.preset_optionsvar.trace("w", self._on_preset_selection)
 
         for child in preset_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
+
+        # Save slot picker
+        self.save_num_label = ttk.Label(preset_frame, text="Save slot")
+        self.save_num_label.grid(column=0, row=2, sticky=NW, padx=5, pady=5)
+        self.save_num_label.grid_remove()
+        save_numbers = [1, 2, 3, 4]
+        self.save_numbervar = StringVar(value=DEFAULT_SAVE_EDIT_NUMBER + 1)
+        self.save_number_picker = ttk.Combobox(
+            preset_frame, textvariable=self.save_numbervar, values=save_numbers
+        )
+        self.save_number_picker.grid(column=1, row=2, sticky=NW, padx=5, pady=5)
+        self.save_number_picker.state(["readonly"])
+        self.save_number_picker.grid_remove()
 
         # Bottom buttons #
         bottom_frame = ttk.Frame(root)

@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable
 from os import path
-from preset import Preset
+from preset import Preset, DEFAULT_SAVE_EDIT_NUMBER
 import json
 import os
 import random
@@ -1713,6 +1713,7 @@ def main(
     even_item_distribution: bool = False,
     random_dungeon_entrances: bool = True,
     shuffle_parallax: bool = False,
+    preset_save_number: int = DEFAULT_SAVE_EDIT_NUMBER
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1870,12 +1871,13 @@ def main(
     _decorate_final_modules(real_levels, final_module_map)
 
     
-    if shuffle_parallax:
+    if True:
         _shuffle_parallax(real_levels)
 
     # Apply presets #
 
     p: Preset = Preset.get_preset_from_name(preset)
+    Preset.save_edit_number = preset_save_number
     if p:
         try:
             p.execute_changes()
