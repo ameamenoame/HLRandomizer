@@ -665,7 +665,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def show_tracker(self):
         self.tracker = ItemTracker(
-            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol
+            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1
         )
 
     def __init__(self, root, path):
@@ -1302,7 +1302,7 @@ class ItemTracker:
             i += 1
 
         self.save_edit_number = save_edit_number
-        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number)).grid(
+        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number + 1)).grid(
             row=1, column=0, pady=5, padx=5
         )
 
