@@ -2416,10 +2416,14 @@ def _shuffle_music(real_levels: LevelHolder):
 
     unique_list: list = list(unique_tracks.keys())
 
+    # Swap all occurences of a track with another track
+    for i in unique_list:
+        unique_tracks[i] = random.choice(unique_list)
+
     for level in real_levels:
         for o in level.object_list:
             if o.type == HLDType.BOOMBOX:
                 track_name: str = o.attrs['s']
                 if not track_name or track_name=="<undefined>" or "amb" in track_name.lower() or "boss" in track_name.lower(): continue
                 # Shuffle track
-                o.attrs['s'] = random.choice(unique_list)
+                o.attrs['s'] = unique_tracks[track_name]
