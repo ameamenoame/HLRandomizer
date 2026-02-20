@@ -2396,9 +2396,14 @@ def _shuffle_parallax(real_levels: LevelHolder):
     unique_bgs.remove('bg_A_Prlx_Dig_1')
     unique_bgs.remove('spr_LabPlatform')
     unique_bgs.remove('bg_parallax_02')
+    unique_bgs.remove('spr_e_Para_FG')
+    unique_bgs.remove('bg_W_Prlx_02lab')
+    unique_bgs.remove('spr_A_Elev_FG')
+    unique_bgs.remove('bg_A_Elevator_BG_02')
+
 
     for level in real_levels:
-        if level.name == "rm_EA_BogTempleCamp.lvl": continue
+        if level.name in ["rm_EA_BogTempleCamp.lvl", "rm_SX_SouthOpening.lvl", "rm_A_ElevatorShaft.lvl", "rm_A_ElevatorShaftUpper.lvl"]: continue
         for o in level.object_list:
             if o.type == HLDType.PARALLAXOBJ and (not "clooud" in o.attrs['spr'].lower() and not "cloud" in o.attrs['spr'].lower()):
                 o.attrs['spr'] = random.choice(unique_bgs)
