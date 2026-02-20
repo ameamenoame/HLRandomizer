@@ -2391,6 +2391,7 @@ def _shuffle_parallax(real_levels: LevelHolder):
     unique_bgs.remove('bg_parallax_02')
 
     for level in real_levels:
+        if level.name == "rm_EA_BogTempleCamp.lvl": continue
         for o in level.object_list:
             if o.type == HLDType.PARALLAXOBJ and (not "clooud" in o.attrs['spr'].lower() and not "cloud" in o.attrs['spr'].lower()):
                 o.attrs['spr'] = random.choice(unique_bgs)
