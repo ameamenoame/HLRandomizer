@@ -2400,6 +2400,7 @@ def _shuffle_parallax(real_levels: LevelHolder):
     unique_bgs.remove('bg_W_Prlx_02lab')
     unique_bgs.remove('spr_A_Elev_FG')
     unique_bgs.remove('bg_A_Elevator_BG_02')
+    unique_bgs.remove('bg_W_Prlx_03crystalLab')
 
 
     for level in real_levels:
