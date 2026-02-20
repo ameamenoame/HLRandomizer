@@ -1713,7 +1713,8 @@ def main(
     even_item_distribution: bool = False,
     random_dungeon_entrances: bool = True,
     shuffle_parallax: bool = False,
-    preset_save_number: int = DEFAULT_SAVE_EDIT_NUMBER
+    preset_save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
+    shuffle_music: bool = False,
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1870,9 +1871,15 @@ def main(
 
     _decorate_final_modules(real_levels, final_module_map)
 
+
+    # Cosmetic shuffles
     
     if shuffle_parallax:
         _shuffle_parallax(real_levels)
+
+    if shuffle_music:
+        _shuffle_music(real_levels)
+
 
     # Apply presets #
 
@@ -2395,3 +2402,22 @@ def _shuffle_parallax(real_levels: LevelHolder):
         for o in level.object_list:
             if o.type == HLDType.PARALLAXOBJ and (not "clooud" in o.attrs['spr'].lower() and not "cloud" in o.attrs['spr'].lower()):
                 o.attrs['spr'] = random.choice(unique_bgs)
+
+                
+def _shuffle_music(real_levels: LevelHolder):
+    unique_tracks: dict = {}
+
+    for level in real_levels:
+        for o in level.object_list:
+            if o.type == HLDType.BOOMBOX:
+                track_name: str = o.attrs['s']
+                if not track_name or track_name=="<undefined>" or "amb" in track_name.lower() or "boss" in track_name.lower(): continue # Skip ambient sounds
+                unique_tracks[track_name] = 1
+
+    unique_list: list = list(unique_tracks.keys())
+
+    for level in real_levels:
+        for o in level.object_list:
+            if o.type == HLDType.BOOMBOX:
+                # Shuffle track
+                o.attrs['s'] = random.choice(unique_list)

@@ -378,6 +378,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         random_dungeon_entrances: bool = False,
         save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
         shuffle_parallax: bool = False,
+        shuffle_music: bool = False,
     ):
         def do_gen(
             random_seed,
@@ -401,7 +402,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             even_item_distribution: bool = False,
             random_dungeon_entrances: bool = False,
             save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
-            shuffle_parallax: bool = False
+            shuffle_parallax: bool = False,
+            shuffle_music: bool = False
         ):
             """
             Starts the randomized level files creation sequence
@@ -478,7 +480,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         even_item_distribution=even_item_distribution,
                         random_dungeon_entrances=random_dungeon_entrances,
                         preset_save_number=save_number,
-                        shuffle_parallax=shuffle_parallax
+                        shuffle_parallax=shuffle_parallax,
+                        shuffle_music=shuffle_music,
                     )
                     success = True
                     break
@@ -537,7 +540,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             even_item_distribution=even_item_distribution,
             random_dungeon_entrances=random_dungeon_entrances,
             save_number=save_number,
-            shuffle_parallax=shuffle_parallax
+            shuffle_parallax=shuffle_parallax,
+            shuffle_music=shuffle_music
         )
 
         # Definitely not thread safe
@@ -623,7 +627,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 self.even_item_distribution.get(),
                 self.random_dungeon_entrances.get(),
                 int(self.save_numbervar.get()) - 1,
-                self.shuffle_parallax.get()
+                self.shuffle_parallax.get(),
+                self.shuffle_music.get(),
             ],
         )
         self.t.daemon = True
@@ -814,6 +819,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             onvalue=True,
             offvalue=False,
         ).grid(column=1, row=6, sticky=W, pady=5)
+
+        self.shuffle_music = BooleanVar(value=False)
+        ttk.Checkbutton(
+            options_frame,
+            text="Shuffle music",
+            variable=self.shuffle_music,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=2, row=4, sticky=W, pady=5)
 
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
