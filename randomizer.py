@@ -2077,11 +2077,11 @@ def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
                     3548,
                     4248,
                     1682,  # Remove the blocks to PlazaToLoop
-                    4425,
-                    3237,
-                    4186,
-                    10,
-                    6444,  # Remove the blocks to the lake
+                    # 4425,
+                    # 3237,
+                    # 4186,
+                    # 10,
+                    # 6444,  # Remove the blocks to the lake
                     5404,
                     7128,
                     7095,
