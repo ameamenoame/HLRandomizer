@@ -1295,6 +1295,7 @@ class ItemTracker:
 
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
+        self.window.attributes('-topmost', True)
 
         # .ico icons don't work on other platforms, skip for now
         if platform.system() == "Windows":
@@ -1361,7 +1362,7 @@ class ItemTracker:
 
         # Entrance data
         self.entrance_textvar = StringVar(value="Entrance tracker text")
-        ttk.Label(self.window, textvariable=self.entrance_textvar).grid(row=2, column=0, pady=5, padx=5)
+        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 10)).grid(row=2, column=0, pady=5, padx=5)
 
         self.window.rowconfigure(1, weight=0)
         self.window.rowconfigure(2, weight=0)
