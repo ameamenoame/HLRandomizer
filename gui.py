@@ -172,6 +172,7 @@ obj,Region,9012,0,0,0,-999999,++,0=400,1=460,p2=0,
 obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 """
     layers = []
+    dungeon_mix_data = []
 
     def do_install(self, *args):
         """
@@ -670,7 +671,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def show_tracker(self):
         self.tracker = ItemTracker(
-            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1
+            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data
         )
 
     def __init__(self, root, path):
@@ -1133,7 +1134,9 @@ class ItemTracker:
             else:
                 self.config(image=self.img_off)
 
-    def poll_save(self, save_path, save_edit_number):
+    def poll_save(self, save_path, save_edit_number, entrance_data):
+        
+
         print("Polling save...")
 
         metadata = SaveMetadata(None, save_path)
@@ -1178,6 +1181,44 @@ class ItemTracker:
             self.toggle_item("all_modules", True)
         else:
             self.toggle_item("all_modules", False)
+
+        if entrance_data != {}:
+            # Track visited entrances
+            mapping: dict = {}
+            empty_mapping = {}
+            for row in entrance_data:
+                from_entrance = row['from'].lower().split('/')[0]
+                to_entrance = row['to_random']['to'].lower().split('/')[0]
+                # text += f"{row['from']:<10} -> {row['to_random']['to']:<5} (OG: {row['to']})\n"
+                mapping[to_entrance] = from_entrance
+                # mapping[from_entrance] = to_entrance
+                empty_mapping[to_entrance] = None
+
+
+            # Get visited rooms
+            visited = self.get_visited_rooms(savedata_map)
+
+            for v in visited:
+                if not HLDBasics.room_names.get(v): continue
+                name: str = HLDBasics.room_names[v][0]
+                if mapping.get(name) != None:
+                    empty_mapping[     name       ] = mapping[name]
+                    
+            text = ""
+            for k in empty_mapping.keys():
+                if empty_mapping[k] != None:
+                    text += empty_mapping[k] + " -> " + k + "\n"
+            self.entrance_textvar.set(text)
+
+    @staticmethod
+    def get_visited_rooms(savedata_map) -> list[int]:
+        rooms = savedata_map["rooms"].value.split("+")
+        result = []
+        for r in rooms:
+            if r == "" or r == None: 
+                continue
+            result.append(int(r))
+        return result
 
     @staticmethod
     def has_laser(savedata_map):
@@ -1248,6 +1289,8 @@ class ItemTracker:
         track_dash_shop: bool = False,
         track_pistol: bool = False,
         save_edit_number: int = 3,
+        entrance_track: bool = False,
+        entrance_data: dict = {}
     ):
 
         self.window = Toplevel(parent)
@@ -1258,7 +1301,8 @@ class ItemTracker:
             self.window.iconbitmap("icon.ico")
 
         row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
-        row.grid()
+        row.grid(row=1)
+        self.window.columnconfigure(0, weight=1)
 
         path_on = os.path.join("assets", "module_icon_on.png")
         path_off = os.path.join("assets", "module_icon_off.png")
@@ -1315,18 +1359,25 @@ class ItemTracker:
             self.wells[f"well_{direction}"].grid(row=3, column=i, padx=5, pady=5)
             i += 1
 
+        # Entrance data
+        self.entrance_textvar = StringVar(value="Entrance tracker text")
+        ttk.Label(self.window, textvariable=self.entrance_textvar).grid(row=2, column=0, pady=5, padx=5)
+
+        self.window.rowconfigure(1, weight=0)
+        self.window.rowconfigure(2, weight=0)
+
         self.save_edit_number = save_edit_number
         ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number + 1)).grid(
-            row=1, column=0, pady=5, padx=5
+            row=0, column=0, pady=5, padx=5
         )
 
         MainRandomizerUI.center_subwindow(parent, self.window)
         self.window.transient(parent)
         self.window.grab_set()
 
-        self.poll_save(save_path, self.save_edit_number)
+        self.poll_save(save_path, self.save_edit_number, entrance_data)
         self.poll_job = self.RepeatingTimer(
-            15.0, lambda: self.poll_save(save_path, self.save_edit_number)
+            15.0, lambda: self.poll_save(save_path, self.save_edit_number, entrance_data)
         )
         self.poll_job.start()
 
@@ -1335,7 +1386,6 @@ class ItemTracker:
             self.window.destroy()
 
         self.window.protocol("WM_DELETE_WINDOW", _on_close)
-
 
 root = Tk()
 

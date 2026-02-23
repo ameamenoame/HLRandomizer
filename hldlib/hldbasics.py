@@ -269,7 +269,12 @@ class HLDBasics:
         250: ("rm_wa_grottox", "Grotto X (Unused)"),
     }
 
-
+    @property
+    def room_name_str_mapping(self) -> dict:
+        mapping = {}
+        for i in self.room_names.keys():
+            mapping[self.room_names[i][0]] = i 
+        return mapping
 
 if platform.system() in ("Linux", "Darwin"):
     HLDBasics.DIRS = tuple(dir_.lower() for dir_ in HLDBasics.DIRS)
