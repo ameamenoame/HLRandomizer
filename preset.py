@@ -81,6 +81,38 @@ class Preset:
         options.key_countvar.set(KeyCount.ALL)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
 
+    @classmethod
+    def random_start(cls):
+        room_choice = None
+        keys = list(HLDBasics.room_names.keys())
+
+        print("Before loop")
+        while not room_choice:
+            c = random.choice(keys)
+            if "unused" in HLDBasics.room_names[c][1].lower() \
+                or HLDBasics.room_names[c][0].startswith("rm_in") \
+                or HLDBasics.room_names[c][0].startswith("rm_c_") \
+                or HLDBasics.room_names[c][0].startswith("rm_pax") \
+                or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
+                or c in [133, 134, 135, 183, 232, 123, 250]:
+                continue
+            print("Naked start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
+            room_choice = c 
+            
+        cls.set_save_data_field(
+            "checkRoom",room_choice
+        )
+        cls.set_save_data_field("checkX", -50)  # Force spawnwarp
+        cls.set_save_data_field("checkY", -50)
+        cls.set_save_data_field("warp", "4+")  # Unlock the blocks in town
+
+        cls.set_save_data_field("events",
+            "336860+363992+-1054677+" # Open the path to vale from thinforest
+                                )
+        cls.set_save_data_field("permaS",
+            "-1052455=2>-1073029=2>" # Open up north main path arenas
+                                )
+
 
 class PresetNimble(Preset):
     description = "Movement-focused. Starts with the effects of purple + yellow + pink drifter cloaks (doubled stamina, increased movement speed, faster stamina recharge) and chain dash."
@@ -229,34 +261,8 @@ class PresetRandomStart(Preset):
     @classmethod
     def execute_changes(cls):
         cls.set_save_data_field("gameName", "RandomStart" + "_" + cls.seed)
-        room_choice = None
-        keys = list(HLDBasics.room_names.keys())
-        print("Before loop")
-        while not room_choice:
-            c = random.choice(keys)
-            print("key choice")
-            print(c)
-            if "unused" in HLDBasics.room_names[c][1].lower() \
-                or HLDBasics.room_names[c][0].startswith("rm_in") \
-                or HLDBasics.room_names[c][0].startswith("rm_c_") \
-                or HLDBasics.room_names[c][0].startswith("rm_pax") \
-                or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
-                or c >= 236  \
-                or c in [133, 134, 135, 183, 232, 123]:
-                continue
-            print("Naked start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
-            room_choice = c 
-            
-        cls.set_save_data_field(
-            "checkRoom",room_choice
-        )
-        cls.set_save_data_field("checkX", -50)  # Force spawnwarp
-        cls.set_save_data_field("checkY", -50)
-        cls.set_save_data_field("warp", "4+")  # Unlock the blocks in town
 
-        cls.set_save_data_field("events",
-            "336860+363992+" # Open the path to vale from thinforest
-                                )
+        cls.random_start()
 
     @classmethod
     def set_options(cls, options):
@@ -314,6 +320,7 @@ class PresetStreamlined(Preset):
         cls.set_save_data_field("cSwords", "0+3+10+7+")
 
         cls.set_save_data_field("skill", "4+")
+        cls.random_start()
 
     @classmethod
     def set_options(cls, options):
