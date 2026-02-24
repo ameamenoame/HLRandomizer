@@ -1264,17 +1264,17 @@ class ItemTracker:
                     empty_mapping[     name       ] = mapping[name]
                     
             dir_mapping = {
-                "North": "North\n",
-                "East": "East\n",
-                "West": "West\n",
-                "South": "South\n",
+                "North": "North\n-----\n",
+                "East": "East\n-----\n",
+                "West": "West\n-----\n",
+                "South": "South\n-----\n",
             }
             for k in empty_mapping.keys():
                 if empty_mapping[k] != None:
                     text = empty_mapping[k] + " -> " + k + "\n"
                     dir_mapping[self.get_dir_from_lvl_name(empty_mapping[k])] += text
 
-            final_text = ""
+            final_text = "ENTRANCE TRACKER\n------------------\n"
             for k in dir_mapping.keys():
                 final_text += dir_mapping[k] + "\n"
             self.entrance_textvar.set(final_text)
@@ -1420,8 +1420,9 @@ class ItemTracker:
             self.window.iconbitmap("icon.ico")
 
         row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
-        row.grid(row=1)
-        self.window.columnconfigure(0, weight=1)
+        row.grid(row=1, sticky=N)
+        self.window.columnconfigure(0, weight=0)
+        self.window.columnconfigure(1, weight=1)
 
         path_on = os.path.join("assets", "module_icon_on.png")
         path_off = os.path.join("assets", "module_icon_off.png")
@@ -1481,7 +1482,7 @@ class ItemTracker:
 
         # Entrance data
         self.entrance_textvar = StringVar(value="")
-        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 10)).grid(row=2, column=0, pady=5, padx=5)
+        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 10)).grid(row=1, column=1, pady=5, padx=5)
 
         self.window.rowconfigure(1, weight=0)
         self.window.rowconfigure(2, weight=0)
