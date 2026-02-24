@@ -1175,7 +1175,7 @@ class ItemTracker:
 
         def set_text(self, _text: str):
             if not self.show_text: return
-            self.config(text=_text, compound='center', font=("TkHeadingFont", 16), foreground="white")
+            self.config(text=_text, compound='center', font=("TkHeadingFont", 24), foreground="white")
 
         def set_counter(self, num: int):
             self.counter = num
