@@ -2328,8 +2328,12 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
 
         entrance_door = None
 
+        skipped_first_bog_street_door = False
         for d in doors:
             if d.attrs["rm"].lower() == i["to"].split("/")[0].lower():
+                if d.attrs['rm'].lower() == 'rm_eb_bogstreet' and not skipped_first_bog_street_door:
+                    skipped_first_bog_street_door = True
+                    continue
                 entrance_door = d
                 break
 
