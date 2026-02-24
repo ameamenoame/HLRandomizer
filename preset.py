@@ -27,7 +27,7 @@ class Preset:
     save_edit_number: int = DEFAULT_SAVE_EDIT_NUMBER
     real_levels = None
     description = "No preset selected"
-    seed = None
+    seed = "seed"
 
     @classmethod
     def execute_changes(cls):

@@ -936,7 +936,7 @@ def place_all_items(
     even_item_distribution: bool = False,
     outfit_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
     shotguns_placement_option: ItemPlacementRestriction =ItemPlacementRestriction.FREE,
-    final_module_map: dict = {"count": 0},
+    final_module_map: dict = {"count": 0, "all": {}},
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -1312,6 +1312,8 @@ def place_all_items(
             if placed_rooms != [] and final_module_map["count"] < 4:
                 final_module_map[placed_rooms[0].extra_info["parent_room_name_real"]] = 1
                 final_module_map["count"] += 1
+            if placed_rooms != []:
+                final_module_map["all"][placed_rooms[0].extra_info["parent_room_name_real"].lower()] = 1
 
     def _place_keys(next_layer):
         print("Place keys")
@@ -1803,7 +1805,7 @@ def main(
         0
     ].type = RandomizerType.PYLON
 
-    final_module_map = {"count": 0}
+    final_module_map = {"count": 0, "all": {}}
 
     layers = place_all_items(
         fake_levels,
@@ -2196,7 +2198,7 @@ def _decorate_final_modules(real_levels: LevelHolder, final_module_map: dict):
                 obj_list.append(decor)
                 return
     for key in final_module_map.keys():
-        if key != "count": _decorate_module_in_level(key)
+        if key != "count" and key != "all": _decorate_module_in_level(key)
 
 def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolder):
     base_entrances = [

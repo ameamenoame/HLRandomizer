@@ -17,6 +17,7 @@ from randomizer import (
     ItemPlacementRestriction,
     ModuleCount,
     ModuleDoorOptions,
+    Direction
 )
 from solution import check_solution
 from random import randrange
@@ -173,6 +174,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 """
     layers = []
     dungeon_mix_data = []
+    final_mod_map = {}
 
     def do_install(self, *args):
         """
@@ -489,6 +491,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 except Exception as e:
                     if not using_preset_seed:
                         print("Retrying!")
+                        print(str(e))
                         Inventory.reset()
                     else:
                         print(
@@ -671,7 +674,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
     def show_tracker(self):
         self.tracker = ItemTracker(
-            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data
+            self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data,
+            self.final_mod_map
         )
 
     def __init__(self, root, path):
@@ -1099,6 +1103,8 @@ class ItemTracker:
                 self._timer.cancel()
 
     class ToggleImage(ttk.Label):
+        counter = 0
+
         def __init__(
             self,
             master,
@@ -1107,6 +1113,7 @@ class ItemTracker:
             width=40,
             height=40,
             initial_state=False,
+            show_text = False
         ):
             super().__init__(master)
 
@@ -1117,12 +1124,27 @@ class ItemTracker:
             # Load images
             self.img_on = ImageTk.PhotoImage(img_on)
             self.img_off = ImageTk.PhotoImage(img_off)
+            self.show_text = show_text
 
             self.state = initial_state
             self.update_image()
 
+
             # Bind click toggle
             self.bind("<Button-1>", self.toggle)
+            self.set_text("0")
+
+        def set_text(self, _text: str):
+            if not self.show_text: return
+            self.config(text=_text, compound='center', font=("TkHeadingFont", 16), foreground="white")
+
+        def set_counter(self, num: int):
+            self.counter = num
+            self.set_text(str(self.counter))
+
+        def increment_counter(self):
+            self.counter += 1
+            self.set_text(str(self.counter))
 
         def toggle(self, event=None):
             self.state = not self.state
@@ -1130,11 +1152,13 @@ class ItemTracker:
 
         def update_image(self):
             if self.state:
-                self.config(image=self.img_on)
+                self.config(image=self.img_on, text=self.counter)
             else:
-                self.config(image=self.img_off)
+                self.config(image=self.img_off,text=self.counter)
+            if self.show_text:
+                self.config(compound='center')
 
-    def poll_save(self, save_path, save_edit_number, entrance_data):
+    def poll_save(self, save_path, save_edit_number, entrance_data, mod_map):
         
 
         print("Polling save...")
@@ -1142,10 +1166,7 @@ class ItemTracker:
         metadata = SaveMetadata(None, save_path)
         savedata_map = savedata_load(metadata, [0, save_edit_number])
 
-        if self.has_key(savedata_map):
-            self.toggle_item("key", True)
-        else:
-            self.toggle_item("key", False)
+        self.track_keys(savedata_map)
 
         if self.has_laser(savedata_map):
             self.toggle_item("laser", True)
@@ -1177,10 +1198,8 @@ class ItemTracker:
         toggle_if_have("pylon_west", "west")
         toggle_if_have("pylon_south", "south")
 
-        if self.has_modules(savedata_map, None):
-            self.toggle_item("all_modules", True)
-        else:
-            self.toggle_item("all_modules", False)
+
+        self.track_modules(savedata_map, mod_map)
 
         if entrance_data != {}:
             # Track visited entrances
@@ -1271,6 +1290,14 @@ class ItemTracker:
             obj = self.wells["well_west"]
         elif name == "pylon_south":
             obj = self.wells["well_south"]
+        elif name == "module_north":
+            obj = self.modules[Direction.NORTH]
+        elif name == "module_west":
+            obj = self.modules[Direction.WEST]
+        elif name == "module_east":
+            obj = self.modules[Direction.EAST]
+        elif name == "module_south":
+            obj = self.modules[Direction.SOUTH]
         elif name == "all_modules":
             obj = self.modules
             for o in obj.values():
@@ -1282,6 +1309,46 @@ class ItemTracker:
         obj.update_image()
         return
 
+    def track_keys(self, savedata_map):
+        key_count = int(savedata_map['drifterkey'].value)
+        self.key.set_counter(key_count)
+        if key_count > 0:
+            self.toggle_item("key")
+
+    def track_modules(self, savedata_map, mod_map):
+        tokens = savedata_map["mapMod"].value.split("&>")
+        module_locations = []
+        for token in tokens:
+            if token != None and token != "":
+                module_locations.append(int(token.split("=")[0]))
+
+        def get_dir_from_lvl_name(name: str):
+            code = name.split("_")[1]
+            match code[0]:
+                case "n":
+                    return Direction.NORTH
+                case "w":
+                    return Direction.WEST
+                case "e":
+                    return Direction.EAST
+                case _:
+                    return Direction.SOUTH
+
+        mapping = {
+            "North": 0,
+            "West": 0,
+            "East": 0,
+            "South": 0,
+        }
+        for module in module_locations:
+            dir = get_dir_from_lvl_name(   HLDBasics.room_names[module][0]  )
+            mapping[dir] += 1
+        for k in mapping.keys():
+            self.modules[k].set_counter(mapping[k])
+            if mapping[k] >= 4:
+                self.toggle_item("module_" + k.lower())
+        return
+
     def __init__(
         self,
         parent,
@@ -1290,7 +1357,8 @@ class ItemTracker:
         track_pistol: bool = False,
         save_edit_number: int = 3,
         entrance_track: bool = False,
-        entrance_data: dict = {}
+        entrance_data: dict = {},
+        mod_map: dict = {}
     ):
 
         self.window = Toplevel(parent)
@@ -1326,20 +1394,21 @@ class ItemTracker:
         ]
 
         i = 0
-        for direction in ["North", "East", "West", "South"]:
+        directions = ["North", "East", "West", "South"]
+        for direction in directions:
             widget = ttk.Label(row, text=direction)
             widget.grid(row=0, column=i, padx=5, pady=5)
             i += 1
 
         self.modules = {}
         for col, (on_path, off_path) in enumerate(img_paths):
-            self.modules[direction[col]] = self.ToggleImage(row, on_path, off_path)
-            self.modules[direction[col]].grid(row=1, column=col, padx=5)
+            self.modules[directions[col]] = self.ToggleImage(row, on_path, off_path, show_text=True)
+            self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
         self.laser = self.ToggleImage(row, laser_on, laser_off, height=20)
         self.laser.grid(row=2, column=0, padx=5, pady=20)
 
-        self.key = self.ToggleImage(row, key_on, key_off)
+        self.key = self.ToggleImage(row, key_on, key_off, show_text=True)
         self.key.grid(row=2, column=1, padx=5, pady=20)
 
         self.dash = self.ToggleImage(row, dash_on, dash_off)
@@ -1376,9 +1445,9 @@ class ItemTracker:
         self.window.transient(parent)
         self.window.grab_set()
 
-        self.poll_save(save_path, self.save_edit_number, entrance_data)
+        self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
         self.poll_job = self.RepeatingTimer(
-            15.0, lambda: self.poll_save(save_path, self.save_edit_number, entrance_data)
+            15.0, lambda: self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
         )
         self.poll_job.start()
 
