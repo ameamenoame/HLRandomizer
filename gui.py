@@ -1240,11 +1240,11 @@ class ItemTracker:
     def has_pylon(savedata_map, dir):
         val = None
         if dir == "east":
-            val = 2
+            val = 0
         elif dir == "north":
             val = 1
         elif dir == "west":
-            val = 0
+            val = 2
         elif dir == "south":
             val = 3
         return str(val) in savedata_map["wellMap"].value
@@ -1295,7 +1295,7 @@ class ItemTracker:
 
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
-        self.window.attributes('-topmost', True)
+        # self.window.attributes('-topmost', True)
 
         # .ico icons don't work on other platforms, skip for now
         if platform.system() == "Windows":
