@@ -2204,8 +2204,8 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
     base_entrances = [
         # EAST ENTRANCES
         {
-        "from": "rm_EC_ThePlaza/2",
-        "to": 'rm_EB_BogStreet/1'
+        "from": "rm_EB_BogStreet/1",
+        "to": 'rm_EC_PlazaAccessLAB/1'
         },
         {
         "from": "rm_EC_ThePlaza/2",
