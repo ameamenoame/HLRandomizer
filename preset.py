@@ -254,6 +254,10 @@ class PresetRandomStart(Preset):
         cls.set_save_data_field("checkY", -50)
         cls.set_save_data_field("warp", "4+")  # Unlock the blocks in town
 
+        cls.set_save_data_field("events",
+            "336860+363992+" # Open the path to vale from thinforest
+                                )
+
     @classmethod
     def set_options(cls, options):
         super().set_options(options)
