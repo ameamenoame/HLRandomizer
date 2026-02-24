@@ -2092,6 +2092,13 @@ def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
                     # 4186,
                     # 10,
                     # 6444,  # Remove the blocks to the lake
+
+                ]  
+                if obj.uid in special_remove_ids:
+                    to_remove.append(obj)
+
+                warp_move_down = [
+                    # blocks below the warp pad
                     5404,
                     7128,
                     7095,
@@ -2100,9 +2107,14 @@ def _manual_mix_real_module_doors(real_levels: LevelHolder, mix_data: dict):
                     5193,
                     93,
                     7830,
-                ]  # Remove the blocks below the warp pad
-                if obj.uid in special_remove_ids:
-                    to_remove.append(obj)
+                ]
+
+                if obj.uid in warp_move_down:
+                    obj.y = 1190
+
+                if obj.uid == 5404:
+                    obj.y = 1205
+                
         for o in to_remove:
             obj_list.remove(o)
 
