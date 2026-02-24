@@ -1102,6 +1102,43 @@ class ItemTracker:
             if self._timer:
                 self._timer.cancel()
 
+    class ModuleImage(ttk.Label):
+        count = 0
+        imgs = []
+        def __init__(
+            self,
+            master,
+            width=40,
+            height=40,
+            initial_state=False,
+        ):
+            super().__init__(master)
+
+            # Load and resize images to fixed size
+
+            self.imgs = []
+            for i in range(5):
+                self.imgs.append(
+                    ImageTk.PhotoImage(
+                        Image.open(os.path.join("assets", "mod_%d.png" % i)).resize((40, 40), Image.LANCZOS)
+                    )
+                )
+
+            # Load images
+            self.img_on = self.imgs[0]
+
+            self.state = initial_state
+            self.update_image()
+
+        def update_image(self):
+            self.config(image=self.img_on)
+
+        def set_module_count(self, count: int):
+            self.count = count
+            if count > 4: count = 4
+
+            self.config(image=self.imgs[count])
+
     class ToggleImage(ttk.Label):
         counter = 0
 
@@ -1113,26 +1150,28 @@ class ItemTracker:
             width=40,
             height=40,
             initial_state=False,
-            show_text = False
+            show_text = False,
+            is_module = False
         ):
             super().__init__(master)
 
-            # Load and resize images to fixed size
-            img_on = Image.open(img_on_path).resize((width, height), Image.LANCZOS)
-            img_off = Image.open(img_off_path).resize((width, height), Image.LANCZOS)
+            if not is_module:
+                # Load and resize images to fixed size
+                img_on = Image.open(img_on_path).resize((width, height), Image.LANCZOS)
+                img_off = Image.open(img_off_path).resize((width, height), Image.LANCZOS)
 
-            # Load images
-            self.img_on = ImageTk.PhotoImage(img_on)
-            self.img_off = ImageTk.PhotoImage(img_off)
-            self.show_text = show_text
+                # Load images
+                self.img_on = ImageTk.PhotoImage(img_on)
+                self.img_off = ImageTk.PhotoImage(img_off)
+                self.show_text = show_text
 
-            self.state = initial_state
-            self.update_image()
+                self.state = initial_state
+                self.update_image()
 
 
-            # Bind click toggle
-            self.bind("<Button-1>", self.toggle)
-            self.set_text("0")
+                # Bind click toggle
+                self.bind("<Button-1>", self.toggle)
+                self.set_text("0")
 
         def set_text(self, _text: str):
             if not self.show_text: return
@@ -1154,9 +1193,10 @@ class ItemTracker:
             if self.state:
                 self.config(image=self.img_on, text=self.counter)
             else:
-                self.config(image=self.img_off,text=self.counter)
+                self.config(image=self.img_off, text=self.counter)
             if self.show_text:
                 self.config(compound='center')
+
 
     def poll_save(self, save_path, save_edit_number, entrance_data, mod_map):
         
@@ -1309,10 +1349,10 @@ class ItemTracker:
         elif name == "module_south":
             obj = self.modules[Direction.SOUTH]
         elif name == "all_modules":
-            obj = self.modules
-            for o in obj.values():
-                o.state = state
-                o.update_image()
+            # obj = self.modules
+            # for o in obj.values():
+            #     o.state = state
+            #     o.update_image()
             return
 
         obj.state = state
@@ -1356,9 +1396,7 @@ class ItemTracker:
             dir = self.get_dir_from_lvl_name(   HLDBasics.room_names[module][0]  )
             mapping[dir] += 1
         for k in mapping.keys():
-            self.modules[k].set_counter(mapping[k])
-            if mapping[k] >= 4:
-                self.toggle_item("module_" + k.lower())
+            self.modules[k].set_module_count(mapping[k])
         return
 
     def __init__(
@@ -1414,7 +1452,7 @@ class ItemTracker:
 
         self.modules = {}
         for col, (on_path, off_path) in enumerate(img_paths):
-            self.modules[directions[col]] = self.ToggleImage(row, on_path, off_path, show_text=True)
+            self.modules[directions[col]] = self.ModuleImage(row)
             self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
         self.laser = self.ToggleImage(row, laser_on, laser_off, height=20)
@@ -1442,7 +1480,7 @@ class ItemTracker:
             i += 1
 
         # Entrance data
-        self.entrance_textvar = StringVar(value="Entrance tracker text")
+        self.entrance_textvar = StringVar(value="")
         ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 10)).grid(row=2, column=0, pady=5, padx=5)
 
         self.window.rowconfigure(1, weight=0)
