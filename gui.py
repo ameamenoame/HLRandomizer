@@ -1223,11 +1223,21 @@ class ItemTracker:
                 if mapping.get(name) != None:
                     empty_mapping[     name       ] = mapping[name]
                     
-            text = ""
+            dir_mapping = {
+                "North": "North\n",
+                "East": "East\n",
+                "West": "West\n",
+                "South": "South\n",
+            }
             for k in empty_mapping.keys():
                 if empty_mapping[k] != None:
-                    text += empty_mapping[k] + " -> " + k + "\n"
-            self.entrance_textvar.set(text)
+                    text = empty_mapping[k] + " -> " + k + "\n"
+                    dir_mapping[self.get_dir_from_lvl_name(empty_mapping[k])] += text
+
+            final_text = ""
+            for k in dir_mapping.keys():
+                final_text += dir_mapping[k] + "\n"
+            self.entrance_textvar.set(final_text)
 
     @staticmethod
     def get_visited_rooms(savedata_map) -> list[int]:
@@ -1315,6 +1325,19 @@ class ItemTracker:
         if key_count > 0:
             self.toggle_item("key")
 
+    @staticmethod
+    def get_dir_from_lvl_name(name: str):
+        code = name.split("_")[1]
+        match code[0]:
+            case "n":
+                return Direction.NORTH
+            case "w":
+                return Direction.WEST
+            case "e":
+                return Direction.EAST
+            case _:
+                return Direction.SOUTH
+
     def track_modules(self, savedata_map, mod_map):
         tokens = savedata_map["mapMod"].value.split("&>")
         module_locations = []
@@ -1322,17 +1345,6 @@ class ItemTracker:
             if token != None and token != "":
                 module_locations.append(int(token.split("=")[0]))
 
-        def get_dir_from_lvl_name(name: str):
-            code = name.split("_")[1]
-            match code[0]:
-                case "n":
-                    return Direction.NORTH
-                case "w":
-                    return Direction.WEST
-                case "e":
-                    return Direction.EAST
-                case _:
-                    return Direction.SOUTH
 
         mapping = {
             "North": 0,
@@ -1341,7 +1353,7 @@ class ItemTracker:
             "South": 0,
         }
         for module in module_locations:
-            dir = get_dir_from_lvl_name(   HLDBasics.room_names[module][0]  )
+            dir = self.get_dir_from_lvl_name(   HLDBasics.room_names[module][0]  )
             mapping[dir] += 1
         for k in mapping.keys():
             self.modules[k].set_counter(mapping[k])
@@ -1406,16 +1418,16 @@ class ItemTracker:
             self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
         self.laser = self.ToggleImage(row, laser_on, laser_off, height=20)
-        self.laser.grid(row=2, column=0, padx=5, pady=20)
+        self.laser.grid(row=3, column=0, padx=5, pady=20)
 
         self.key = self.ToggleImage(row, key_on, key_off, show_text=True)
-        self.key.grid(row=2, column=1, padx=5, pady=20)
+        self.key.grid(row=3, column=1, padx=5, pady=20)
 
         self.dash = self.ToggleImage(row, dash_on, dash_off)
-        self.dash.grid(row=2, column=2, padx=5, pady=20)
+        self.dash.grid(row=3, column=2, padx=5, pady=20)
 
         self.pistol = self.ToggleImage(row, pistol_on, pistol_off)
-        self.pistol.grid(row=2, column=3, padx=5, pady=20)
+        self.pistol.grid(row=3, column=3, padx=5, pady=20)
 
         i = 0
         self.wells = {}
@@ -1426,7 +1438,7 @@ class ItemTracker:
                 os.path.join("assets", "well_off.png"),
                 height=75,
             )
-            self.wells[f"well_{direction}"].grid(row=3, column=i, padx=5, pady=5)
+            self.wells[f"well_{direction}"].grid(row=2, column=i, padx=5, pady=5)
             i += 1
 
         # Entrance data
