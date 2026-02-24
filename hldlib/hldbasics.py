@@ -269,11 +269,11 @@ class HLDBasics:
         250: ("rm_wa_grottox", "Grotto X (Unused)"),
     }
 
-    @property
-    def room_name_str_mapping(self) -> dict:
+    @classmethod
+    def room_name_str_mapping(cls) -> dict:
         mapping = {}
-        for i in self.room_names.keys():
-            mapping[self.room_names[i][0]] = i 
+        for i in cls.room_names.keys():
+            mapping[cls.room_names[i][0]] = i 
         return mapping
 
 if platform.system() in ("Linux", "Darwin"):

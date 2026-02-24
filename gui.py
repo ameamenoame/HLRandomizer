@@ -1248,10 +1248,22 @@ class ItemTracker:
             for row in entrance_data:
                 from_entrance = row['from'].lower().split('/')[0]
                 to_entrance = row['to_random']['to'].lower().split('/')[0]
+
+                og_to = row['to'].split("/")[0]
                 # text += f"{row['from']:<10} -> {row['to_random']['to']:<5} (OG: {row['to']})\n"
                 mapping[to_entrance] = from_entrance
+
                 # mapping[from_entrance] = to_entrance
-                empty_mapping[to_entrance] = None
+
+                name_mapping = HLDBasics.room_name_str_mapping()
+                human_from =  HLDBasics.room_names[name_mapping[from_entrance]][1]
+                human_to = HLDBasics.room_names[name_mapping[to_entrance]][1]
+                og_to = HLDBasics.room_names[name_mapping[og_to.lower()]][1]
+
+                empty_mapping[to_entrance] = {"random": None, "og": og_to, 
+                                              "human_from": human_from,
+                                              "human_to": human_to
+                                              }
 
 
             # Get visited rooms
@@ -1261,7 +1273,7 @@ class ItemTracker:
                 if not HLDBasics.room_names.get(v): continue
                 name: str = HLDBasics.room_names[v][0]
                 if mapping.get(name) != None:
-                    empty_mapping[     name       ] = mapping[name]
+                    empty_mapping[     name       ]["random"] = mapping[name]
                     
             dir_mapping = {
                 "North": "North\n-----\n",
@@ -1270,9 +1282,11 @@ class ItemTracker:
                 "South": "South\n-----\n",
             }
             for k in empty_mapping.keys():
-                if empty_mapping[k] != None:
-                    text = empty_mapping[k] + " -> " + k + "\n"
-                    dir_mapping[self.get_dir_from_lvl_name(empty_mapping[k])] += text
+                if empty_mapping[k]["random"] != None:
+                    # text = empty_mapping[k]["human_from"] + " -> " + empty_mapping[k]["human_to"] + (" (%s entrance)" % empty_mapping[k]["og"]) + "\n"
+                    text = ("%s entrance" % empty_mapping[k]["og"]) + ' -> ' + empty_mapping[k]["human_to"] + "\n"
+                    dir_mapping[self.get_dir_from_lvl_name(empty_mapping[k]["random"])] += text
+                    
 
             final_text = "ENTRANCE TRACKER\n------------------\n"
             for k in dir_mapping.keys():
@@ -1493,8 +1507,8 @@ class ItemTracker:
         )
 
         MainRandomizerUI.center_subwindow(parent, self.window)
-        self.window.transient(parent)
-        self.window.grab_set()
+        # self.window.transient(parent)
+        # self.window.grab_set()
 
         self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
         self.poll_job = self.RepeatingTimer(
