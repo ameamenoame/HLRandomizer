@@ -15,7 +15,7 @@ import json
 import os
 import random
 
-VERSION_NUMBER = "v0.13"
+VERSION_NUMBER = "v0.15"
 
 
 JSON_DIR = "jsons"
@@ -1885,6 +1885,7 @@ def main(
 
     p: Preset = Preset.get_preset_from_name(preset)
     Preset.save_edit_number = preset_save_number
+    Preset.seed = random_seed
     if p:
         try:
             p.execute_changes()

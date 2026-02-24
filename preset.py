@@ -12,7 +12,7 @@ DEFAULT_SAVE_EDIT_NUMBER: int = 3
 class PresetType(str, Enum):
     NONE = "None"
     SEEKER = "Seeker"
-    NIMBLE = "Nimble"
+    # NIMBLE = "Nimble"
     VAGABOND = "Vagabond"
     SPEEDRUN = "Speedrun"
     GUNSLINGER = "Gunslinger"
@@ -20,12 +20,14 @@ class PresetType(str, Enum):
     NAKED = "Naked"
     RANDOM_START = "Random start"
     BINGO = "Bingo"
+    STREAMLINED = "Streamlined"
 
 
 class Preset:
     save_edit_number: int = DEFAULT_SAVE_EDIT_NUMBER
     real_levels = None
     description = "No preset selected"
+    seed = None
 
     @classmethod
     def execute_changes(cls):
@@ -40,9 +42,9 @@ class Preset:
 
     @staticmethod
     def get_preset_from_name(name: PresetType):
-        if name == PresetType.NIMBLE:
-            return PresetNimble
-        elif name == PresetType.VAGABOND:
+        # if name == PresetType.NIMBLE:
+        #     return PresetNimble
+        if name == PresetType.VAGABOND:
             return PresetVagabond
         elif name == PresetType.SPEEDRUN:
             return PresetSpeedrun
@@ -58,6 +60,8 @@ class Preset:
             return PresetRandomStart
         elif name == PresetType.BINGO:
             return PresetBingo
+        elif name == PresetType.STREAMLINED:
+            return PresetStreamlined
         return Preset
 
     @classmethod
@@ -93,7 +97,7 @@ class PresetNimble(Preset):
         cls.set_save_data_field("cShells", "0+10+4+7+")
         cls.set_save_data_field("cSwords", "0+10+4+7+")
         cls.set_save_data_field("skill", "4+")
-        cls.set_save_data_field("gameName", "NIMBLE")
+        cls.set_save_data_field("gameName", "NIMBLE" + "_" + cls.seed)
 
 
 class PresetVagabond(Preset):
@@ -108,7 +112,7 @@ class PresetVagabond(Preset):
         cls.set_save_data_field("cShells", "0+1+2+7+")
         cls.set_save_data_field("cSwords", "0+1+2+7+")
         cls.set_save_data_field("skill", "1+2+3+")
-        cls.set_save_data_field("gameName", "Vagabond")
+        cls.set_save_data_field("gameName", "Vagabond" + "_" + cls.seed)
 
     @classmethod
     def set_options(cls, options):
@@ -132,7 +136,7 @@ class PresetGunslinger(Preset):
         cls.set_save_data_field("sc", "23+41+43+1+21+2+")
         cls.set_save_data_field("scUp", "23+41+43+1+21+2+")
         cls.set_save_data_field("specialUp", 2)
-        cls.set_save_data_field("gameName", "Gunslinger")
+        cls.set_save_data_field("gameName", "Gunslinger" + "_" + cls.seed)
 
     @classmethod
     def set_options(cls, options):
@@ -154,7 +158,7 @@ class PresetSpeedrun(Preset):
         cls.set_save_data_field("cSwords", "0+3+10+7+")
 
         cls.set_save_data_field("skill", "4+")
-        cls.set_save_data_field("gameName", "Speedrun")
+        cls.set_save_data_field("gameName", "Speedrun" + "_" + cls.seed)
 
 
 class PresetBitbound(Preset):
@@ -172,7 +176,7 @@ class PresetBitbound(Preset):
 
         cls.set_save_data_field("gear", 64)
 
-        cls.set_save_data_field("gameName", "Bitbound")
+        cls.set_save_data_field("gameName", "Bitbound"+ "_" + cls.seed)
 
     @classmethod
     def set_options(cls, options):
@@ -193,7 +197,7 @@ class PresetSeeker(Preset):
         cls.set_save_data_field("cShells", "0+12+")
         cls.set_save_data_field("cSwords", "0+4+")
 
-        cls.set_save_data_field("gameName", "Seeker")
+        cls.set_save_data_field("gameName", "Seeker"+ "_" + cls.seed)
 
     @classmethod
     def set_options(cls, options):
@@ -207,7 +211,7 @@ class PresetNaked(Preset):
 
     @classmethod
     def execute_changes(cls):
-        cls.set_save_data_field("gameName", "Naked")
+        cls.set_save_data_field("gameName", "Naked" + "_" + cls.seed)
         cls.set_save_data_field("sc", "")
         cls.set_save_data_field("scK", "")
         cls.set_save_data_field("scUp", "")
@@ -224,7 +228,7 @@ class PresetRandomStart(Preset):
 
     @classmethod
     def execute_changes(cls):
-        cls.set_save_data_field("gameName", "RandomStart")
+        cls.set_save_data_field("gameName", "RandomStart" + "_" + cls.seed)
         room_choice = None
         keys = list(HLDBasics.room_names.keys())
         print("Before loop")
@@ -261,7 +265,7 @@ class PresetBingo(Preset):
 
     @classmethod
     def execute_changes(cls):
-        cls.set_save_data_field("gameName", "Bingo")
+        cls.set_save_data_field("gameName", "Bingo" + "_" + cls.seed)
 
         # Speedrun preset stuff
         cls.set_save_data_field("cape", 3)
@@ -287,3 +291,41 @@ class PresetBingo(Preset):
         options.key_countvar.set(KeyCount.ALL)
         options.module_count_optionsvar.set(ModuleCount.ALL)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+
+
+class PresetStreamlined(Preset):
+    description = "Streamlined for quick playing."
+
+    @classmethod
+    def execute_changes(cls):
+        cls.set_save_data_field("gameName", "Streamlined" + "_" + cls.seed)
+
+        # Speedrun preset stuff
+        cls.set_save_data_field("cape", 3)
+        cls.set_save_data_field("compShell", 10)
+        cls.set_save_data_field("sword", 7)
+
+        cls.set_save_data_field("cCapes", "0+3+10+7+")
+        cls.set_save_data_field("cShells", "0+3+10+7+")
+        cls.set_save_data_field("cSwords", "0+3+10+7+")
+
+        cls.set_save_data_field("skill", "4+")
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.even_item_distribution.set(False)
+        options.random_enemies.set(True)
+        options.random_pistol.set(True)
+        options.random_shops.set(True)
+        options.random_dungeon_entrances.set(True)
+        options.use_chain_logic.set(False)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.MODULES_EXTENDED
+        )
+        options.limit_one_module_per_room.set(False)
+        options.key_countvar.set(4)
+        options.module_count_optionsvar.set(ModuleCount.MINIMUM)
+        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.shuffle_parallax.set(True)
+        options.shuffle_music.set(True)
