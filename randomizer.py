@@ -2349,6 +2349,10 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
     return base_entrances
 
 def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
+    # Tracks already changed doors so changing doors in the same level won't overlap
+    changed_entrance_doors = {}
+    changed_exit_doors = {}
+
     for i in mix_data:
         entrance_level = real_levels.find_by_name(i["from"].split("/")[0] + ".lvl")
         doors = [o for o in entrance_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
@@ -2357,11 +2361,12 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
 
         skipped_first_bog_street_door = False
         for d in doors:
-            if d.attrs["rm"].lower() == i["to"].split("/")[0].lower():
+            if d.attrs["rm"].lower() == i["to"].split("/")[0].lower() and not changed_entrance_doors.get(str(d.uid) + i["to"]):
                 if d.attrs['rm'].lower() == 'rm_eb_bogstreet' and not skipped_first_bog_street_door:
                     skipped_first_bog_street_door = True
                     continue
                 entrance_door = d
+                changed_entrance_doors[str(d.uid) + i["to_random"]["to"]] = True
                 break
 
         exit_door = None
@@ -2369,8 +2374,9 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
         exit_level = real_levels.find_by_name(i["to_random"]["to"].split("/")[0] + ".lvl")
         doors = [o for o in exit_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
         for d in doors:
-            if d.attrs["rm"].lower() == i['to_random']["from"].lower().split("/")[0]:
+            if d.attrs["rm"].lower() == i['to_random']["from"].lower().split("/")[0] and not changed_exit_doors.get(str(d.uid) + i["from"]):
                 exit_door = d
+                changed_exit_doors[str(d.uid) + i["to_random"]["from"]] = True
                 break
 
         if entrance_door.type == HLDType.TELEVATOR:
