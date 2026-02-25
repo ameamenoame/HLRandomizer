@@ -82,6 +82,11 @@ class Preset:
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
 
     @classmethod
+    def random_skill(cls):
+        skills = [1, 2, 3, 5, 6]
+        cls.set_save_data_field("skill", "4+%d+" % random.choice(skills))
+
+    @classmethod
     def random_start(cls):
         room_choice = None
         keys = list(HLDBasics.room_names.keys())
@@ -304,7 +309,7 @@ class PresetBingo(Preset):
 
 
 class PresetStreamlined(Preset):
-    description = "Streamlined for quick playing."
+    description = "Streamlined for quick playing. Random start. Random skill given in addition to chain dash."
 
     @classmethod
     def execute_changes(cls):
@@ -319,7 +324,7 @@ class PresetStreamlined(Preset):
         cls.set_save_data_field("cShells", "0+3+10+7+")
         cls.set_save_data_field("cSwords", "0+3+10+7+")
 
-        cls.set_save_data_field("skill", "4+")
+        cls.random_skill()
         cls.random_start()
 
     @classmethod
