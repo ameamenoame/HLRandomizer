@@ -1789,7 +1789,7 @@ def main(
         
         if random_dungeon_entrances:
             dungeon_entrance_mix_data = _randomize_dungeon_entrances(connections_data, fake_levels)
-
+            
         fake_levels.connect_levels_from_list(connections_data)
 
     fake_levels.find_by_name("rm_NX_TowerLock/2").fake_object_list[
@@ -2312,24 +2312,39 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
     for e in base_entrances:
         e["to_random"] = available_dungeon_entrances.pop()
 
+    marked_map = {}
+    exit_marked_map = {}
+
+    changed_connections = {}
+
     # Apply to connections list
     for e in base_entrances:
         # Entrance
+        i = 0
         for c in connections_data:
-            if c["from"].lower() == e["from"].lower() and c["to"].lower() == e["to"].lower():
+            if c["from"].lower() == e["from"].lower() and c["to"].lower() == e["to"].lower() and not marked_map.get(i):
                 c["to"] = e["to_random"]["to"] 
+                marked_map[i] = True
                 # print("Entrance %s will go into %s" % (c["from"], c['to'])) 
+                changed_connections[i] = c
                 break
+            i+= 1
 
+        i = 0
         # Exit
         for c in connections_data:
             # The other way
-            if c["from"].lower() == e["to_random"]["to"].lower() and c["to"].lower() == e["to_random"]["from"].lower():
+            if c["from"].lower() == e["to_random"]["to"].lower() and c["to"].lower() == e["to_random"]["from"].lower() and not exit_marked_map.get(i):
                 c["to"] = e["from"]
                 # print("Exit %s will go into %s" % (c["from"], c['to'])) 
+                # changed_connections[i] = c
                 break
+            i+= 1
 
     print("Shuffled dungeon entrances")
+
+    # print("changed connections")
+    # print(json.dumps(changed_connections, sort_keys=True, indent=4))
 
     return base_entrances
 
