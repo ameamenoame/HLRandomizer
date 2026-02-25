@@ -118,6 +118,16 @@ class Preset:
             "-1052455=2>-1073029=2>" # Open up north main path arenas
                                 )
 
+                                
+        # Remove teleporter in brokenshallows
+        obj_list = cls.real_levels.find_by_name(
+            HLDLevel.Names.RM_IN_01_BROKENSHALLOWS
+        ).object_list
+        for o in obj_list:
+            if o.type == HLDType.TELEPORTER:
+                obj_list.remove(o)
+                break
+
 
 class PresetNimble(Preset):
     description = "Movement-focused. Starts with the effects of purple + yellow + pink drifter cloaks (doubled stamina, increased movement speed, faster stamina recharge) and chain dash."

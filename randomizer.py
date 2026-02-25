@@ -1888,6 +1888,7 @@ def main(
     p: Preset = Preset.get_preset_from_name(preset)
     Preset.save_edit_number = preset_save_number
     Preset.seed = random_seed
+    Preset.real_levels = real_levels
     if p:
         try:
             p.execute_changes()
