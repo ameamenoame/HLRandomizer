@@ -81,6 +81,23 @@ class Preset:
         options.key_countvar.set(KeyCount.ALL)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
 
+    @classmethod 
+    def random_outfit(cls):
+        choices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        cape = random.choice(choices)
+        sword = random.choice(choices)
+        companion = random.choice(choices)
+
+        # Speedrun preset stuff
+        cls.set_save_data_field("cape", cape)
+        cls.set_save_data_field("compShell", companion)
+        cls.set_save_data_field("sword", sword)
+
+        outfit_str = "0+%d+%d+%d+" % (cape, companion, sword)
+        cls.set_save_data_field("cCapes", outfit_str)
+        cls.set_save_data_field("cShells", outfit_str)
+        cls.set_save_data_field("cSwords", outfit_str)
+
     @classmethod
     def random_skill(cls):
         skills = [1, 2, 3, 5, 6]
@@ -91,7 +108,6 @@ class Preset:
         room_choice = None
         keys = list(HLDBasics.room_names.keys())
 
-        print("Before loop")
         while not room_choice:
             c = random.choice(keys)
             if "unused" in HLDBasics.room_names[c][1].lower() \
@@ -102,7 +118,7 @@ class Preset:
                 or c >= 220 \
                 or c in [132, 133, 134, 135, 183, 232, 123, 250]:
                 continue
-            print("Naked start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
+            print("Random start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
             room_choice = c 
             
         cls.set_save_data_field(
@@ -122,15 +138,12 @@ class Preset:
                 obj_list.remove(o)
                 break
 
-
         cls.set_save_data_field("events",
             "336860+363992+-1054677+" # Open the path to vale from thinforest
                                 )
         cls.set_save_data_field("permaS",
             "-1052455=2>-1073029=2>" # Open up north main path arenas
                                 )
-
-                                
         # Remove teleporter in brokenshallows
         obj_list = cls.real_levels.find_by_name(
             HLDLevel.Names.RM_IN_01_BROKENSHALLOWS
@@ -331,21 +344,12 @@ class PresetBingo(Preset):
 
 
 class PresetStreamlined(Preset):
-    description = "Streamlined for quick playing. Random start. Random skill given in addition to chain dash."
+    description = "Streamlined for quick playing. Random start. Random starting skill given in addition to chain dash. Random starting outfit."
 
     @classmethod
     def execute_changes(cls):
         cls.set_save_data_field("gameName", "Streamlined" + "_" + cls.seed)
-
-        # Speedrun preset stuff
-        cls.set_save_data_field("cape", 3)
-        cls.set_save_data_field("compShell", 10)
-        cls.set_save_data_field("sword", 7)
-
-        cls.set_save_data_field("cCapes", "0+3+10+7+")
-        cls.set_save_data_field("cShells", "0+3+10+7+")
-        cls.set_save_data_field("cSwords", "0+3+10+7+")
-
+        cls.random_outfit()
         cls.random_skill()
         cls.random_start()
 
