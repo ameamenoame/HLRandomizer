@@ -110,7 +110,18 @@ class Preset:
         )
         cls.set_save_data_field("checkX", -50)  # Force spawnwarp
         cls.set_save_data_field("checkY", -50)
-        cls.set_save_data_field("warp", "4+")  # Unlock the blocks in town
+        cls.set_save_data_field("warp", "")
+        cls.set_save_data_field("hasMap", 1)
+
+        # Remove the warp blocks in town
+        obj_list = cls.real_levels.find_by_name(
+            HLDLevel.Names.RM_C_CENTRAL
+        ).object_list
+        for o in obj_list:
+            if o.uid in [1270, 3911, 766]:
+                obj_list.remove(o)
+                break
+
 
         cls.set_save_data_field("events",
             "336860+363992+-1054677+" # Open the path to vale from thinforest
