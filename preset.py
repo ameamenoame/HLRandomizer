@@ -100,7 +100,7 @@ class Preset:
                 or HLDBasics.room_names[c][0].startswith("rm_pax") \
                 or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
                 or c >= 220 \
-                or c in [133, 134, 135, 183, 232, 123, 250]:
+                or c in [132, 133, 134, 135, 183, 232, 123, 250]:
                 continue
             print("Naked start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
             room_choice = c 
