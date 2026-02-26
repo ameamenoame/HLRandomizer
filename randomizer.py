@@ -897,7 +897,7 @@ def randomize_enemies(
                     and obj.attrs["-1"] not in protect_list
                 ):
                     obj.attrs["-1"] = random.choices(list_of_enemies, weights)[0]
-                    obj.attrs["-2"] = 0
+                    # obj.attrs["-2"] = 0
                     obj.attrs["-4"] = 1
                     # obj.attrs["-5"] = 0
                     obj.attrs["-6"] = -1
