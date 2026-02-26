@@ -13,7 +13,7 @@ class ItemPlacementRestriction(str, Enum):
     FREE = "Free (252 checks)"  # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
     KEY_ITEMS = "Key items (63 checks)"  # Module can only appear at key item places - outfits, keys, weapons
     KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)"
-    MODULES_EXTENDED = "Modules Extended (39 checks)"  # Only place where modules would be plus special key / outfit checks
+    MODULES_EXTENDED = "Modules Extended (47 checks)"  # Only place where modules would be plus special key / outfit checks
     # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
 
 
@@ -33,6 +33,17 @@ class ModuleCount(int, Enum):
     MINIMUM = 16
     ALL = 32
 
+class Direction(str, Enum):
+    def __str__(self):
+        return self.value
+
+    NORTH = "North"
+    EAST = "East"
+    WEST = "West"
+    SOUTH = "South"
+    CENTRAL = "Central"
+    INTRO = "Intro"
+    ABYSS = "Abyss"
 
 class KeyCount(int, Enum):
     def __str__(self):
@@ -268,6 +279,24 @@ class HLDBasics:
         248: ("rm_wa_crsytaldescent", "Crystal Descent"),
         250: ("rm_wa_grottox", "Grotto X (Unused)"),
     }
+
+    @classmethod
+    def get_human_room_name(cls, room_name: str) -> str:
+        name_mapping = HLDBasics.room_name_str_mapping()
+        return HLDBasics.room_names[name_mapping[room_name.lower().split("/")[0]]][1]
+
+    @classmethod
+    def get_dir_from_room_name(cls, room_name: str) -> Direction:
+        code = room_name.split("_")[1].lower()
+        match code[0]:
+            case "n":
+                return Direction.NORTH
+            case "w":
+                return Direction.WEST
+            case "e":
+                return Direction.EAST
+            case _:
+                return Direction.SOUTH
 
     @classmethod
     def room_name_str_mapping(cls) -> dict:

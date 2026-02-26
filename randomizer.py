@@ -5,6 +5,7 @@ from hldlib.hldbasics import (
     ItemPlacementRestriction,
     ModuleDoorOptions,
     ModuleCount,
+    Direction
 )
 from dataclasses import dataclass, field
 from enum import Enum
@@ -95,17 +96,6 @@ class RandomizerType(str, Enum):
     TELEPORTER = "teleporter"
 
 
-class Direction(str, Enum):
-    def __str__(self):
-        return self.value
-
-    NORTH = "North"
-    EAST = "East"
-    WEST = "West"
-    SOUTH = "South"
-    CENTRAL = "Central"
-    INTRO = "Intro"
-    ABYSS = "Abyss"
 
 
 def glue_on_direction(string: str, dir_: Direction):
@@ -113,7 +103,6 @@ def glue_on_direction(string: str, dir_: Direction):
 
 
 class CoolJSON:
-
     class_name = "class_name"
 
     @classmethod
@@ -1732,14 +1721,8 @@ def main(
         Inventory.set_key_requirements(KeyCount.ALL)
         Inventory.set_lasers_requirements(2)
 
-    fake_levels = LevelHolder(
-        CoolJSON.load(
-            GRAPH_JSON
-            if not module_placement == ItemPlacementRestriction.MODULES_EXTENDED
-            or random_doors
-            else GRAPH_LIMITED_JSON
-        )
-    )
+    graph_data = CoolJSON.load(GRAPH_JSON if not module_placement == ItemPlacementRestriction.MODULES_EXTENDED or random_doors else GRAPH_LIMITED_JSON)
+    fake_levels = LevelHolder(graph_data)
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
 
     for level in fake_levels:
@@ -1900,7 +1883,7 @@ def main(
     if output:
         real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
 
-    return (layers,final_module_map, dungeon_entrance_mix_data)
+    return (layers,final_module_map, dungeon_entrance_mix_data, graph_data)
 
 
 def _mix_fake_key_doors(

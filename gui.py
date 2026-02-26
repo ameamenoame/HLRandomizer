@@ -3,7 +3,8 @@ from tkinter import *
 from tkinter import ttk, messagebox, scrolledtext
 from time import time
 from preset import PresetType, Preset, DEFAULT_SAVE_EDIT_NUMBER
-from hldlib import HLDBasics, HLDLevel
+from hldlib import HLDBasics, HLDLevel, HLDType
+from hldlib.hldbasics import Direction
 from randomizer import (
     VERSION_NUMBER,
     main,
@@ -17,7 +18,6 @@ from randomizer import (
     ItemPlacementRestriction,
     ModuleCount,
     ModuleDoorOptions,
-    Direction
 )
 from solution import check_solution
 from random import randrange
@@ -167,6 +167,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     layers = []
     dungeon_mix_data = []
     final_mod_map = {}
+    graph_data = None
 
     def do_install(self, *args):
         """
@@ -450,7 +451,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                             continue
                         final_enemy_weights.append(e["weight"])
 
-                    layers, final_mod_map, dungeon_mix_data = main(
+                    layers, final_mod_map, dungeon_mix_data, graph_data = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
@@ -491,7 +492,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         )
                         break
 
-            return (success, random_seed, layers, final_mod_map, dungeon_mix_data)
+            return (success, random_seed, layers, final_mod_map, dungeon_mix_data, graph_data)
 
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
@@ -546,6 +547,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results["layers"] = gen_result[2]
         results["final_mod_map"] = gen_result[3]
         results["dungeon_mix_data"] = gen_result[4]
+        results["graph_data"] = gen_result[5]
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
@@ -646,6 +648,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.layers = self.results["layers"]
             self.final_mod_map = self.results["final_mod_map"]
             self.dungeon_mix_data = self.results["dungeon_mix_data"]
+            self.graph_data = self.results["graph_data"]
         else:
             messagebox.showerror(
                 message=f"Could not generate seed. Try again or try another seed if a seed was set.",
@@ -667,8 +670,77 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     def show_tracker(self):
         self.tracker = ItemTracker(
             self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data,
-            self.final_mod_map
+            self.final_mod_map, self.graph_data
         )
+    def show_check_tracker(self):
+        if not self.graph_data: 
+            messagebox.showinfo(
+                message="Generate a seed to use the check tracker",
+                title="No generated seed found",
+            )
+            return
+        window = Toplevel(self.root)
+        window.title("Check Tracker")
+
+        # .ico icons don't work on other platforms, skip for now
+        if platform.system() == "Windows":
+            window.iconbitmap("icon.ico")
+
+        # Check tracker
+        checks_frame = ttk.Frame(window, padding=(10, 10, 10, 10))
+        checks_frame.grid(row=1, column=2, sticky=N, columnspan=4)
+
+        count = 0
+        levels_with_checks = {}
+        dir_levels = {}
+        for level in self.graph_data:
+            for o in level.fake_object_list:
+                if o.original_type.lower() in ["module", "bones"]:
+                    name = level.name.lower().split("/")[0]
+                    if name not in ["rm_c_central/out", "rm_c_central/hordedoor", "rm_pax_staging", "rm_c_ven_dash"]:
+                        count+= 1
+                        name = level.name.split("/")[0]
+
+                        dir = HLDBasics.get_dir_from_room_name(name)
+                        if "backertablet" in name.lower() :
+                            dir = Direction.NORTH
+
+                        if levels_with_checks.get(name):
+                            levels_with_checks[name].append(o.original_type)
+                        else:
+                            levels_with_checks[name] = [o.original_type]
+
+                        if not dir_levels.get(dir):
+                            dir_levels[dir] = [name]
+                        else:
+                            if name not in dir_levels[dir]: dir_levels[dir].append(name)
+                pass
+
+        check_row = 0
+        check_col = 0
+        col = 0
+        for d in [Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH]:
+            d_frame = ttk.LabelFrame(checks_frame, text=d)
+            d_frame.grid(row=1, column=col, padx=5, ipadx=5, ipady=5, sticky=NSEW)
+            col+=1
+
+            for l in dir_levels[d]:
+                ttk.Label(d_frame, text=HLDBasics.get_human_room_name(l), font=("TkHeadingFont", 10, "bold")).grid(row=check_row, column=check_col, sticky=NW)
+                check_row+=1
+                for i in levels_with_checks[l]:
+                    ttk.Checkbutton(d_frame, text=i + " check", onvalue=True, offvalue=False).grid(row=check_row, column=check_col, sticky=NW, padx=5)
+                    check_row+=1
+                ttk.Label(d_frame, text="").grid(row=check_row, column=check_col, sticky=NW, pady=3)
+                check_row+=1
+                if check_row >= 15:
+                    check_row = 0
+                    check_col += 1
+            check_col += 1
+            check_row = 0
+
+        ttk.Label(checks_frame, text="Check tracker (manual) (%d checks) \n---------------" % count, font=("TkDefaultFont", 12)).grid(sticky=NW, row=0, column=0)
+
+        return
 
     def __init__(self, root, path):
         self.root = root
@@ -1034,9 +1106,12 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Bottom buttons #
         bottom_frame = ttk.Frame(root)
-        bottom_frame.grid(column=0, row=9, sticky=NSEW, columnspan=2)
+        bottom_frame.grid(column=0, row=9, sticky=NSEW, columnspan=3)
 
         # ttk.Button(bottom_frame, text="Push to HLD", command=self.do_push).grid(column=2,row=0)
+        ttk.Button(bottom_frame, text="Check tracker", command=self.show_check_tracker).grid(
+            column=3, row=0
+        )
         ttk.Button(bottom_frame, text="Item tracker", command=self.show_tracker).grid(
             column=2, row=0
         )
@@ -1049,8 +1124,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         # ttk.Button(bottom_frame, text="Close", command=root.destroy).grid(column=4, row=0)
         ttk.Button(
             bottom_frame, text="Generate", padding=10, command=self.randomize
-        ).grid(column=3, row=0, sticky=NE)
-        bottom_frame.grid_columnconfigure(3, weight=1)
+        ).grid(column=4, row=0, sticky=NE)
+        bottom_frame.grid_columnconfigure(4, weight=1)
 
         for child in bottom_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
@@ -1414,9 +1489,9 @@ class ItemTracker:
         save_edit_number: int = 3,
         entrance_track: bool = False,
         entrance_data: dict = {},
-        mod_map: dict = {}
+        mod_map: dict = {},
+        graph_data: dict = {}
     ):
-
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
         # self.window.attributes('-topmost', True)
@@ -1488,15 +1563,17 @@ class ItemTracker:
 
         # Entrance data
         self.entrance_textvar = StringVar(value="")
-        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 12)).grid(row=1, column=1, pady=5, padx=5)
+        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 12)).grid(row=1, column=1, pady=5, padx=5, sticky=NW)
 
         self.window.rowconfigure(1, weight=0)
         self.window.rowconfigure(2, weight=0)
 
         self.save_edit_number = save_edit_number
         ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number + 1)).grid(
-            row=0, column=0, pady=5, padx=5
+            row=0, column=0, pady=5, padx=5, sticky=N
         )
+
+        
 
         MainRandomizerUI.center_subwindow(parent, self.window)
         # self.window.transient(parent)

@@ -142,7 +142,7 @@ class Preset:
         #     "336860+363992+-1054677+" # Open the path to vale from thinforest
         #                         )
         cls.set_save_data_field("events",
-            "-1392839+" 
+            "-1392839+"  # Skip the house map cutscene
         )
         cls.set_save_data_field("permaS",
             "-1052455=2>-1073029=2>" # Open up north main path arenas
