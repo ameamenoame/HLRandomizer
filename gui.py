@@ -375,6 +375,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
         shuffle_parallax: bool = False,
         shuffle_music: bool = False,
+        no_logic: bool = False,
     ):
         def do_gen(
             random_seed,
@@ -399,7 +400,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             random_dungeon_entrances: bool = False,
             save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
             shuffle_parallax: bool = False,
-            shuffle_music: bool = False
+            shuffle_music: bool = False,
+            no_logic: bool = False,
         ):
             """
             Starts the randomized level files creation sequence
@@ -478,6 +480,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         preset_save_number=save_number,
                         shuffle_parallax=shuffle_parallax,
                         shuffle_music=shuffle_music,
+                        no_logic=no_logic
                     )
                     success = True
                     break
@@ -538,7 +541,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             random_dungeon_entrances=random_dungeon_entrances,
             save_number=save_number,
             shuffle_parallax=shuffle_parallax,
-            shuffle_music=shuffle_music
+            shuffle_music=shuffle_music,
+            no_logic=no_logic
         )
 
         # Definitely not thread safe
@@ -627,6 +631,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 int(self.save_numbervar.get()) - 1,
                 self.shuffle_parallax.get(),
                 self.shuffle_music.get(),
+                self.no_logicvar.get(),
             ],
         )
         self.t.daemon = True
@@ -910,6 +915,15 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             onvalue=True,
             offvalue=False,
         ).grid(column=0, row=5, sticky=W, padx=5, pady=5)
+
+        self.no_logicvar = BooleanVar(value=False)
+        ttk.Checkbutton(
+            progression_frame,
+            text="No logic",
+            variable=self.no_logicvar,
+            onvalue=True,
+            offvalue=False,
+        ).grid(column=1, row=5, sticky=W, padx=5, pady=5)
 
         ttk.Label(
             progression_frame, text="Progression item placement location pool"

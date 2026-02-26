@@ -21,6 +21,7 @@ class PresetType(str, Enum):
     RANDOM_START = "Random start"
     BINGO = "Bingo"
     STREAMLINED = "Streamlined"
+    NO_LOGIC = "No logic"
 
 
 class Preset:
@@ -42,8 +43,6 @@ class Preset:
 
     @staticmethod
     def get_preset_from_name(name: PresetType):
-        # if name == PresetType.NIMBLE:
-        #     return PresetNimble
         if name == PresetType.VAGABOND:
             return PresetVagabond
         elif name == PresetType.SPEEDRUN:
@@ -62,6 +61,8 @@ class Preset:
             return PresetBingo
         elif name == PresetType.STREAMLINED:
             return PresetStreamlined
+        elif name == PresetType.NO_LOGIC:
+            return PresetNoLogic
         return Preset
 
     @classmethod
@@ -80,6 +81,7 @@ class Preset:
         )
         options.key_countvar.set(KeyCount.ALL)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.no_logicvar.set(False)
 
     @classmethod 
     def random_outfit(cls):
@@ -104,20 +106,28 @@ class Preset:
         cls.set_save_data_field("skill", "4+%d+" % random.choice(skills))
 
     @classmethod
-    def random_start(cls):
+    def random_start(cls, no_logic: bool = False):
         room_choice = None
         keys = list(HLDBasics.room_names.keys())
 
         while not room_choice:
             c = random.choice(keys)
-            if "unused" in HLDBasics.room_names[c][1].lower() \
-                or HLDBasics.room_names[c][0].startswith("rm_in") \
-                or HLDBasics.room_names[c][0].startswith("rm_c_") \
-                or HLDBasics.room_names[c][0].startswith("rm_pax") \
-                or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
-                or c >= 220 \
-                or c in [132, 133, 134, 135, 183, 232, 123, 250, 86]:
-                continue
+            if not no_logic:
+                if "unused" in HLDBasics.room_names[c][1].lower() \
+                    or HLDBasics.room_names[c][0].startswith("rm_in") \
+                    or HLDBasics.room_names[c][0].startswith("rm_c_") \
+                    or HLDBasics.room_names[c][0].startswith("rm_pax") \
+                    or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
+                    or c >= 220 \
+                    or c in [132, 133, 134, 135, 183, 232, 123, 250, 86]:
+                    continue
+            else:
+                if "unused" in HLDBasics.room_names[c][1].lower() \
+                    or HLDBasics.room_names[c][0].startswith("rm_in") \
+                    or HLDBasics.room_names[c][0].startswith("rm_c_") \
+                    or HLDBasics.room_names[c][0].startswith("rm_pax") \
+                    or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"]:
+                    continue
             print("Random start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
             room_choice = c 
             
@@ -360,6 +370,35 @@ class PresetStreamlined(Preset):
     def set_options(cls, options):
         super().set_options(options)
         options.even_item_distribution.set(False)
+        options.random_enemies.set(True)
+        options.random_pistol.set(True)
+        options.random_shops.set(True)
+        options.random_dungeon_entrances.set(True)
+        options.use_chain_logic.set(False)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.MODULES_EXTENDED
+        )
+        options.limit_one_module_per_room.set(False)
+        options.key_countvar.set(4)
+        options.module_count_optionsvar.set(ModuleCount.MINIMUM)
+        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.shuffle_parallax.set(True)
+        options.shuffle_music.set(True)
+
+
+class PresetNoLogic(Preset):
+    description = "No logic. Random starting position. Good luck."
+
+    @classmethod
+    def execute_changes(cls):
+        cls.set_save_data_field("gameName", "NoLogic" + "_" + cls.seed)
+        cls.random_start(True)
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.even_item_distribution.set(False)
+        options.no_logicvar.set(True)
         options.random_enemies.set(True)
         options.random_pistol.set(True)
         options.random_shops.set(True)

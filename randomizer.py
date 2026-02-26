@@ -240,13 +240,13 @@ class FakeLevel:
     connections: list[Connection] = field(default_factory=list)
     extra_info: dict = field(default_factory=dict)
 
-    def ping_all(self):
+    def ping_all(self, no_logic: bool = False):
         self.passed = True
         for check in self.fake_object_list:
-            check.ping_object()
+            check.ping_object(no_logic)
 
         for connection in self.connections:
-            connection.ping_connection()
+            connection.ping_connection(no_logic)
 
     def convert_fake_objects_into_real(self):
         for fake_object in self.fake_object_list:
@@ -283,8 +283,8 @@ class FakeObject:
             and not self.passed
         )
 
-    def ping_object(self):
-        if self.passes_requirements:
+    def ping_object(self, no_logic: bool = False):
+        if no_logic or self.passes_requirements:
             self.passed = True
             if self.type == RandomizerType.CHECK:
                 Inventory.place_check_in_reached(self)
@@ -637,8 +637,8 @@ class Connection:
             and not self.pointer_to_level.passed
         )
 
-    def ping_connection(self):
-        if self.passes_requirements:
+    def ping_connection(self, no_logic: bool = False):
+        if no_logic or self.passes_requirements:
             self.pointer_to_level.ping_all()
 
 
@@ -685,12 +685,12 @@ class LevelHolder(list[HLDLevel | FakeLevel]):
     #################################################################################
     # GET EMPTY CHECK
     ####################################################################################
-    def get_empty_object(self, filter_lambda: Callable):
+    def get_empty_object(self, filter_lambda: Callable, no_logic: bool = False):
         inventory_before = False
         inventory_after = True
 
         def _ping_and_clear():
-            self[0].ping_all()
+            self[0].ping_all(no_logic)
             for level in self:
                 level.passed = False
 
@@ -926,6 +926,7 @@ def place_all_items(
     outfit_placement_option: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
     shotguns_placement_option: ItemPlacementRestriction =ItemPlacementRestriction.FREE,
     final_module_map: dict = {"count": 0, "all": {}},
+    no_logic: bool = False,
 ):
 
     tablets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -951,6 +952,7 @@ def place_all_items(
         after_each_place_callback: Callable = (lambda _: True),
         place_count: int = -1,
     ):
+        nonlocal no_logic
         def _place():
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
@@ -1706,9 +1708,12 @@ def main(
     shuffle_parallax: bool = False,
     preset_save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
     shuffle_music: bool = False,
+    no_logic: bool = False
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
+
+    if no_logic: print("Using no logic")
 
     if not random_doors:
         Inventory.set_module_requirements(
@@ -1721,6 +1726,7 @@ def main(
         Inventory.set_key_requirements(KeyCount.ALL)
         Inventory.set_lasers_requirements(2)
 
+    graph_data = None
     graph_data = CoolJSON.load(GRAPH_JSON if not module_placement == ItemPlacementRestriction.MODULES_EXTENDED or random_doors else GRAPH_LIMITED_JSON)
     fake_levels = LevelHolder(graph_data)
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
@@ -1769,7 +1775,6 @@ def main(
         print("Key door mix data")
         print(key_mix_data)
 
-        
         if random_dungeon_entrances:
             dungeon_entrance_mix_data = _randomize_dungeon_entrances(connections_data, fake_levels)
             
@@ -1810,7 +1815,8 @@ def main(
         even_item_distribution=even_item_distribution,
         outfit_placement_option=module_placement,
         shotguns_placement_option=module_placement,
-        final_module_map=final_module_map
+        final_module_map=final_module_map,
+        no_logic=no_logic,
     )
 
     real_levels = LevelHolder(
