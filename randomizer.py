@@ -2214,7 +2214,7 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
         "to": 'rm_EB_BogStreet/2'
         },
         {
-        "from": "rm_EC_ThePlaza/2",
+        "from": "rm_EC_ThePlaza/1",
         "to": 'rm_EX_TowerEast',
         },
         {
