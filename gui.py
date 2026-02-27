@@ -1193,16 +1193,18 @@ class ItemTracker:
             width=40,
             height=40,
             initial_state=False,
+            path_prefix="mod_",
+            range_size=5
         ):
             super().__init__(master)
 
             # Load and resize images to fixed size
 
             self.imgs = []
-            for i in range(5):
+            for i in range(range_size):
                 self.imgs.append(
                     ImageTk.PhotoImage(
-                        Image.open(os.path.join("assets", "mod_%d.png" % i)).resize((40, 40), Image.LANCZOS)
+                        Image.open(os.path.join("assets", "%s%d.png" % (path_prefix, i))).resize((40, 40), Image.LANCZOS)
                     )
                 )
 
@@ -1259,6 +1261,14 @@ class ItemTracker:
             if not self.show_text: return
             self.config(text=_text, compound='center', font=("TkHeadingFont", 24), foreground="white")
 
+        def set_off(self):
+            self.state = False
+            self.update_image()
+
+        def set_on(self):
+            self.state = True
+            self.update_image()
+
         def set_counter(self, num: int):
             self.counter = num
             self.set_text(str(self.counter))
@@ -1290,20 +1300,12 @@ class ItemTracker:
 
         self.track_keys(savedata_map)
 
-        if self.has_laser(savedata_map):
-            self.toggle_item("laser", True)
-        else:
-            self.toggle_item("laser", False)
+        self.toggle_item("laser", self.has_laser(savedata_map))
 
-        if self.has_dash(savedata_map):
-            self.toggle_item("dash", True)
-        else:
-            self.toggle_item("dash", False)
+        for s in self.skills.keys():
+            self.toggle_item(s, self.has_skill(savedata_map, str(self.skills[s])))
 
-        if self.has_pistol(savedata_map):
-            self.toggle_item("pistol", True)
-        else:
-            self.toggle_item("pistol", False)
+        self.toggle_item("pistol", self.has_pistol(savedata_map))
 
         def toggle_if_have(item: str, arg):
             val = False
@@ -1322,6 +1324,8 @@ class ItemTracker:
 
         self.track_modules(savedata_map, mod_map)
         self.track_bits(savedata_map)
+        self.track_grenades(savedata_map)
+        self.track_heal_ups(savedata_map)
 
         if entrance_data != {}:
             # Track visited entrances
@@ -1397,6 +1401,10 @@ class ItemTracker:
     def has_dash(savedata_map):
         return "4" in savedata_map["skill"].value
 
+    @staticmethod 
+    def has_skill(savedata_map, skill):
+        return skill in savedata_map["skill"].value
+
     @staticmethod
     def has_pistol(savedata_map):
         return "1" in savedata_map["sc"].value.split("+")
@@ -1425,7 +1433,17 @@ class ItemTracker:
         elif name == "key":
             obj = self.key
         elif name == "dash":
-            obj = self.dash
+            obj = self.skills_widgets["dash"]
+        elif name == "jab":
+            obj = self.skills_widgets["jab"]
+        elif name == "shield":
+            obj = self.skills_widgets["shield"]
+        elif name == "slash":
+            obj = self.skills_widgets["slash"]
+        elif name == "phantom":
+            obj = self.skills_widgets["phantom"]
+        elif name == "deflect":
+            obj = self.skills_widgets["deflect"]
         elif name == "pistol":
             obj = self.pistol
         elif name == "pylon_north":
@@ -1457,9 +1475,20 @@ class ItemTracker:
 
     def track_keys(self, savedata_map):
         key_count = int(savedata_map['drifterkey'].value)
-        self.key.set_counter(key_count)
+
         if key_count > 0:
             self.toggle_item("key")
+            self.key_text.config(
+text=key_count, font=("TkHeadingFont", 14, "bold")
+            )
+
+    def track_grenades(self, savedata_map):
+        g_count = int(savedata_map["specialUp"].value)
+        self.grenade.set_module_count(g_count)
+
+    def track_heal_ups(self, savedata_map):
+        h_count = int(savedata_map["healthUp"].value)
+        self.heal_up.set_module_count(h_count)
 
     @staticmethod
     def get_dir_from_lvl_name(name: str):
@@ -1478,7 +1507,15 @@ class ItemTracker:
         bit_count = savedata_map["gear"].value
         big_bit_count = bit_count / 4
         small_bit_count = bit_count % 4
-        self.bit_text.config(text="%d (%d)" % (big_bit_count, small_bit_count), compound='center', font=("TkHeadingFont", 14, "bold"))
+        if big_bit_count == 0 and small_bit_count == 0:
+            self.bit.set_off()
+            self.bit_text.grid_forget()
+            return
+        else:
+            self.bit.set_on()
+            small_bit_text = ['⠁' ,'⠉', '⠋', '⠛'][int(small_bit_count)]
+            self.bit_text.config(text="%d %s" % (big_bit_count, small_bit_text), compound='center', font=("TkHeadingFont", 14, "bold"))
+            self.bit_text.grid()
 
     def track_modules(self, savedata_map, mod_map):
         tokens = savedata_map["mapMod"].value.split("&>")
@@ -1521,7 +1558,7 @@ class ItemTracker:
         if platform.system() == "Windows":
             self.window.iconbitmap("icon.ico")
 
-        row = ttk.Frame(self.window, padding=(10, 10, 10, 10))
+        row = ttk.Frame(self.window, padding=(10, 10, 10, 20))
         row.grid(row=1, sticky=N)
         self.window.columnconfigure(0, weight=0)
         self.window.columnconfigure(1, weight=1)
@@ -1559,30 +1596,74 @@ class ItemTracker:
             self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
         self.laser = self.ToggleImage(row, laser_on, laser_off)
-        self.laser.grid(row=3, column=0, padx=5, pady=20)
+        self.laser.grid(row=3, column=2, padx=5, pady=5, sticky=N)
 
-        self.key = self.ToggleImage(row, key_on, key_off, show_text=True)
-        self.key.grid(row=3, column=1, padx=5, pady=20)
+        # Key
+        self.key_frame = ttk.Frame(row)
+        self.key_frame.grid(row=3, column=1, padx=5, pady=5, sticky=N)
 
-        self.dash = self.ToggleImage(row, dash_on, dash_off)
-        self.dash.grid(row=3, column=2, padx=5, pady=20)
+        self.key = self.ToggleImage(self.key_frame, key_on, key_off)
+        self.key.grid(sticky=N)
+        self.key_text = ttk.Label(self.key_frame)
+        self.key_text.grid(row=1, padx=5, sticky=N)
 
+        
+
+        # Skills
+        self.skills = {
+            "slash": 1,
+            "deflect": 2,
+            "phantom": 3,
+            "dash": 4,
+            "shield": 5,
+            "jab": 6,
+        }
+        self.skills_widgets = {}
+        skill_col_count = 0
+        skill_row_count = 4
+        for s in self.skills:
+            self.skills_widgets[s] = self.ToggleImage(row, os.path.join("assets", "%s_on.png" % s), os.path.join("assets", "%s_off.png" % s))
+            self.skills_widgets[s].grid(row=skill_row_count, column=skill_col_count, padx=5, pady=5)
+            skill_col_count += 1
+            if skill_col_count > 2:
+                skill_col_count = 0
+                skill_row_count+=1
+
+
+        # Pistol
         self.pistol = self.ToggleImage(row, pistol_on, pistol_off)
-        self.pistol.grid(row=3, column=3, padx=5, pady=20)
+        self.pistol.grid(row=3, column=3, padx=5, pady=5, sticky=N)
+
+
+        # Bits
 
         self.bit_frame = ttk.Frame(row)
-        self.bit_frame.grid(row=4, column=0, padx=5, pady=5)
+        self.bit_frame.grid(row=3, column=0, pady=5, sticky=N)
 
         self.bit = self.ToggleImage(
             self.bit_frame,
-            os.path.join("assets", "bit.png"),
-            os.path.join("assets", "bit.png"),
-            width=30,
-            height=30
+            os.path.join("assets", "bit_on.png"),
+            os.path.join("assets", "bit_off.png"),
         )
-        self.bit.grid(row=0, column=0)
+        self.bit.grid(row=0, column=0, sticky=N)
         self.bit_text = ttk.Label(self.bit_frame, text="bit count")
-        self.bit_text.grid(row=1, column=0)
+        self.bit_text.grid(row=1, column=0, sticky=N)
+
+        # Grenades
+        self.grenade = self.ModuleImage(
+            row, path_prefix="g_",
+            range_size=3
+        )
+        self.grenade.grid(row=4, column=3)
+
+        # Heal ups
+        self.heal_up = self.ModuleImage(
+            row, path_prefix="heal_",
+            range_size=3
+        )
+        self.heal_up.grid(row=5, column=3)
+
+
 
         i = 0
         self.wells = {}
