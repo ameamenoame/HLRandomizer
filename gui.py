@@ -1513,7 +1513,7 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
             return
         else:
             self.bit.set_on()
-            small_bit_text = ['⠁' ,'⠉', '⠋', '⠛'][int(small_bit_count)]
+            small_bit_text = ['', '⠁' ,'⠉', '⠋'][int(small_bit_count)]
             self.bit_text.config(text="%d %s" % (big_bit_count, small_bit_text), compound='center', font=("TkHeadingFont", 14, "bold"))
             self.bit_text.grid()
 
