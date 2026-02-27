@@ -284,7 +284,7 @@ class FakeObject:
         )
 
     def ping_object(self, no_logic: bool = False):
-        if no_logic or self.passes_requirements:
+        if (no_logic and not self.passed) or self.passes_requirements:
             self.passed = True
             if self.type == RandomizerType.CHECK:
                 Inventory.place_check_in_reached(self)
@@ -638,8 +638,8 @@ class Connection:
         )
 
     def ping_connection(self, no_logic: bool = False):
-        if no_logic or self.passes_requirements:
-            self.pointer_to_level.ping_all()
+        if (no_logic and not self.pointer_to_level.passed) or self.passes_requirements:
+            self.pointer_to_level.ping_all(no_logic)
 
 
 class LevelHolder(list[HLDLevel | FakeLevel]):
@@ -957,7 +957,7 @@ def place_all_items(
             Inventory.current[inventory_key] -= 1
             Inventory.reset_temporary()
 
-            empty_check = levels.get_empty_object(lambda_filter)
+            empty_check = levels.get_empty_object(lambda_filter, no_logic)
             place_func(empty_check)
             after_each_place_callback(empty_check)
             return empty_check
@@ -976,9 +976,10 @@ def place_all_items(
     def place_unimportant(
         i: int, place_func: Callable, lambda_filter: Callable = lambda x, _, __, c: True
     ):
+        nonlocal no_logic
         for _ in range(i):
             Inventory.reset_temporary()
-            empty_check = levels.get_empty_object(lambda_filter)
+            empty_check = levels.get_empty_object(lambda_filter, no_logic)
             place_func(empty_check)
 
     def _place_module(check: FakeObject):
