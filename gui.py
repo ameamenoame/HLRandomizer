@@ -1320,8 +1320,8 @@ class ItemTracker:
         toggle_if_have("pylon_west", "west")
         toggle_if_have("pylon_south", "south")
 
-
         self.track_modules(savedata_map, mod_map)
+        self.track_bits(savedata_map)
 
         if entrance_data != {}:
             # Track visited entrances
@@ -1474,6 +1474,12 @@ class ItemTracker:
             case _:
                 return Direction.SOUTH
 
+    def track_bits(self, savedata_map):
+        bit_count = savedata_map["gear"].value
+        big_bit_count = bit_count / 4
+        small_bit_count = bit_count % 4
+        self.bit_text.config(text="%d (%d)" % (big_bit_count, small_bit_count), compound='center', font=("TkHeadingFont", 14, "bold"))
+
     def track_modules(self, savedata_map, mod_map):
         tokens = savedata_map["mapMod"].value.split("&>")
         module_locations = []
@@ -1552,7 +1558,7 @@ class ItemTracker:
             self.modules[directions[col]] = self.ModuleImage(row)
             self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
-        self.laser = self.ToggleImage(row, laser_on, laser_off, height=20)
+        self.laser = self.ToggleImage(row, laser_on, laser_off)
         self.laser.grid(row=3, column=0, padx=5, pady=20)
 
         self.key = self.ToggleImage(row, key_on, key_off, show_text=True)
@@ -1563,6 +1569,20 @@ class ItemTracker:
 
         self.pistol = self.ToggleImage(row, pistol_on, pistol_off)
         self.pistol.grid(row=3, column=3, padx=5, pady=20)
+
+        self.bit_frame = ttk.Frame(row)
+        self.bit_frame.grid(row=4, column=0, padx=5, pady=5)
+
+        self.bit = self.ToggleImage(
+            self.bit_frame,
+            os.path.join("assets", "bit.png"),
+            os.path.join("assets", "bit.png"),
+            width=30,
+            height=30
+        )
+        self.bit.grid(row=0, column=0)
+        self.bit_text = ttk.Label(self.bit_frame, text="bit count")
+        self.bit_text.grid(row=1, column=0)
 
         i = 0
         self.wells = {}
@@ -1575,6 +1595,9 @@ class ItemTracker:
             )
             self.wells[f"well_{direction}"].grid(row=2, column=i, padx=5, pady=5)
             i += 1
+
+
+
 
         # Entrance data
         self.entrance_textvar = StringVar(value="")
