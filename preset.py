@@ -370,9 +370,9 @@ class PresetStreamlined(Preset):
     def set_options(cls, options):
         super().set_options(options)
         options.even_item_distribution.set(False)
-        options.random_enemies.set(True)
+        options.random_enemies.set(False)
         options.random_pistol.set(True)
-        options.random_shops.set(True)
+        options.random_shops.set(False)
         options.random_dungeon_entrances.set(True)
         options.use_chain_logic.set(False)
         options.module_optionsvar.set(
