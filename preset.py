@@ -111,6 +111,8 @@ class Preset:
     @classmethod
     def random_start(cls, no_logic: bool = False):
         room_choice = None
+        x = None
+        y = None
         keys = list(HLDBasics.room_names.keys())
 
         while not room_choice:
@@ -122,7 +124,7 @@ class Preset:
                     or HLDBasics.room_names[c][0].startswith("rm_pax") \
                     or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"] \
                     or c >= 220 \
-                    or c in [132, 133, 134, 135, 183, 232, 123, 250, 86]:
+                    or c in [132, 133, 134, 135, 183, 232, 123, 250, 86, 184]:
                     continue
             else:
                 if "unused" in HLDBasics.room_names[c][1].lower() \
@@ -131,14 +133,49 @@ class Preset:
                     or HLDBasics.room_names[c][0].startswith("rm_pax") \
                     or HLDBasics.room_names[c][0] in ["rm_carena", "rm_televatorshaft"]:
                     continue
-            print("Random start: " + HLDBasics.room_names[c][0] + " - " + HLDBasics.room_names[c][1])
-            room_choice = c 
-            
+
+            obj_list = cls.real_levels.find_by_name(
+                HLDBasics.room_names[c][0]+".lvl"
+            ).object_list
+            doors = []
+            for o in obj_list:
+                if o.uid in [ 
+                             5643,  # MoonCourtyard -> gapopening televator
+                            7652,  # TowerSouth -> BGunPillars televator 
+                            94304,  # EastLoop -> LoopLAB televator   
+                            6897, # MoonCourtyard -> CliffCampfile door
+                           ]:
+                    continue
+                if o.type in [HLDType.DOOR, HLDType.TELEVATOR]:
+                    doors.append(o)
+            if doors == []: continue
+            door = random.choice(doors)
+            x = door.x
+            y = door.y
+            offset_amount = 32
+            if door.type == HLDType.DOOR:
+                if door.attrs["ed"] == 90:
+                    y -= offset_amount
+                elif door.attrs["ed"] == 180:
+                    x -= offset_amount
+                elif door.attrs["ed"] == 270:
+                    y += offset_amount
+                else:
+                    x += offset_amount
+            else:
+                # Spawn in the middle of the televator
+                y -= 15
+                x += 15
+            room_choice = c
+            print("Random start: " + HLDBasics.room_names[room_choice][0] + " - " + HLDBasics.room_names[room_choice][1])
+
         cls.set_save_data_field(
             "checkRoom",room_choice
         )
-        cls.set_save_data_field("checkX", -50)  # Force spawnwarp
-        cls.set_save_data_field("checkY", -50)
+
+        cls.set_save_data_field("checkX", x)
+        cls.set_save_data_field("checkY", y)
+
         cls.set_save_data_field("warp", "")
         cls.set_save_data_field("hasMap", 1)
         cls.set_save_data_field("cues", "-1383674+") # Remove the starting town square camera cue
