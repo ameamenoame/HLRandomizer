@@ -138,6 +138,7 @@ class Preset:
         cls.set_save_data_field("checkY", -50)
         cls.set_save_data_field("warp", "")
         cls.set_save_data_field("hasMap", 1)
+        cls.set_save_data_field("cues", "-1383674+") # Remove the starting town square camera cue
 
         # Remove the warp blocks in town
         obj_list = cls.real_levels.find_by_name(
