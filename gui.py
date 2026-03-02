@@ -1,4 +1,5 @@
 import threading
+import random
 from tkinter import *
 from tkinter import ttk, messagebox, scrolledtext
 from time import time
@@ -169,6 +170,39 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     final_mod_map = {}
     graph_data = None
 
+    @staticmethod
+    def edit_splash_text(game_path, is_revert = False):
+        splash_choices = [
+            "Hyper Light Drifter Randomizer",
+            "Doritos Finder Simulator",
+            "We love gambling",
+            "Not even randomized!",
+            "You should get that checked up",
+            "Pet the dog",
+            "What the dog doin'",
+            "They're turning the frogs genocidal!",
+            "Don't step on the snail",
+            "Birdo blast!",
+            "Bonk",
+        ] 
+
+        try:
+            lines = []
+            with open(os.path.join(game_path, "MenuText.txt"), encoding="UTF-8") as file:
+                will_change_next = False
+                for line in file:
+                    if will_change_next:
+                        line = "ENG|" + (random.choice(splash_choices) if not is_revert else "MAIN MENU")
+                        line += "\n"
+                        will_change_next = False
+                    if line.rstrip() == "=|MAIN_MENU_TITLE|50":
+                        will_change_next = True
+                    lines.append(line)
+            with open(os.path.join(game_path, "MenuText.txt"), "w", encoding="UTF-8") as f:
+                f.writelines(lines)
+        except Exception as e:
+            print("Could not edit splash text")
+
     def do_install(self, *args):
         """
         Makes a backup of HLD levels and makes itemless and doorless copies of levels
@@ -256,6 +290,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             end_time = time()
             print(f"Done in {end_time-start_time:.2f} s")
             messagebox.showinfo(message="Reverted Hyper Light Drifter to normal")
+
+            MainRandomizerUI.edit_splash_text(self.PATH_TO_HLD, True)
 
     def disable_enemy(self):
         current_index = self.enemy_list.curselection()
@@ -516,9 +552,10 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     dirs_exist_ok=True,
                 )
                 end_time = time()
-                print(f"Done in {end_time-start_time:.2f} s")
-                return True
+                print(f"Copy Done in {end_time-start_time:.2f} s")
 
+                return True
+        
         gen_result = do_gen(
             random_seed,
             enemy_data,
@@ -556,6 +593,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
+            MainRandomizerUI.edit_splash_text(PATH_TO_HLD)
 
         root.event_generate("<<GenerationComplete>>")
 
