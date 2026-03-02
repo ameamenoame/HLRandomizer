@@ -369,6 +369,7 @@ class PresetStreamlined(Preset):
         cls.random_outfit()
         cls.random_skill()
         cls.random_start()
+        cls.set_save_data_field("halluc", 99)
 
     @classmethod
     def set_options(cls, options):
