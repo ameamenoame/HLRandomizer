@@ -1375,7 +1375,7 @@ class ItemTracker:
             for k in empty_mapping.keys():
                 if empty_mapping[k]["random"] != None:
                     # text = empty_mapping[k]["human_from"] + " -> " + empty_mapping[k]["human_to"] + (" (%s entrance)" % empty_mapping[k]["og"]) + "\n"
-                    text = ("%s entrance" % empty_mapping[k]["og"]) + ' -> ' + empty_mapping[k]["human_to"] + "\n"
+                    text = ("%s" % empty_mapping[k]["og"]) + ' -> ' + empty_mapping[k]["human_to"] + "\n"
                     dir_mapping[self.get_dir_from_lvl_name(empty_mapping[k]["random"])] += text
                     
 
