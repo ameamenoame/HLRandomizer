@@ -1184,7 +1184,7 @@ class ItemTracker:
             if self._timer:
                 self._timer.cancel()
 
-    class ModuleImage(ttk.Label):
+    class ItemImage(ttk.Label):
         count = 0
         imgs = []
         def __init__(
@@ -1199,7 +1199,6 @@ class ItemTracker:
             super().__init__(master)
 
             # Load and resize images to fixed size
-
             self.imgs = []
             for i in range(range_size):
                 self.imgs.append(
@@ -1214,13 +1213,18 @@ class ItemTracker:
             self.state = initial_state
             self.update_image()
 
+        def set_manual_image(self, path):
+            img = ImageTk.PhotoImage(Image.open(path).resize((40, 40), Image.LANCZOS))
+            self.img_on = img
+            self.update_image()
+
         def update_image(self):
             self.config(image=self.img_on)
 
-        def set_module_count(self, count: int):
+        def set_count(self, count: int):
             self.count = count
-            if count > 4: count = 4
-
+            if self.count >= len(self.imgs):
+                self.count = len(self.imgs) - 1
             self.config(image=self.imgs[count])
 
     class ToggleImage(ttk.Label):
@@ -1326,6 +1330,7 @@ class ItemTracker:
         self.track_bits(savedata_map)
         self.track_grenades(savedata_map)
         self.track_heal_ups(savedata_map)
+        self.track_outfit(savedata_map)
 
         if entrance_data != {}:
             # Track visited entrances
@@ -1484,11 +1489,25 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
 
     def track_grenades(self, savedata_map):
         g_count = int(savedata_map["specialUp"].value)
-        self.grenade.set_module_count(g_count)
+        self.grenade.set_count(g_count)
 
     def track_heal_ups(self, savedata_map):
         h_count = int(savedata_map["healthUp"].value)
-        self.heal_up.set_module_count(h_count)
+        self.heal_up.set_count(h_count)
+
+    def track_outfit(self, savedata_map):
+        comp = int(savedata_map["compShell"].value)
+        self.comp.set_count(comp)
+
+        is_alt = savedata_map["CH"].value != 0.0
+        cape = int(savedata_map["cape"].value)
+        if cape == 0 and is_alt:
+            self.cloak.set_manual_image(os.path.join("assets", "cl_0_alt.png"))
+        else:
+            self.cloak.set_count(cape)
+
+        sword = int(savedata_map["sword"].value)
+        self.sword.set_count(sword)
 
     @staticmethod
     def get_dir_from_lvl_name(name: str):
@@ -1535,7 +1554,7 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
             dir = self.get_dir_from_lvl_name(   HLDBasics.room_names[module][0]  )
             mapping[dir] += 1
         for k in mapping.keys():
-            self.modules[k].set_module_count(mapping[k])
+            self.modules[k].set_count(min(mapping[k], 4))
         return
 
     def __init__(
@@ -1592,7 +1611,7 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
 
         self.modules = {}
         for col, (on_path, off_path) in enumerate(img_paths):
-            self.modules[directions[col]] = self.ModuleImage(row)
+            self.modules[directions[col]] = self.ItemImage(row)
             self.modules[directions[col]].grid(row=1, column=col, padx=5)
 
         self.laser = self.ToggleImage(row, laser_on, laser_off)
@@ -1623,7 +1642,7 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         skill_row_count = 4
         for s in self.skills:
             self.skills_widgets[s] = self.ToggleImage(row, os.path.join("assets", "%s_on.png" % s), os.path.join("assets", "%s_off.png" % s))
-            self.skills_widgets[s].grid(row=skill_row_count, column=skill_col_count, padx=5, pady=5)
+            self.skills_widgets[s].grid(row=skill_row_count, column=skill_col_count, padx=5)
             skill_col_count += 1
             if skill_col_count > 2:
                 skill_col_count = 0
@@ -1650,21 +1669,28 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         self.bit_text.grid(row=1, column=0, sticky=N)
 
         # Grenades
-        self.grenade = self.ModuleImage(
+        self.grenade = self.ItemImage(
             row, path_prefix="g_",
             range_size=3
         )
         self.grenade.grid(row=4, column=3)
 
         # Heal ups
-        self.heal_up = self.ModuleImage(
+        self.heal_up = self.ItemImage(
             row, path_prefix="heal_",
             range_size=3
         )
         self.heal_up.grid(row=5, column=3)
 
+        # Outfit
+        self.cloak = self.ItemImage(row, path_prefix="cl_", range_size=11)
+        self.cloak.grid(row=6, column=2)
+        self.sword = self.ItemImage(row, path_prefix="sw_", range_size=11)
+        self.sword.grid(row=6, column=1)
+        self.comp = self.ItemImage(row, path_prefix="comp_", range_size=11)
+        self.comp.grid(row=6, column=0)
 
-
+        # Wells
         i = 0
         self.wells = {}
         for direction in ["north", "east", "west", "south"]:
