@@ -1,6 +1,6 @@
 # Hyper Light Drifter Randomizer 
 [(click here to download)
-](https://github.com/ameamenoame/HLRandomizer/releases/download/0.16/HLDRando.zip)
+](https://github.com/ameamenoame/HLRandomizer/releases/download/0.17/HLDRando.zip)
 
 ![][image1]
 

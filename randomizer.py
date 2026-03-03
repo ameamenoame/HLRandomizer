@@ -19,7 +19,7 @@ import os
 import random
 import shutil
 
-VERSION_NUMBER = "v0.16"
+VERSION_NUMBER = "v0.17"
 
 
 JSON_DIR = "jsons"
