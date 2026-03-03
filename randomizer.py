@@ -1907,7 +1907,7 @@ def main(
     if output:
         real_levels.dump_all(dump_path)
 
-    return (layers,final_module_map, dungeon_entrance_mix_data, graph_data)
+    return (layers,final_module_map, dungeon_entrance_mix_data, graph_data, goal_type)
 
 
 def _mix_fake_key_doors(
@@ -2536,7 +2536,7 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
 
     def track_pillars(savedata_map):
         pillar_count = len(savedata_map["wellMap"].value.split("+")) - 1
-        print("Tracking pillar goal: " + str(pillar_count))
+        # print("Tracking pillar goal: " + str(pillar_count))
         if pillar_count >= 4:
             enable_abyss_elevator()
         else:
@@ -2544,7 +2544,7 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
 
     def track_bosses(savedata_map):
         boss_count = len(savedata_map["bosses"].value.split("&>")) - 1
-        print("Tracking all bosses goal: " + str(boss_count))
+        # print("Tracking all bosses goal: " + str(boss_count))
         if boss_count >= 7:
             enable_abyss_elevator()
         else:

@@ -169,6 +169,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     dungeon_mix_data = []
     final_mod_map = {}
     graph_data = None
+    seed_goal_type = GoalType.DEFAULT
 
     @staticmethod
     def edit_splash_text(game_path, is_revert = False):
@@ -472,6 +473,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             final_mod_map = None
             dungeon_mix_data = None
             graph_data = None
+            seed_goal_type = None
 
             using_preset_seed = random_seed
 
@@ -494,7 +496,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                             continue
                         final_enemy_weights.append(e["weight"])
 
-                    layers, final_mod_map, dungeon_mix_data, graph_data = main(
+                    layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
@@ -538,7 +540,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         )
                         break
 
-            return (success, random_seed, layers, final_mod_map, dungeon_mix_data, graph_data)
+            return (success, random_seed, layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type)
 
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
@@ -598,6 +600,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results["final_mod_map"] = gen_result[3]
         results["dungeon_mix_data"] = gen_result[4]
         results["graph_data"] = gen_result[5]
+        results["seed_goal_type"] = gen_result[6]
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
@@ -702,6 +705,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             self.final_mod_map = self.results["final_mod_map"]
             self.dungeon_mix_data = self.results["dungeon_mix_data"]
             self.graph_data = self.results["graph_data"]
+            self.seed_goal_type = self.results["seed_goal_type"]
         else:
             messagebox.showerror(
                 message=f"Could not generate seed. Try again or try another seed if a seed was set.",
@@ -723,7 +727,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     def show_tracker(self):
         self.tracker = ItemTracker(
             self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data,
-            self.final_mod_map, self.graph_data
+            self.final_mod_map, self.graph_data, self.seed_goal_type
         )
     def show_check_tracker(self):
         if not self.graph_data: 
@@ -1260,7 +1264,7 @@ class ItemTracker:
             self.count = count
             if self.count >= len(self.imgs):
                 self.count = len(self.imgs) - 1
-            self.config(image=self.imgs[count])
+            self.config(image=self.imgs[self.count])
 
     class ToggleImage(ttk.Label):
         counter = 0
@@ -1600,7 +1604,8 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         entrance_track: bool = False,
         entrance_data: dict = {},
         mod_map: dict = {},
-        graph_data: dict = {}
+        graph_data: dict = {},
+        seed_goal_type: GoalType = GoalType.DEFAULT,
     ):
         self.window = Toplevel(parent)
         self.window.title("Item Tracker")
@@ -1722,6 +1727,11 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         self.sword.grid(row=6, column=1)
         self.comp = self.ItemImage(row, path_prefix="comp_", range_size=11)
         self.comp.grid(row=6, column=0)
+
+        # Goals
+        self.goal_label = ttk.Label(row,text="Goal: " + str(seed_goal_type))
+        self.goal_label.grid(row=7, column=0, padx=5, pady=5, sticky=NW, columnspan=4)
+
 
         # Wells
         i = 0
