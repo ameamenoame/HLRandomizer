@@ -2351,10 +2351,14 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
         entrance_door = None
 
         skipped_first_bog_street_door = False
+        skipped_first_eastloop_door = False
         for d in doors:
             if d.attrs["rm"].lower() == i["to"].split("/")[0].lower() and not changed_entrance_doors.get(str(d.uid) + i["to"]):
                 if d.attrs['rm'].lower() == 'rm_eb_bogstreet' and not skipped_first_bog_street_door:
                     skipped_first_bog_street_door = True
+                    continue
+                if d.attrs['rm'].lower() == 'rm_ec_looplab' and not skipped_first_eastloop_door:
+                    skipped_first_eastloop_door = True
                     continue
                 entrance_door = d
                 changed_entrance_doors[str(d.uid) + i["to_random"]["to"]] = True

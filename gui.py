@@ -184,6 +184,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             "Don't step on the snail",
             "Birdo blast!",
             "Bonk",
+            "Drifter dood. Wat nou.",
         ] 
 
         try:
