@@ -5,7 +5,7 @@ from tkinter import ttk, messagebox, scrolledtext
 from time import time
 from preset import PresetType, Preset, DEFAULT_SAVE_EDIT_NUMBER
 from hldlib import HLDBasics, HLDLevel, HLDType
-from hldlib.hldbasics import Direction
+from hldlib.hldbasics import Direction, GoalType
 from randomizer import (
     VERSION_NUMBER,
     main,
@@ -19,7 +19,6 @@ from randomizer import (
     ItemPlacementRestriction,
     ModuleCount,
     ModuleDoorOptions,
-    GoalType
 )
 from solution import check_solution
 from random import randrange

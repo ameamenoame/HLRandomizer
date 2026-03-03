@@ -4,6 +4,13 @@ from enum import Enum
 import os
 import platform
 
+class GoalType(str, Enum):
+    def __str__(self):
+        return self.value
+    DEFAULT = "16 modules & 4 pillars"
+    ALL_PILLARS = "4 pillars"
+    ALL_BOSSES = "All bosses" 
+
 
 class ItemPlacementRestriction(str, Enum):
     def __str__(self):

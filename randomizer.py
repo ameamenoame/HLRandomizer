@@ -5,7 +5,8 @@ from hldlib.hldbasics import (
     ItemPlacementRestriction,
     ModuleDoorOptions,
     ModuleCount,
-    Direction
+    Direction,
+    GoalType
 )
 from dataclasses import dataclass, field
 from enum import Enum
@@ -100,12 +101,6 @@ class RandomizerType(str, Enum):
     TELEPORTER = "teleporter"
 
 
-class GoalType(str, Enum):
-    def __str__(self):
-        return self.value
-    DEFAULT = "16 modules & 4 pillars"
-    ALL_PILLARS = "4 pillars"
-    ALL_BOSSES = "All bosses" 
 
 
 def glue_on_direction(string: str, dir_: Direction):

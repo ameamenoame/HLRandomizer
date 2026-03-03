@@ -1,7 +1,7 @@
 from enum import Enum
 from tkinter import StringVar
 from hldlib import HLDObj, HLDLevel, HLDType, HLDBasics
-from hldlib.hldbasics import ItemPlacementRestriction, KeyCount, ModuleCount, ModuleDoorOptions
+from hldlib.hldbasics import ItemPlacementRestriction, KeyCount, ModuleCount, ModuleDoorOptions, GoalType
 from save_edit import *
 import random
 
@@ -11,17 +11,17 @@ DEFAULT_SAVE_EDIT_NUMBER: int = 3
 
 class PresetType(str, Enum):
     NONE = "None"
-    SEEKER = "Seeker"
+    STREAMLINED = "Streamlined"
     # NIMBLE = "Nimble"
     VAGABOND = "Vagabond"
-    SPEEDRUN = "Speedrun"
+    SPEEDRUN = "Nimble"
     GUNSLINGER = "Gunslinger"
     BITBOUND = "Bitbound"
     NAKED = "Naked"
     RANDOM_START = "Random start"
     BINGO = "Bingo"
-    STREAMLINED = "Streamlined"
     NO_LOGIC = "No logic"
+    SEEKER = "Seeker"
 
 
 class Preset:
@@ -208,22 +208,6 @@ class Preset:
                 break
 
 
-class PresetNimble(Preset):
-    description = "Movement-focused. Starts with the effects of purple + yellow + pink drifter cloaks (doubled stamina, increased movement speed, faster stamina recharge) and chain dash."
-
-    @classmethod
-    def execute_changes(cls):
-        # Set cape  for  player
-        # Indexes here are 1 less than what it would be in level files
-        print("Setting cape")
-        cls.set_save_data_field("cape", 10)
-        cls.set_save_data_field("compShell", 7)
-        cls.set_save_data_field("sword", 4)
-        cls.set_save_data_field("cCapes", "0+10+4+7+")
-        cls.set_save_data_field("cShells", "0+10+4+7+")
-        cls.set_save_data_field("cSwords", "0+10+4+7+")
-        cls.set_save_data_field("skill", "4+")
-        cls.set_save_data_field("gameName", "NIMBLE" + "_" + cls.seed)
 
 
 class PresetVagabond(Preset):
@@ -271,20 +255,44 @@ class PresetGunslinger(Preset):
 
 
 class PresetSpeedrun(Preset):
-    description = "Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks."
+    description = "Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks. Activate all pillars to open the abyss elevator."
 
     @classmethod
     def execute_changes(cls):
         cls.set_save_data_field("cape", 3)
         cls.set_save_data_field("compShell", 10)
         cls.set_save_data_field("sword", 7)
-
         cls.set_save_data_field("cCapes", "0+3+10+7+")
         cls.set_save_data_field("cShells", "0+3+10+7+")
         cls.set_save_data_field("cSwords", "0+3+10+7+")
-
         cls.set_save_data_field("skill", "4+")
         cls.set_save_data_field("gameName", "Speedrun" + "_" + cls.seed)
+        cls.random_start()
+        cls.set_save_data_field("halluc", 99)
+
+    @classmethod
+    def set_options(cls, options):
+        super().set_options(options)
+        options.random_enemies.set(False)
+        options.even_item_distribution.set(False)
+        options.no_logicvar.set(False)
+        options.random_pistol.set(True)
+        options.random_shops.set(False)
+        options.random_dungeon_entrances.set(True)
+        options.use_chain_logic.set(False)
+        options.module_optionsvar.set(
+            ItemPlacementRestriction.MODULES_EXTENDED
+        )
+        options.limit_one_module_per_room.set(False)
+        options.key_countvar.set(4)
+        options.module_count_optionsvar.set(ModuleCount.MINIMUM)
+        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
+        options.shuffle_parallax.set(True)
+        options.shuffle_music.set(True)
+        options.goal_optionvar.set(GoalType.ALL_PILLARS)
+    
+    
+        
 
 
 class PresetBitbound(Preset):
