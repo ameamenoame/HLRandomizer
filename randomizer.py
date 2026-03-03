@@ -2389,10 +2389,15 @@ def _mix_real_dungeon_doors(mix_data: list, real_levels: LevelHolder):
 
         exit_door = None
 
+        skipped_first_eastloop_door = False
         exit_level = real_levels.find_by_name(i["to_random"]["to"].split("/")[0] + ".lvl")
         doors = [o for o in exit_level.object_list if o.type in [HLDType.TELEVATOR, HLDType.DOOR]]
         for d in doors:
             if d.attrs["rm"].lower() == i['to_random']["from"].lower().split("/")[0] and not changed_exit_doors.get(str(d.uid) + i["from"]):
+                if d.attrs['rm'].lower() == 'rm_ec_eastloop' and not skipped_first_eastloop_door:
+                    skipped_first_eastloop_door = True
+                    continue
+
                 exit_door = d
                 changed_exit_doors[str(d.uid) + i["to_random"]["from"]] = True
                 break
