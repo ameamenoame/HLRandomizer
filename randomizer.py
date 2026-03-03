@@ -1769,6 +1769,8 @@ def main(
 
         if module_door_option == ModuleDoorOptions.MIX:
             module_door_mix_data = _mix_fake_module_doors(connections_data)
+        elif module_door_option == ModuleDoorOptions.NONE:
+            _mix_fake_module_doors(connections_data, module_door_mix_data)
         print("Module door Mix data")
         print(module_door_mix_data)
 
@@ -1950,7 +1952,7 @@ def _mix_fake_key_doors(
     return mix_data
 
 
-def _mix_fake_module_doors(level_data: list):
+def _mix_fake_module_doors(level_data: list, base_data: dict = {}):
     mix_data: dict = {}
 
     def _mix_doors_in_level(levels_to_change: list, x_door_count=3, high_door_count=3):
@@ -1979,17 +1981,23 @@ def _mix_fake_module_doors(level_data: list):
                             name == "rm_NX_MoonCourtyard/3"
                             and level["to"]
                             in ["rm_NX_CathedralEntrance", "rm_NL_GapOpening/1"]
-                        )
+                        ) # Because north has a level with 2 module doors
                     )
-                ):  # Because north has a level with 2 module doors
-                    to_place = random.choice(choices)
-                    choices.remove(to_place)
-                    level["requirements"]["modules"] = to_place
-
-                    if name != "rm_NX_MoonCourtyard/3":
-                        mix_data[level["from"]] = to_place
+                ):  
+                    if base_data != {}: # Not mixing module doors at all, just changing the connections to fit the module count
+                        if name != "rm_NX_MoonCourtyard/3":
+                            level["requirements"]["modules"] = base_data[level["from"]]
+                        else:
+                            level["requirements"]["modules"] = base_data[level["from"] + ":" + level["to"]]
                     else:
-                        mix_data[level["from"] + ":" + level["to"]] = to_place
+                        to_place = random.choice(choices)
+                        choices.remove(to_place)
+                        level["requirements"]["modules"] = to_place
+
+                        if name != "rm_NX_MoonCourtyard/3":
+                            mix_data[level["from"]] = to_place
+                        else:
+                            mix_data[level["from"] + ":" + level["to"]] = to_place
 
     north_module_door_levels = ["rm_NX_MoonCourtyard/3"]
     west_module_door_levels = ["rm_WA_EntSwitch", "rm_WA_Vale/1"]
