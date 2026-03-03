@@ -1,7 +1,7 @@
 ## SAVE EDITING LIBRARY BY SPRINGSYLVI ##
 
 
-import sys, base64, os.path, json, re, configparser, platform, getpass
+import sys, base64, os.path, json, re, configparser, platform, getpass, threading
 
 help_all = (
     "load       load data from a save file\n"
@@ -56,6 +56,29 @@ class InvalidArgsError(Exception):
 
 class FileError(Exception):
     pass
+
+class RepeatingTimer:
+    def __init__(self, interval, function, *args, **kwargs):
+        self.interval = interval
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self._stop_event = threading.Event()
+        self._timer = None
+
+    def _run(self):
+        if not self._stop_event.is_set():
+            self.function(*self.args, **self.kwargs)
+            self.start()  # schedule next call
+
+    def start(self):
+        self._timer = threading.Timer(self.interval, self._run)
+        self._timer.start()
+
+    def stop(self):
+        self._stop_event.set()
+        if self._timer:
+            self._timer.cancel()
 
 
 # todo: rework this class as a virtual savefile object, no static methods
@@ -318,3 +341,9 @@ def autofill_path(config):
     if os.path.exists(path):
         return path
     raise Exception("Default path does not exist")
+
+
+def poll_save(save_path, save_number, handler):
+    metadata = SaveMetadata(None, save_path)
+    savedata_map = savedata_load(metadata, [0, save_number])
+    handler(savedata_map)

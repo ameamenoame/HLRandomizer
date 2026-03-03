@@ -5,14 +5,16 @@ from dataclasses import dataclass
 
 @dataclass
 class HLDObj:
+    DEFAULT_MIDDLE_STRING = "-999999"
 
     type: str
     x: int
     y: int
     attrs: dict
-    middle_string: str = "-999999"
+    middle_string: str = DEFAULT_MIDDLE_STRING
     uid: int = 10000
     layer: int = 0
+
 
     def translate(self, x: int, y: int) -> None:
         self.x += x
@@ -44,6 +46,10 @@ class HLDObj:
             middle_string=middle_string,
             attrs=attrs,
         )
+
+    def reset_middle_string(self):
+        self.middle_string = self.DEFAULT_MIDDLE_STRING
+        
 
     def get_line(self, uid: int = None) -> str:
         attrs_to_str = ",".join([f"{key}={value}" for key, value in self.attrs.items()])

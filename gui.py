@@ -19,12 +19,12 @@ from randomizer import (
     ItemPlacementRestriction,
     ModuleCount,
     ModuleDoorOptions,
+    GoalType
 )
 from solution import check_solution
 from random import randrange
 from save_edit import *
 import shutil
-from save_edit import autofill_path
 import os
 from json_generators import generate_all_jsons, PATH_TO_MANUAL
 import platform
@@ -413,6 +413,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         shuffle_parallax: bool = False,
         shuffle_music: bool = False,
         no_logic: bool = False,
+        goal_type: GoalType = GoalType.DEFAULT,
     ):
         def do_gen(
             random_seed,
@@ -439,6 +440,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             shuffle_parallax: bool = False,
             shuffle_music: bool = False,
             no_logic: bool = False,
+            goal_type: GoalType = GoalType.DEFAULT,
+            hld_path: str= PATH_TO_HLD,
         ):
             """
             Starts the randomized level files creation sequence
@@ -518,7 +521,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         preset_save_number=save_number,
                         shuffle_parallax=shuffle_parallax,
                         shuffle_music=shuffle_music,
-                        no_logic=no_logic
+                        no_logic=no_logic,
+                        goal_type=goal_type,
+                        hld_path=hld_path
                     )
                     success = True
                     break
@@ -581,7 +586,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             save_number=save_number,
             shuffle_parallax=shuffle_parallax,
             shuffle_music=shuffle_music,
-            no_logic=no_logic
+            no_logic=no_logic,
+            goal_type=goal_type,
+            hld_path=PATH_TO_HLD,
         )
 
         # Definitely not thread safe
@@ -672,6 +679,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 self.shuffle_parallax.get(),
                 self.shuffle_music.get(),
                 self.no_logicvar.get(),
+                self.goal_optionvar.get(),
             ],
         )
         self.t.daemon = True
@@ -866,7 +874,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             column=0, row=3, padx=5, sticky=(N,W,E)
         )
         seed_entry = ttk.Entry(seed_frame, textvariable=self.random_seed, width=30)
-        seed_entry.grid(column=1, row=3, sticky=(N, E, W))
+        seed_entry.grid(column=1, row=3, sticky=(N, E, W, S))
 
         ttk.Button(
             seed_frame, text="Clear", command=lambda: self.random_seed.set("")
@@ -945,7 +953,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         # Progression settings #
         progression_frame = ttk.LabelFrame(root, text="Progression")
-        progression_frame.grid(column=0, row=4, sticky=(N,W,E))
+        progression_frame.grid(column=0, row=4, sticky=(N,W,E), ipadx=5, ipady=5)
 
         self.use_chain_logic = BooleanVar(value=False)
         ttk.Checkbutton(
@@ -1037,6 +1045,17 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             onvalue=True,
             offvalue=False,
         ).grid(column=1, row=12, sticky=W, pady=5)
+
+        
+        # Goal type #
+        goal_options = [e.value for e in GoalType]
+        self.goal_optionvar = StringVar(value=GoalType.DEFAULT)
+        self.goal_list = ttk.Combobox(
+            progression_frame, textvariable=self.goal_optionvar, values=goal_options
+        )
+        self.goal_list.grid(column=1, row=13, sticky=NW, pady=5)
+        self.goal_list.state(["readonly"])
+        ttk.Label(progression_frame, text="Goal", wraplength=400).grid(column=0, row=13, sticky=NE, padx=5, pady=5)
 
         # Enemy settings #
 
@@ -1139,7 +1158,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.preset_list.grid(column=1, row=1, sticky=NW)
         self.preset_list.state(["readonly"])
         self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
-        self.preset_description_label.grid(column=1, row=3, sticky=NW, columnspan=3)
+        self.preset_description_label.grid(column=1, row=3, sticky=NE, columnspan=3)
         self.preset_optionsvar.trace("w", self._on_preset_selection)
 
         for child in preset_frame.winfo_children():
@@ -1200,29 +1219,6 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
 class ItemTracker:
-    class RepeatingTimer:
-        def __init__(self, interval, function, *args, **kwargs):
-            self.interval = interval
-            self.function = function
-            self.args = args
-            self.kwargs = kwargs
-            self._stop_event = threading.Event()
-            self._timer = None
-
-        def _run(self):
-            if not self._stop_event.is_set():
-                self.function(*self.args, **self.kwargs)
-                self.start()  # schedule next call
-
-        def start(self):
-            self._timer = threading.Timer(self.interval, self._run)
-            self._timer.start()
-
-        def stop(self):
-            self._stop_event.set()
-            if self._timer:
-                self._timer.cancel()
-
     class ItemImage(ttk.Label):
         count = 0
         imgs = []
@@ -1334,8 +1330,6 @@ class ItemTracker:
 
 
     def poll_save(self, save_path, save_edit_number, entrance_data, mod_map):
-        
-
         print("Polling save...")
 
         metadata = SaveMetadata(None, save_path)
@@ -1764,7 +1758,7 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         # self.window.grab_set()
 
         self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
-        self.poll_job = self.RepeatingTimer(
+        self.poll_job = RepeatingTimer(
             15.0, lambda: self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
         )
         self.poll_job.start()

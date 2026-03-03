@@ -12,9 +12,12 @@ from enum import Enum
 from typing import Callable
 from os import path
 from preset import Preset, DEFAULT_SAVE_EDIT_NUMBER
+from save_edit import poll_save, RepeatingTimer
+from platform import system
 import json
 import os
 import random
+import shutil
 
 VERSION_NUMBER = "v0.16"
 
@@ -77,6 +80,7 @@ BASE_LIST_OF_ENEMIES = [
 BASE_ENEMY_PROTECT_POOL = ["Birdman"]
 BASE_ENEMY_WEIGHTS = [1.0 for i in range(len(BASE_LIST_OF_ENEMIES))]
 
+goal_poll_job: RepeatingTimer = None
 
 class RandomizerType(str, Enum):
     def __str__(self):
@@ -96,6 +100,12 @@ class RandomizerType(str, Enum):
     TELEPORTER = "teleporter"
 
 
+class GoalType(str, Enum):
+    def __str__(self):
+        return self.value
+    DEFAULT = "16 modules & 4 pillars"
+    ALL_PILLARS = "4 pillars"
+    ALL_BOSSES = "All bosses" 
 
 
 def glue_on_direction(string: str, dir_: Direction):
@@ -1709,7 +1719,9 @@ def main(
     shuffle_parallax: bool = False,
     preset_save_number: int = DEFAULT_SAVE_EDIT_NUMBER,
     shuffle_music: bool = False,
-    no_logic: bool = False
+    no_logic: bool = False,
+    goal_type: GoalType = GoalType.DEFAULT,
+    hld_path: str = "",
 ):
     print("Seed: " + str(random_seed))
     random.seed(random_seed)
@@ -1887,10 +1899,13 @@ def main(
         except FileNotFoundError as e:
             raise FileNotFoundError("Save file to apply preset to does not exist")
 
+    dump_path = os.path.join(OUTPUT_PATH, output_folder_name)
+    _track_goal(goal_type, p.save_edit_number, real_levels, dump_path, hld_path)
+
     Inventory.reset()
 
     if output:
-        real_levels.dump_all(os.path.join(OUTPUT_PATH, output_folder_name))
+        real_levels.dump_all(dump_path)
 
     return (layers,final_module_map, dungeon_entrance_mix_data, graph_data)
 
@@ -2476,3 +2491,83 @@ def _shuffle_music(real_levels: LevelHolder):
                 if not track_name or track_name=="<undefined>" or "amb" in track_name.lower(): continue
                 # Shuffle track
                 o.attrs['s'] = unique_tracks[track_name]
+
+
+def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder, dump_path: str, hld_path: str):
+    print("goal type: " + str(goal_type))
+    if goal_type == GoalType.DEFAULT: 
+        # No need to track
+        return
+
+    town_level = real_levels.find_by_name("rm_C_Central.lvl")
+    abyss_elevator = None
+    for o in town_level.object_list:
+        if o.uid == 7699:
+            abyss_elevator = o
+            break
+
+    def push():
+        folder = "central" if system() in ("Linux", "Darwin") else "Central"
+        shutil.copyfile(
+            os.path.join(dump_path, folder, "rm_C_Central.lvl"),
+            os.path.join(hld_path, folder, "rm_C_Central.lvl"),
+        )
+        print("Copied changed abyss door")
+        return True
+
+    def enable_abyss_elevator():
+        if abyss_elevator.middle_string == o.DEFAULT_MIDDLE_STRING: 
+            # Already enabled
+            return
+        abyss_elevator.reset_middle_string()
+        town_level.dump_level(os.path.join(dump_path, town_level.dir_))
+        push()
+        print("Pushed enabled abyss door")
+
+    def disable_abyss_elevator():
+        disabled_str = "1,1079,caseScript,3,1,-999999,0"
+        if abyss_elevator.middle_string == disabled_str: 
+            # Already disabled
+            return
+        abyss_elevator.middle_string = "1,1079,caseScript,3,1,-999999,0"
+        town_level.dump_level(os.path.join(dump_path, town_level.dir_))
+        push()
+        print("Pushed disabled abyss door")
+
+    def track_pillars(savedata_map):
+        pillar_count = len(savedata_map["wellMap"].value.split("+")) - 1
+        print("Tracking pillar goal: " + str(pillar_count))
+        if pillar_count >= 4:
+            enable_abyss_elevator()
+        else:
+            disable_abyss_elevator()
+
+    def track_bosses(savedata_map):
+        boss_count = len(savedata_map["bosses"].value.split("&>")) - 1
+        print("Tracking all bosses goal: " + str(boss_count))
+        if boss_count >= 7:
+            enable_abyss_elevator()
+        else:
+            disable_abyss_elevator()
+        return
+
+    handler = None
+    match goal_type:
+        case GoalType.ALL_PILLARS:
+            handler = track_pillars
+        case GoalType.ALL_BOSSES:
+            handler = track_bosses
+        case _:
+            print("Unrecognized goal type")
+            raise Exception
+
+    global goal_poll_job
+    if goal_poll_job: goal_poll_job.stop() # Stop any existing poll job
+
+    goal_poll_job = RepeatingTimer(
+        7.0, lambda: poll_save(HLDBasics.find_save_path(), save_number, handler)
+    )
+    goal_poll_job.start()
+
+    return
+
