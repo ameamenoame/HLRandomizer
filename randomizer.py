@@ -1786,7 +1786,7 @@ def main(
         print(key_mix_data)
 
         if random_dungeon_entrances:
-            dungeon_entrance_mix_data = _randomize_dungeon_entrances(connections_data, fake_levels)
+            dungeon_entrance_mix_data = _randomize_dungeon_entrances(connections_data, even_item_distribution)
             
         fake_levels.connect_levels_from_list(connections_data)
 
@@ -2221,7 +2221,7 @@ def _decorate_final_modules(real_levels: LevelHolder, final_module_map: dict):
     for key in final_module_map.keys():
         if key != "count" and key != "all": _decorate_module_in_level(key)
 
-def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolder):
+def _randomize_dungeon_entrances(connections_data: list, even_dist: bool = False):
     base_entrances = [
         # EAST ENTRANCES
         {
@@ -2310,16 +2310,109 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
         },
     ]
 
-    available_dungeon_entrances = []
+    if even_dist:
+        for e in base_entrances:
+            e["to_random"] = None
+            e["changed"] = False
+            e["dest_placed"] = False
 
-    for e in base_entrances:
-        available_dungeon_entrances.append(e)
-        e["to_random"] = None
+        # Place pillar paths first
+        # Only one set of pillar paths allowed in each region
+        pillar_path_placed_mapping: dict = {}
+        pillar_paths = [
+            'rm_NX_CathedralEntrance',
+            'rm_WC_ThinForest',
+            'rm_WT_SlowLab/1',
+            "rm_EC_BigBogLAB/1",
+            'rm_CH_APillarBird',
+        ]
+        for e in [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]:
+            dests = []
+            if e == Direction.NORTH:
+                dests = [
+                    {
+                    "from": "rm_NX_MoonCourtyard/3",
+                    "to": 'rm_NX_CathedralEntrance',
+                    },
+                ]
+            elif e == Direction.WEST:
+                dests = [
+                    {
+                    "from": "rm_WA_EntSwitch",
+                    "to": 'rm_WC_ThinForest',
+                    },
+                    {
+                    "from": "rm_WA_EntSwitch",
+                    "to": 'rm_WT_SlowLab/1',
+                    },
+                ]
+            elif e == Direction.EAST:
+                dests = [
+                    {
+                    "from": 'rm_EB_BogStreet/2',
+                    "to": "rm_EC_BigBogLAB/1",
+                    },
+                ]
+            else:
+                dests =[
+                    {
+                    "from": "rm_CH_ACorner",
+                    "to": 'rm_CH_APillarBird',
+                    },
+                ]
+            pillar_path_placed_mapping[e] = {
+                "placed": False,
+                "dests": dests
+            }
+        for d in [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]:
+            key = random.choice(list(pillar_path_placed_mapping.keys()))
+            to_place = pillar_path_placed_mapping[key]
+            
+            tries = 0
+            while to_place["dests"] != []:
+                rooms = []
+                for e in base_entrances:
+                    if not e["changed"] and HLDBasics.get_dir_from_room_name(e["from"]) == d :
+                        rooms.append(e)
+                room = random.choice(rooms)
+                room["changed"] = True
+                room["to_random"] = to_place["dests"].pop()
 
-    random.shuffle(available_dungeon_entrances)
+                tries += 1
+                if tries > 100:
+                    raise IndexError("Could not find suitable entrance for shuffling")
+            pillar_path_placed_mapping.pop(key)
 
-    for e in base_entrances:
-        e["to_random"] = available_dungeon_entrances.pop()
+
+        available_dungeon_entrances: list = []
+        for e in base_entrances:
+            available_dungeon_entrances.append(e)
+
+        random.shuffle(available_dungeon_entrances)
+
+        for e in base_entrances:
+            if not e["changed"]: 
+                peek = available_dungeon_entrances[len(available_dungeon_entrances) - 1]
+                tries = 0
+                while peek["dest_placed"] or peek["to"] in pillar_paths:
+                    random.shuffle(available_dungeon_entrances)
+                    peek = available_dungeon_entrances[len(available_dungeon_entrances) - 1]
+                    tries += 1
+                    if tries > 100:
+                        raise IndexError("Could not find suitable entrance for shuffling")
+                peek["dest_placed"] = True
+                e["to_random"] = peek
+    else:
+        available_dungeon_entrances = []
+
+        for e in base_entrances:
+            available_dungeon_entrances.append(e)
+            e["to_random"] = None
+
+        random.shuffle(available_dungeon_entrances)
+
+        for e in base_entrances:
+            e["to_random"] = available_dungeon_entrances.pop()
 
     marked_map = {}
     exit_marked_map = {}
