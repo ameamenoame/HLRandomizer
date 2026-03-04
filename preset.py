@@ -12,8 +12,8 @@ DEFAULT_SAVE_EDIT_NUMBER: int = 3
 class PresetType(str, Enum):
     NONE = "None"
     STREAMLINED = "Streamlined"
-    VAGABOND = "Vagabond"
     SPEEDRUN = "Nimble"
+    VAGABOND = "Vagabond"
     GUNSLINGER = "Gunslinger"
     BITBOUND = "Bitbound"
     NAKED = "Naked"
