@@ -1,5 +1,6 @@
 import threading
 import random
+import traceback
 from tkinter import *
 from tkinter import ttk, messagebox, scrolledtext
 from time import time
@@ -531,7 +532,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 except Exception as e:
                     if not using_preset_seed:
                         print("Retrying!")
-                        print(str(e))
+                        print(traceback.format_exc())
                         Inventory.reset()
                     else:
                         print(
