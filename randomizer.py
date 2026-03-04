@@ -2229,8 +2229,8 @@ def _randomize_dungeon_entrances(connections_data: list, fake_levels: LevelHolde
         "to": 'rm_EC_PlazaAccessLAB/1'
         },
         {
-        "from": "rm_EC_ThePlaza/2",
-        "to": 'rm_EB_BogStreet/2'
+        "from": 'rm_EB_BogStreet/2',
+        "to": "rm_EC_BigBogLAB/1",
         },
         {
         "from": "rm_EC_ThePlaza/1",
@@ -2516,6 +2516,7 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
         return True
 
     def enable_abyss_elevator():
+        global goal_poll_job
         if abyss_elevator.middle_string == o.DEFAULT_MIDDLE_STRING: 
             # Already enabled
             return
@@ -2523,6 +2524,7 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
         town_level.dump_level(os.path.join(dump_path, town_level.dir_))
         push()
         print("Pushed enabled abyss door")
+        if goal_poll_job: goal_poll_job.stop()
 
     def disable_abyss_elevator():
         disabled_str = "1,1079,caseScript,3,1,-999999,0"
