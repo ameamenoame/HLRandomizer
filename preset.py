@@ -12,7 +12,6 @@ DEFAULT_SAVE_EDIT_NUMBER: int = 3
 class PresetType(str, Enum):
     NONE = "None"
     STREAMLINED = "Streamlined"
-    # NIMBLE = "Nimble"
     VAGABOND = "Vagabond"
     SPEEDRUN = "Nimble"
     GUNSLINGER = "Gunslinger"
@@ -176,7 +175,6 @@ class Preset:
         cls.set_save_data_field("checkX", x)
         cls.set_save_data_field("checkY", y)
 
-        cls.set_save_data_field("warp", "")
         cls.set_save_data_field("hasMap", 1)
         cls.set_save_data_field("cues", "-1383674+") # Remove the starting town square camera cue
 
@@ -266,7 +264,7 @@ class PresetSpeedrun(Preset):
         cls.set_save_data_field("cShells", "0+3+10+7+")
         cls.set_save_data_field("cSwords", "0+3+10+7+")
         cls.set_save_data_field("skill", "4+")
-        cls.set_save_data_field("gameName", "Speedrun" + "_" + cls.seed)
+        cls.set_save_data_field("gameName", "Nimble" + "_" + cls.seed)
         cls.random_start()
         cls.set_save_data_field("halluc", 99)
 
