@@ -17,7 +17,7 @@ class PresetType(str, Enum):
     GUNSLINGER = "Gunslinger"
     BITBOUND = "Bitbound"
     NAKED = "Naked"
-    RANDOM_START = "Random start"
+    # RANDOM_START = "Random start"
     BINGO = "Bingo"
     NO_LOGIC = "No logic"
     SEEKER = "Seeker"
@@ -54,8 +54,6 @@ class Preset:
             return PresetBitbound
         elif name == PresetType.NAKED:
             return PresetNaked
-        elif name == PresetType.RANDOM_START:
-            return PresetRandomStart
         elif name == PresetType.BINGO:
             return PresetBingo
         elif name == PresetType.STREAMLINED:
@@ -272,7 +270,7 @@ class PresetSpeedrun(Preset):
     def set_options(cls, options):
         super().set_options(options)
         options.random_enemies.set(False)
-        options.even_item_distribution.set(False)
+        options.even_item_distribution.set(True)
         options.no_logicvar.set(False)
         options.random_pistol.set(True)
         options.random_shops.set(False)
@@ -417,7 +415,7 @@ class PresetStreamlined(Preset):
     @classmethod
     def set_options(cls, options):
         super().set_options(options)
-        options.even_item_distribution.set(False)
+        options.even_item_distribution.set(True)
         options.random_enemies.set(False)
         options.random_pistol.set(True)
         options.random_shops.set(False)
