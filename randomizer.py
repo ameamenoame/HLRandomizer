@@ -37,6 +37,9 @@ GRAPH_JSON = os.path.join(JSON_DIR, "out_graph.json")  # "jsons\\out_graph.json"
 GRAPH_LIMITED_JSON = os.path.join(
     JSON_DIR, "out_graph_limited.json"
 )  # "jsons\\out_graph_limited.json"
+GRAPH_STANDARDPLUS_JSON = os.path.join(
+    JSON_DIR, "out_graph_standardplus.json"
+) 
 DOOR_JSON = os.path.join(JSON_DIR, "out_door.json")  # "jsons\\out_door.json"
 CONNECT_JSON = os.path.join(JSON_DIR, "out_connect.json")  # "jsons\\out_connect.json"
 CONNECT2_JSON = os.path.join(
@@ -1038,7 +1041,8 @@ def place_all_items(
 
         if (
             module_option == ItemPlacementRestriction.KEY_ITEMS
-            or module_option == ItemPlacementRestriction.MODULES_EXTENDED
+            or module_option == ItemPlacementRestriction.STANDARD
+            or module_option == ItemPlacementRestriction.STANDARD_PLUS
         ):
             can_place = empty_check.original_type in ["MODULE", "BONES"]
         elif module_option == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
@@ -1074,7 +1078,8 @@ def place_all_items(
 
         if (
             restriction_type == ItemPlacementRestriction.KEY_ITEMS
-            or module_option == ItemPlacementRestriction.MODULES_EXTENDED
+            or module_option == ItemPlacementRestriction.STANDARD
+            or module_option == ItemPlacementRestriction.STANDARD_PLUS
         ):
             return empty_check.original_type in ["MODULE", "BONES"]
         elif restriction_type == ItemPlacementRestriction.KEY_ITEMS_EXTENDED:
@@ -1484,7 +1489,7 @@ def place_all_items(
                             check_amount=1,
                             max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
                         )
-                        if mod_door_option != ModuleDoorOptions.NONE
+                        if mod_door_option != ModuleDoorOptions.UNCHANGED
                         else True
                     ),
                     "finish_callback": lambda: _set_blocker_placed(
@@ -1519,7 +1524,7 @@ def place_all_items(
                             check_amount=1,
                             max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
                         )
-                        if mod_door_option != ModuleDoorOptions.NONE
+                        if mod_door_option != ModuleDoorOptions.UNCHANGED
                         else True
                     ),
                     "finish_callback": lambda: _set_blocker_placed(
@@ -1541,7 +1546,7 @@ def place_all_items(
                             check_amount=1,
                             max_amount=2 if mod_door_option == ModuleDoorOptions.MIX else 3,
                         )
-                        if mod_door_option != ModuleDoorOptions.NONE
+                        if mod_door_option != ModuleDoorOptions.UNCHANGED
                         else True
                     ),
                     "finish_callback": lambda: _set_blocker_placed(
@@ -1702,7 +1707,7 @@ def main(
     protect_list=BASE_ENEMY_PROTECT_POOL,
     module_placement: ItemPlacementRestriction = ItemPlacementRestriction.FREE,
     limit_one_module_per_room: bool = True,
-    module_door_option: ModuleDoorOptions = ModuleDoorOptions.NONE,
+    module_door_option: ModuleDoorOptions = ModuleDoorOptions.UNCHANGED,
     module_count: ModuleCount = ModuleCount.ALL,
     key_count: int = KeyCount.MINIMUM,
     randomize_pistol: bool = False,
@@ -1734,8 +1739,16 @@ def main(
         Inventory.set_key_requirements(KeyCount.ALL)
         Inventory.set_lasers_requirements(2)
 
-    graph_data = None
-    graph_data = CoolJSON.load(GRAPH_JSON if not module_placement == ItemPlacementRestriction.MODULES_EXTENDED or random_doors else GRAPH_LIMITED_JSON)
+    graph_path = None
+    match module_placement:
+        case ItemPlacementRestriction.STANDARD:
+            graph_path = GRAPH_LIMITED_JSON
+        case ItemPlacementRestriction.STANDARD_PLUS:
+            graph_path =  GRAPH_STANDARDPLUS_JSON
+        case _:
+            graph_path = GRAPH_JSON
+
+    graph_data = CoolJSON.load(graph_path)
     fake_levels = LevelHolder(graph_data)
     fake_levels.connect_levels_from_list(CoolJSON.load(CONNECT_JSON))
 
@@ -1776,7 +1789,7 @@ def main(
 
         if module_door_option == ModuleDoorOptions.MIX:
             module_door_mix_data = _mix_fake_module_doors(connections_data)
-        elif module_door_option == ModuleDoorOptions.NONE:
+        elif module_door_option == ModuleDoorOptions.UNCHANGED:
             _mix_fake_module_doors(connections_data, module_door_mix_data)
         print("Module door Mix data")
         print(module_door_mix_data)
@@ -1902,7 +1915,7 @@ def main(
     if output:
         real_levels.dump_all(dump_path)
 
-    return (layers,final_module_map, dungeon_entrance_mix_data, graph_data, goal_type)
+    return (layers,final_module_map, dungeon_entrance_mix_data, graph_data, goal_type, preset, module_placement)
 
 
 def _mix_fake_key_doors(

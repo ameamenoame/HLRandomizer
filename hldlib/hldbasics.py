@@ -16,19 +16,19 @@ class ItemPlacementRestriction(str, Enum):
     def __str__(self):
         return self.value
 
-    NONE = "Don't randomize"  # Module placements unchanged
-    FREE = "Free (252 checks)"  # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    STANDARD = "Standard (49 checks)"  # Only place where modules would be plus special key / outfit checks
+    STANDARD_PLUS = "StandardPlus (54 checks)"
     KEY_ITEMS = "Key items (63 checks)"  # Module can only appear at key item places - outfits, keys, weapons
     KEY_ITEMS_EXTENDED = "Key items + tablets (82 checks)"
-    MODULES_EXTENDED = "Modules Extended (47 checks)"  # Only place where modules would be plus special key / outfit checks
-    # KEY_ITEMS_EXTENDED = "Key items extended" # Module can only appear at key items plus some specially designated bits that are hard to get to
+    FREE = "Free (252 checks)"  # Randomize module placements across every possible item - bits, outfits, keys, weapons, tablets (except for enemy drops)
+    NONE = "Don't randomize"  # Module placements unchanged
 
 
 class ModuleDoorOptions(str, Enum):
     def __str__(self):
         return self.value
 
-    NONE = "Don't randomize"
+    UNCHANGED = "Don't randomize"
     MIX = "Mix"
     DISABLED = "Disabled"
 
@@ -58,6 +58,7 @@ class KeyCount(int, Enum):
 
     NONE = 0
     MINIMUM = 1
+    STANDARD = 4
     ALL = 16
 
 
@@ -193,7 +194,7 @@ class HLDBasics:
         132: ("rm_s_gauntlet_elevator", "South Dash Challenge"),
         133: ("rm_ch_bgunpillars", "Sky Factory 1"),
         134: ("rm_ch_bfinal", "Sky Factory 2"),
-        135: ("rm_s_gauntletend", "Sky Factory 3"),
+        135: ("rm_s_gauntletend", "Impact Railgun"),
         137: ("rm_ch_bdirkdemolition", "South Left Elevator"),
         139: ("rm_ch_tabigone", "Baker Module 1"),
         140: ("rm_ch_cgateblock", "Baker Module 2"),
@@ -243,7 +244,7 @@ class HLDBasics:
         196: ("rm_ec_templeishvault", "East Pillar"),
         198: ("rm_ec_eastloop", "East Loop"),
         199: ("rm_ec_looplab", "Loop Lab"),
-        200: ("rm_eb_meltyleaperarena", "Loop Arena"),
+        200: ("rm_eb_meltyleaperarena", "Diamond Shotgun"),
         202: ("rm_ec_plazatodocks", "Plaza to Docks (Unused)"),
         203: ("rm_ea_dockfightlab", "Dock Fight Lab (Unused)"),
         204: ("rm_eb_underotterbigriflerumble", "Big Rifle Rumble (Unused)"),

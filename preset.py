@@ -10,7 +10,7 @@ DEFAULT_SAVE_EDIT_NUMBER: int = 3
 
 
 class PresetType(str, Enum):
-    NONE = "None"
+    NONE = "Safe"
     STREAMLINED = "Streamlined"
     SPEEDRUN = "Nimble"
     VAGABOND = "Vagabond"
@@ -29,6 +29,7 @@ class Preset:
     description = "No preset selected"
     seed = "seed"
 
+    
     @classmethod
     def execute_changes(cls):
         return
@@ -67,18 +68,19 @@ class Preset:
         cls, options
     ):  # Passes the entire tkinter window object. Should rework presets to be based on config files instead
         options.random_shops.set(False)
-        options.random_pistol.set(False)
-        options.random_enemies.set(True)
-        options.module_count_optionsvar.set(ModuleCount.ALL)
-        options.limit_one_module_per_room.set(True)
-        options.even_item_distribution.set(False)
+        options.random_pistol.set(True)
+        options.random_enemies.set(False)
+        options.module_count_optionsvar.set(ModuleCount.MINIMUM)
+        options.limit_one_module_per_room.set(False)
+        options.even_item_distribution.set(True)
         options.use_chain_logic.set(False)
         options.module_optionsvar.set(
-            ItemPlacementRestriction.FREE
+            ItemPlacementRestriction.STANDARD
         )
-        options.key_countvar.set(KeyCount.ALL)
-        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.key_countvar.set(KeyCount.STANDARD)
+        options.module_door_optionsvar.set(ModuleDoorOptions.UNCHANGED)
         options.no_logicvar.set(False)
+        options.goal_optionvar.set(GoalType.DEFAULT)
 
     @classmethod 
     def random_outfit(cls):
@@ -277,12 +279,12 @@ class PresetSpeedrun(Preset):
         options.random_dungeon_entrances.set(True)
         options.use_chain_logic.set(False)
         options.module_optionsvar.set(
-            ItemPlacementRestriction.MODULES_EXTENDED
+            ItemPlacementRestriction.STANDARD
         )
         options.limit_one_module_per_room.set(False)
-        options.key_countvar.set(4)
+        options.key_countvar.set(KeyCount.STANDARD)
         options.module_count_optionsvar.set(ModuleCount.MINIMUM)
-        options.module_door_optionsvar.set(ModuleDoorOptions.NONE)
+        options.module_door_optionsvar.set(ModuleDoorOptions.UNCHANGED)
         options.shuffle_parallax.set(True)
         options.shuffle_music.set(True)
         options.goal_optionvar.set(GoalType.ALL_PILLARS)
@@ -402,7 +404,7 @@ class PresetBingo(Preset):
 
 
 class PresetStreamlined(Preset):
-    description = "Streamlined for quick playing. Random start. Random starting skill given in addition to chain dash. Random starting outfit."
+    description = "The recommended randomized experience. Random start. Random starting skill. Random starting outfit. Dungeon shuffle."
 
     @classmethod
     def execute_changes(cls):
@@ -422,12 +424,12 @@ class PresetStreamlined(Preset):
         options.random_dungeon_entrances.set(True)
         options.use_chain_logic.set(False)
         options.module_optionsvar.set(
-            ItemPlacementRestriction.MODULES_EXTENDED
+            ItemPlacementRestriction.STANDARD
         )
         options.limit_one_module_per_room.set(False)
-        options.key_countvar.set(4)
+        options.key_countvar.set(KeyCount.STANDARD)
         options.module_count_optionsvar.set(ModuleCount.MINIMUM)
-        options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
+        options.module_door_optionsvar.set(ModuleDoorOptions.UNCHANGED)
         options.shuffle_parallax.set(True)
         options.shuffle_music.set(True)
 
@@ -451,10 +453,10 @@ class PresetNoLogic(Preset):
         options.random_dungeon_entrances.set(True)
         options.use_chain_logic.set(False)
         options.module_optionsvar.set(
-            ItemPlacementRestriction.MODULES_EXTENDED
+            ItemPlacementRestriction.STANDARD
         )
         options.limit_one_module_per_room.set(False)
-        options.key_countvar.set(4)
+        options.key_countvar.set(KeyCount.STANDARD)
         options.module_count_optionsvar.set(ModuleCount.MINIMUM)
         options.module_door_optionsvar.set(ModuleDoorOptions.MIX)
         options.shuffle_parallax.set(True)

@@ -166,10 +166,13 @@ obj,Region,9012,0,0,0,-999999,++,0=400,1=460,p2=0,
 obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 """
     layers = []
+    final_seed = None
     dungeon_mix_data = []
     final_mod_map = {}
     graph_data = None
     seed_goal_type = GoalType.DEFAULT
+    seed_preset = Preset
+    check_pool = None
 
     @staticmethod
     def edit_splash_text(game_path, is_revert = False):
@@ -474,6 +477,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             dungeon_mix_data = None
             graph_data = None
             seed_goal_type = None
+            seed_preset = None
+            check_pool = None
 
             using_preset_seed = random_seed
 
@@ -496,7 +501,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                             continue
                         final_enemy_weights.append(e["weight"])
 
-                    layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type = main(
+                    layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type, seed_preset, check_pool = main(
                         random_doors=random_doors,
                         random_enemies=random_enemies,
                         output=output,
@@ -540,7 +545,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         )
                         break
 
-            return (success, random_seed, layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type)
+            return (success, random_seed, layers, final_mod_map, dungeon_mix_data, graph_data, seed_goal_type, seed_preset, check_pool)
 
         def do_push(OUT_FOLDER_NAME, PATH_TO_HLD):
             """
@@ -601,6 +606,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         results["dungeon_mix_data"] = gen_result[4]
         results["graph_data"] = gen_result[5]
         results["seed_goal_type"] = gen_result[6]
+        results["seed_preset"] = gen_result[7]
+        results["check_pool"] = gen_result[8]
 
         if results["success"]:
             do_push(OUT_FOLDER_NAME, PATH_TO_HLD)
@@ -702,10 +709,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                 title="Success",
             )
             self.layers = self.results["layers"]
+            self.final_seed = self.results["final_seed"]
             self.final_mod_map = self.results["final_mod_map"]
             self.dungeon_mix_data = self.results["dungeon_mix_data"]
             self.graph_data = self.results["graph_data"]
             self.seed_goal_type = self.results["seed_goal_type"]
+            self.seed_preset = self.results["seed_preset"]
+            self.check_pool = self.results["check_pool"]
+
         else:
             messagebox.showerror(
                 message=f"Could not generate seed. Try again or try another seed if a seed was set.",
@@ -727,11 +738,11 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
     def show_tracker(self):
         self.tracker = ItemTracker(
             self.root, HLDBasics.find_save_path(), self.random_shops, self.random_pistol, int(self.save_numbervar.get()) - 1, self.dungeon_mix_data != {}, self.dungeon_mix_data,
-            self.final_mod_map, self.graph_data, self.seed_goal_type
+            self.final_mod_map, self.graph_data, self.seed_goal_type, self.seed_preset, self.check_pool, self.final_seed
         )
     def show_check_tracker(self):
         if not self.graph_data: 
-            messagebox.showinfo(
+            messagebox.showerror(
                 message="Generate a seed to use the check tracker",
                 title="No generated seed found",
             )
@@ -901,7 +912,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             offvalue=False,
         ).grid(column=0, row=4, sticky=W, pady=5, padx=5)
 
-        self.random_enemies = BooleanVar(value=True)
+        self.random_enemies = BooleanVar(value=False)
         ttk.Checkbutton(
             options_frame,
             text="Shuffle enemies",
@@ -937,7 +948,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             offvalue=False,
         ).grid(column=0, row=6, sticky=W, padx=5, pady=5)
 
-        self.shuffle_parallax = BooleanVar(value=False)
+        self.shuffle_parallax = BooleanVar(value=True)
         ttk.Checkbutton(
             options_frame,
             text="Shuffle parallax",
@@ -946,7 +957,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             offvalue=False,
         ).grid(column=1, row=6, sticky=W, pady=5)
 
-        self.shuffle_music = BooleanVar(value=False)
+        self.shuffle_music = BooleanVar(value=True)
         ttk.Checkbutton(
             options_frame,
             text="Shuffle music",
@@ -959,14 +970,17 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         progression_frame = ttk.LabelFrame(root, text="Progression")
         progression_frame.grid(column=0, row=4, sticky=(N,W,E), ipadx=5, ipady=5)
 
+        progression_frame.grid_columnconfigure(0, weight=1)
+        progression_frame.grid_columnconfigure(1, weight=1)
+
         self.use_chain_logic = BooleanVar(value=False)
-        ttk.Checkbutton(
-            progression_frame,
-            text="Enable chain logic",
-            variable=self.use_chain_logic,
-            onvalue=True,
-            offvalue=False,
-        ).grid(column=0, row=5, sticky=W, padx=5, pady=5)
+        # ttk.Checkbutton(
+        #     progression_frame,
+        #     text="Enable chain logic",
+        #     variable=self.use_chain_logic,
+        #     onvalue=True,
+        #     offvalue=False,
+        # ).grid(column=0, row=5, sticky=W, padx=5, pady=5)
 
         self.no_logicvar = BooleanVar(value=False)
         ttk.Checkbutton(
@@ -975,14 +989,14 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
             variable=self.no_logicvar,
             onvalue=True,
             offvalue=False,
-        ).grid(column=1, row=5, sticky=W, padx=5, pady=5)
+        ).grid(column=0, row=5, sticky=W, padx=5, pady=5)
 
         ttk.Label(
-            progression_frame, text="Progression item placement location pool"
+            progression_frame, text="Check pool"
         ).grid(column=0, row=6, sticky=E, pady=5, padx=5)
         module_options = [e.value for e in ItemPlacementRestriction]
         self.module_optionsvar = StringVar(
-            value=ItemPlacementRestriction.FREE
+            value=ItemPlacementRestriction.STANDARD
         )
         module_settings_list = ttk.Combobox(
             progression_frame,
@@ -993,7 +1007,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         module_settings_list.grid(column=1, row=6, sticky=W, columnspan=3)
         module_settings_list.state(["readonly"])
 
-        self.limit_one_module_per_room = BooleanVar(value=True)
+        self.limit_one_module_per_room = BooleanVar(value=False)
         ttk.Checkbutton(
             progression_frame,
             text="Limit 1 module per room",
@@ -1004,7 +1018,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_door_label = ttk.Label(progression_frame, text="Module door")
         module_door_options = [e.value for e in ModuleDoorOptions]
-        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.MIX)
+        self.module_door_optionsvar = StringVar(value=ModuleDoorOptions.UNCHANGED)
         self.module_door_list = ttk.Combobox(
             progression_frame,
             textvariable=self.module_door_optionsvar,
@@ -1016,7 +1030,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         self.module_count_label = ttk.Label(progression_frame, text="Module count")
         module_count_options = [e.value for e in ModuleCount]
-        self.module_count_optionsvar = StringVar(value=ModuleCount.ALL)
+        self.module_count_optionsvar = StringVar(value=ModuleCount.MINIMUM)
         self.module_count_list = ttk.Combobox(
             progression_frame,
             textvariable=self.module_count_optionsvar,
@@ -1029,7 +1043,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
         ttk.Label(progression_frame, text="Key count").grid(column=0, row=11, sticky=NE, padx=5, pady=5)
-        self.key_countvar = StringVar(value="16")
+        self.key_countvar = StringVar(value="4")
         self.key_count_spinbox = ttk.Spinbox(
             progression_frame,
             from_=0,
@@ -1041,7 +1055,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         )
         self.key_count_spinbox.grid(column=1, row=11, sticky=W)
 
-        self.even_item_distribution = BooleanVar(value=False)
+        self.even_item_distribution = BooleanVar(value=True)
         ttk.Checkbutton(
             progression_frame,
             text="Equal item distribution across regions",
@@ -1369,7 +1383,7 @@ class ItemTracker:
         self.track_heal_ups(savedata_map)
         self.track_outfit(savedata_map)
 
-        if entrance_data != {}:
+        if entrance_data:
             # Track visited entrances
             mapping: dict = {}
             empty_mapping = {}
@@ -1606,9 +1620,14 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         mod_map: dict = {},
         graph_data: dict = {},
         seed_goal_type: GoalType = GoalType.DEFAULT,
+        seed_preset: Preset = Preset,
+        check_pool: ItemPlacementRestriction = ItemPlacementRestriction.STANDARD,
+        seed = "",
     ):
         self.window = Toplevel(parent)
-        self.window.title("Item Tracker")
+
+        self.save_edit_number = save_edit_number
+        self.window.title("(S%d) Item Tracker" % (save_edit_number + 1))
         # self.window.attributes('-topmost', True)
 
         # .ico icons don't work on other platforms, skip for now
@@ -1728,10 +1747,6 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         self.comp = self.ItemImage(row, path_prefix="comp_", range_size=11)
         self.comp.grid(row=6, column=0)
 
-        # Goals
-        self.goal_label = ttk.Label(row,text="Goal: " + str(seed_goal_type))
-        self.goal_label.grid(row=7, column=0, padx=5, pady=5, sticky=NW, columnspan=4)
-
 
         # Wells
         i = 0
@@ -1750,18 +1765,24 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
 
 
         # Entrance data
-        self.entrance_textvar = StringVar(value="")
-        ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 12)).grid(row=1, column=1, pady=5, padx=5, sticky=NW)
+        if entrance_data:
+            self.entrance_textvar = StringVar(value="ENTRANCE TRACKER--------")
+            self.entrance_label = ttk.Label(self.window, textvariable=self.entrance_textvar, font=("TkDefaultFont", 12))
+            self.entrance_label.grid(row=1, column=1, pady=10, padx=5, sticky=(N, W,E))
 
-        self.window.rowconfigure(1, weight=0)
-        self.window.rowconfigure(2, weight=0)
+            self.window.rowconfigure(1, weight=0)
+            self.window.rowconfigure(2, weight=0)
 
-        self.save_edit_number = save_edit_number
-        ttk.Label(self.window, text="Tracking save " + str(self.save_edit_number + 1)).grid(
-            row=0, column=0, pady=5, padx=5, sticky=N
-        )
-
-        
+        if seed_preset and check_pool and seed_goal_type:
+            info_str = ""
+            if seed:
+                info_str = seed+ "\n"
+            info_str += "%s [%s]" % (str(seed_preset if seed_preset != "None" else ""), check_pool.split(" ")[0])
+            if seed_goal_type != GoalType.DEFAULT:
+                info_str += "\n(%s)" % seed_goal_type
+            ttk.Label(row, text=info_str).grid(
+                row=7, column=0, pady=5, padx=5, sticky=NW, columnspan=4
+            )
 
         MainRandomizerUI.center_subwindow(parent, self.window)
         # self.window.transient(parent)

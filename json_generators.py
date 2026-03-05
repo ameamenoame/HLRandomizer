@@ -7,6 +7,7 @@ COUNTER = HLDBasics.Counter(9000)
 RESOURCES_DIR = "legacy_resources"
 PATH_TO_GRAPH = os.path.join(RESOURCES_DIR, "graph.txt")
 PATH_TO_GRAPH_LIMITED = os.path.join(RESOURCES_DIR, "graph_limited.txt")
+PATH_TO_GRAPH_STANDARDPLUS = os.path.join(RESOURCES_DIR, "graph_standardplus.txt")
 PATH_TO_DOOR = os.path.join(RESOURCES_DIR, "doors.txt")
 PATH_TO_CONNECT = os.path.join(RESOURCES_DIR, "connect.txt")
 PATH_TO_CONNECT2 = os.path.join(RESOURCES_DIR, "connect2.txt")
@@ -228,6 +229,9 @@ def generate_all_jsons():
     get_json_from_graph(PATH_TO_GRAPH, os.path.join(JSON_DIR, "out_graph.json"))
     get_json_from_graph(
         PATH_TO_GRAPH_LIMITED, os.path.join(JSON_DIR, "out_graph_limited.json")
+    )
+    get_json_from_graph(
+        PATH_TO_GRAPH_STANDARDPLUS, os.path.join(JSON_DIR, "out_graph_standardplus.json")
     )
     get_json_from_door(PATH_TO_DOOR, os.path.join(JSON_DIR, "out_door.json"))
     get_json_from_connect(PATH_TO_CONNECT, os.path.join(JSON_DIR, "out_connect.json"))
