@@ -40,7 +40,6 @@ Un-randomize:
 
 
 Check solution:
-- If you are stuck, you should check out the Logic section first to find out how the randomizer places progression items. 
 - If you want to see the location of all the progression items in the seed, press the 'Check solution' button in the bottom left corner.
 
 
@@ -64,6 +63,12 @@ Enemy pool: Enables editing how enemies are randomized. Usage: click on an enemy
 
 Shuffle dungeon entrances: Randomizes entrances to dungeon paths in each region. This means you can, for example, go into the South Reaper path from the North 3-module door. Generally, dungeon entrances are near the warp pads in each region.
 
+Goal: 
+- Set the condition for the abyss elevator to open in town:
+	- 16 modules & 4 pillars: Default condition. 
+	- 4 pillars: Activate 4 pillars to open the abyss elevator.
+	- All bosses: Defeat 7 bosses to open the abyss elevator.
+- Note that for 4 pillars & All bosses you need to have the randomizer running to track the goal's progress. Closing the randomizer will lose progress on that goal and will not open the abyss elevator on goal completion. However you can still finish the game normally by finding 16 modules and 4 pillars.
 
 # Check location pools
 The term 'check' will be referring to a location where an item appears in the base game but may contain another item or nothing in the randomizer. For example, a 'key check' would be referring to a check where in the base game that location would have contained a key but may contain any item in the randomizer.
@@ -80,18 +85,24 @@ Helpful info:
      - West: https://docs.google.com/document/d/1Sy7dmVj5yCj4qF9o8YkQD9BtUTn8ObyO-24JWB6-a1Q/edit?usp=sharing
      - South: https://docs.google.com/document/d/1joqm0TAkUgh-ou-HAL7rYKSV1qKAtuqo8EyusIwif_Y/edit?usp=sharing
 
-## Free (252 checks)
-- Progression items can appear at all item checks including enemy drops.
-	- Excluded check locations: dash shop, horde room, monolith room.
+## Standard (47 checks)
+- Progression items can appear at the normal 32 module checks and some extra checks:
+	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood, south mimic route spiders room).
+	- All checks behind laser triggers (north bird rush module, east dash challenge, south scythe route big room, west slow lab)
+	- Most key checks. Excluded key checks: north bird cave / first crusher room, east plaza access lab (same room as key door) / big bog lab, west thin forest, all south keys except barrel room.
+	- Outfit checks. Excluded outfit checks: dash shop, horde room, east flame lab, pink drifter.
+	- Weapon checks. Excluded weapon checks: intro pistol check.
+	- No tablet checks.
+	- Special checks: EastOpening gearbox check (invisible path), North monolith room.
 
-## Key items + tablets (82 checks)
-- Progression items can appear at the normal 32 module checks and all keys / outfits / weapons / tablet checks:
-	- All checks behind key doors.
-	- All checks behind laser triggers.
-	- All key checks.
-	- Outfit checks. Excluded outfit checks: dash shop, horde room, pink drifter.
-	- Weapon checks. 
-	- All tablet checks.
+- The rationale for removing specific checks for this setting is to limit redundant checks that are not interesting to see or is already on a route to another check.
+
+## StandardPlus (54 checks)
+- Same as standard but with 5 added checks behind the 8-module arenas.
+	- Waterfall arena tablet check and GapHallway gearbox check behind the pistol trigger
+	- Diamond shotgun check in MeltyLeaperArena
+	- Blue-green outfit check in WestDrifterVault
+	- Impact railgun at sky factory.
 
 ## Key items (63 checks)
 - Progression items can appear at the normal 32 module checks and keys / outfits / weapons checks:
@@ -102,24 +113,26 @@ Helpful info:
 	- Weapon checks. 
 	- No tablet checks.
 
-## Modules Extended (47 checks)
-- Progression items can appear at the normal 32 module checks and some extra checks:
-	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood, south mimic route spiders room).
-	- All checks behind laser triggers (north bird rush module, east dash challenge, south scythe route big room, west slow lab)
-	- Most key checks. Excluded key checks: north bird cave / first crusher room, east plaza access lab (same room as key door) / big bog lab, west thin forest, all south keys.
-	- Outfit checks. Excluded outfit checks: dash shop, horde room, east flame lab, pink drifter.
-	- Weapon checks. Excluded weapon checks: intro pistol check.
-	- No tablet checks.
+## Key items + tablets (82 checks)
+- Progression items can appear at the normal 32 module checks and all keys / outfits / weapons / tablet checks:
+	- All checks behind key doors.
+	- All checks behind laser triggers.
+	- All key checks.
+	- Outfit checks. Excluded outfit checks: dash shop, horde room, pink drifter.
+	- Weapon checks. 
+	- All tablet checks.
 
-- The rationale for removing specific checks for this setting is to limit redundant checks that are not interesting to see or is already on a route to another check.
+## Free (252 checks)
+- Progression items can appear at all item checks including enemy drops.
+	- Excluded check locations: dash shop, horde room, monolith room.
 
 # Presets
 
 Presets: Start with certain cloaks and upgrades depending on the preset. The current presets:
-- Streamlined: The recommended preset for playing the randomizer. Random starting location. Starts with chain dashing and a random skill. Random outfit. Shuffled dungeon entrances, shops, pistol. 16 modules. 4 keys.
+- Streamlined: The recommended randomized experience. Random start. Random starting skill. Random starting outfit. Dungeon shuffle.
+- Nimble: Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks. Activate all pillars to open the abyss elevator.
 - Vagabond: Sword-focused fighting. Starts with all sword upgrades and the effects of blue + fuchsia + pink drifter cloaks (faster attacks, more ammo from sword slashes, faster stamina recharge)
 - Gunslinger: Gun-focused fighting. Starts with all guns, grenade, and the effects of fuchsia + yellow + orange cloaks (more ammo from sword slashes, faster movement, faster grenade recharge)
-- Speedrun: Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks.
 - Seeker:  Starts with the sky blue companion that helps track secrets and yellow + ochre cloak effects (faster movement and +1 health).
 - Naked: Only works for NG. Starts with nothing, not even pistol. Shops are randomized. Must go into teleporter straight into town at the starting campfire. Pistol and chain dashing is required to finish the game. 
 - Random start: Random starting room and shops. Go back to the drifter's house to get map to unlock warping. Might softlock because there is no logic at the beginning but if you can get to a warp it's fine. If playing on NG drifter you should also turn on 'Randomize pistol' option to have pistol spawn in the world.
@@ -137,29 +150,11 @@ Tracks progression items as you play. Works the same as presets by reading your 
 ![][image3]
 Tracks checks in the current seed. Currently manual.
 
-# Chain Logic
-- If enabled, places items that can block progress in a chain with one another, making the seed more linear. Every seed will follow a standard progression logic. The player is expected to complete all 'layers' in this logic in order to complete the game. Though the layers don't change, each seed will mix the order in which these layers are done.
-- The first layer will always be: In each region, activate 1 or 2 modules to unlock the first unlockable module door (modules_layer_1)
-- The following layers can be mixed depending on the seed: find laser gun (lasers), find enough modules to unlock the 3-module door (modules_layer_2), find 1 key (keys)
-	- Optional layer: pistols, dash shop
-- The final layer will always be: In each region, activate the 4th and final module. (final_module)
-
-- Example: if the layers are: modules_layer_1 -> keys -> modules_layer_2 -> lasers -> final_module, the expected progression will be:
-	- In each region, find 1/2 modules in order to unlock the first unlockable module door. (example: the module door leading to North boss will be unlocked after 2 modules are found in hand arena and crusher arena)
-	- In each region, in rooms that the first unlockable module door leads to, a key may be found. (ex: the key may be found after defeating North boss at the normal laser gun spot or it may be in another region behind that region's first module door)
-	- In each region, the 3rd module will be behind one of the key doors in that region, activating the 3rd module will unlock the 3-module door in that region. (ex: the north's 3rd module will be behind the key door in TitanVista)
-	- In each region, in rooms that the 3-module door leads to, the laser gun may be found. (ex: because the first module door led to North boss, the 3-module door left in North leads to GapHallway (the normal 8-module door route) so the laser may be located there)
-	- In each region, the laser gun will be required to activate the laser trigger in that region and find the 4th module (ex: use the laser to find the 4th module at the bird rush module)
-	- Go down the abyss elevator and finish the game.
-
-- The usual 'go mode' condition will be having the laser gun and a key.
-
 # Updating from a previous version
 If you are updating from a previous randomizer version, be sure to revert Hyper Light Drifter to normal first using the previous randomizer by pressing the 'Revert to normal' button before changing to the newer randomizer version.
 
 # Tips
 - Skip the intro by pressing /skip or by holding all the face buttons and left+right trigger on controller.
-- The pink drifter knows where the modules are. Just ask!
 
 ***
 
