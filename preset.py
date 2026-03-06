@@ -101,11 +101,12 @@ class Preset:
 
     @classmethod
     def random_skill(cls):
-        skill_choice = random.choice(["skill", "grenade"])
-        if skill_choice == "grenade":
+        skills = [0, 1, 2, 3, 4, 5, 6]
+        skill_choice = random.choice(skills)
+        if skill_choice == 0:
             cls.set_save_data_field("specialUp", random.choice([1, 2]))
         else:
-            cls.set_save_data_field("skill", "%d+" % random.choice([1, 2, 3, 4, 5, 6]))
+            cls.set_save_data_field("skill", "%d+" % skill_choice)
 
     @classmethod
     def random_start(cls, no_logic: bool = False):
