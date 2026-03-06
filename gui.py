@@ -193,7 +193,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
         try:
             lines = []
-            with open(os.path.join(game_path, "MenuText.txt"), encoding="UTF-8") as file:
+            menutxt_file = "menutext.txt" if platform.system() in ("Linux", "Darwin") else "MenuText.txt"
+            with open(os.path.join(game_path, menutxt_file), encoding="UTF-8") as file:
                 will_change_next = False
                 for line in file:
                     if will_change_next:
@@ -203,8 +204,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                     if line.rstrip() == "=|MAIN_MENU_TITLE|50":
                         will_change_next = True
                     lines.append(line)
-            with open(os.path.join(game_path, "MenuText.txt"), "w", encoding="UTF-8") as f:
+            with open(os.path.join(game_path, menutxt_file), "w", encoding="UTF-8") as f:
                 f.writelines(lines)
+            print("Edited splash text")
         except Exception as e:
             print("Could not edit splash text")
 
@@ -533,6 +535,9 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
                         hld_path=hld_path
                     )
                     success = True
+                    break
+                except FileNotFoundError as e:
+                    messagebox.showerror("File not found", str(e))
                     break
                 except Exception as e:
                     if not using_preset_seed:
@@ -1177,7 +1182,7 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
         self.preset_list.state(["readonly"])
         self.preset_description_label = ttk.Label(preset_frame, text="", wraplength=400)
         self.preset_description_label.grid(column=1, row=3, sticky=NE, columnspan=3)
-        self.preset_optionsvar.trace("w", self._on_preset_selection)
+        self.preset_optionsvar.trace_add("write", self._on_preset_selection)
 
         for child in preset_frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
@@ -1237,6 +1242,8 @@ obj,TutorialInfiniteSlime,9013,250,305,0,1,9012,caseScript,3,1,-999999,0,++,,
 
 
 class ItemTracker:
+    poll_job = None
+
     class ItemImage(ttk.Label):
         count = 0
         imgs = []
@@ -1350,8 +1357,15 @@ class ItemTracker:
     def poll_save(self, save_path, save_edit_number, entrance_data, mod_map):
         print("Polling save...")
 
-        metadata = SaveMetadata(None, save_path)
-        savedata_map = savedata_load(metadata, [0, save_edit_number])
+        metadata = None
+        savedata_map = None
+        try:
+            metadata = SaveMetadata(None, save_path)
+            savedata_map = savedata_load(metadata, [0, save_edit_number])
+        except FileNotFoundError as e:
+            messagebox.showerror("Error", str(e))
+            self._on_close()
+            return
 
         self.track_keys(savedata_map)
 
@@ -1788,17 +1802,18 @@ text=key_count, font=("TkHeadingFont", 14, "bold")
         # self.window.transient(parent)
         # self.window.grab_set()
 
-        self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
+        self.window.protocol("WM_DELETE_WINDOW", self._on_close)
+
         self.poll_job = RepeatingTimer(
             15.0, lambda: self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
         )
         self.poll_job.start()
+        self.poll_save(save_path, self.save_edit_number, entrance_data, mod_map)
 
-        def _on_close():
-            self.poll_job.stop()
-            self.window.destroy()
+    def _on_close(self):
+        if self.poll_job: self.poll_job.stop()
+        self.window.destroy()
 
-        self.window.protocol("WM_DELETE_WINDOW", _on_close)
 
 root = Tk()
 

@@ -2614,9 +2614,10 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
 
     def push():
         folder = "central" if system() in ("Linux", "Darwin") else "Central"
+        lvl = "rm_c_central.lvl" if system() in ("Linux", "Darwin") else "rm_C_Central.lvl"
         shutil.copyfile(
-            os.path.join(dump_path, folder, "rm_C_Central.lvl"),
-            os.path.join(hld_path, folder, "rm_C_Central.lvl"),
+            os.path.join(dump_path, folder, lvl),
+            os.path.join(hld_path, folder, lvl),
         )
         print("Copied changed abyss door")
         return True
@@ -2642,18 +2643,22 @@ def _track_goal(goal_type: GoalType, save_number: int, real_levels: LevelHolder,
         push()
         print("Pushed disabled abyss door")
 
-    def track_pillars(savedata_map):
+    def track_pillars(savedata_map, pillar_goal=4):
+        if not savedata_map:
+            return
         pillar_count = len(savedata_map["wellMap"].value.split("+")) - 1
         # print("Tracking pillar goal: " + str(pillar_count))
-        if pillar_count >= 4:
+        if pillar_count >= pillar_goal:
             enable_abyss_elevator()
         else:
             disable_abyss_elevator()
 
-    def track_bosses(savedata_map):
+    def track_bosses(savedata_map, bosses_goal=7):
+        if not savedata_map:
+            return
         boss_count = len(savedata_map["bosses"].value.split("&>")) - 1
         # print("Tracking all bosses goal: " + str(boss_count))
-        if boss_count >= 7:
+        if boss_count >= bosses_goal:
             enable_abyss_elevator()
         else:
             disable_abyss_elevator()

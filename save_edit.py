@@ -222,7 +222,7 @@ def savedata_load(metadata, args):
         raise InvalidArgsError("Usage: load [save_num]")
     filename = metadata.get_name(args[1])
     if not os.path.exists(filename):
-        raise FileNotFoundError("File does not exist")
+        raise FileNotFoundError("Save file does not exist")
 
     metadata.set_save(args[1])
     savefile = open(filename, "rb", buffering=0)
@@ -344,6 +344,10 @@ def autofill_path(config):
 
 
 def poll_save(save_path, save_number, handler):
-    metadata = SaveMetadata(None, save_path)
-    savedata_map = savedata_load(metadata, [0, save_number])
-    handler(savedata_map)
+    try:
+        metadata = SaveMetadata(None, save_path)
+        savedata_map = savedata_load(metadata, [0, save_number])
+        handler(savedata_map)
+    except FileNotFoundError as e:
+        print("Save file not found when polling")
+        handler(None)
