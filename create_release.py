@@ -15,6 +15,10 @@ def main():
             "icon.ico",
             "-F",
             "--noconsole",
+            "--hidden-import",
+            "PIL._tkinter_finder",
+            "--hidden-import",
+            "tkinter",
             "-n",
             f"hlr-release-gui-{datetime.now().strftime('-%Y-%m-%d-%H-%M-%S')}",
         ]
