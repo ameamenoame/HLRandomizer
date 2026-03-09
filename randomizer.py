@@ -209,7 +209,8 @@ class Inventory:
         def _pick_up_weapon():
             if obj.extra_info["weapon_id"] in [21, 23]:
                 cls.temporary["lasers"] += 1
-            elif obj.extra_info["weapon_id"] == 1:
+                cls.temporary["pistol"] += 1
+            elif obj.extra_info["weapon_id"] in [1, 2]:
                 cls.temporary["pistol"] += 1
 
         def _pick_up_key():
