@@ -85,9 +85,9 @@ Helpful info:
      - West: https://docs.google.com/document/d/1Sy7dmVj5yCj4qF9o8YkQD9BtUTn8ObyO-24JWB6-a1Q/edit?usp=sharing
      - South: https://docs.google.com/document/d/1joqm0TAkUgh-ou-HAL7rYKSV1qKAtuqo8EyusIwif_Y/edit?usp=sharing
 
-## Standard (47 checks)
+## Standard (49 checks)
 - Progression items can appear at the normal 32 module checks and some extra checks:
-	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood, south mimic route spiders room).
+	- All checks behind key doors (north titan vista, east flame lab / plaza access lab / big bog lab, west crystal lake / deadwood / big battle, south mimic route spiders room).
 	- All checks behind laser triggers (north bird rush module, east dash challenge, south scythe route big room, west slow lab)
 	- Most key checks. Excluded key checks: north bird cave / first crusher room, east plaza access lab (same room as key door) / big bog lab, west thin forest, all south keys except barrel room.
 	- Outfit checks. Excluded outfit checks: dash shop, horde room, east flame lab, pink drifter.
@@ -97,9 +97,9 @@ Helpful info:
 
 - The rationale for removing specific checks for this setting is to limit redundant checks that are not interesting to see or is already on a route to another check.
 
-## StandardPlus (54 checks)
-- Same as standard but with 5 added checks behind the 8-module arenas.
-	- Waterfall arena tablet check and GapHallway gearbox check behind the pistol trigger
+## StandardPlus (53 checks)
+- Same as standard but with 4 added checks behind the 8-module arenas.
+	- Waterfall arena tablet check.
 	- Diamond shotgun check in MeltyLeaperArena
 	- Blue-green outfit check in WestDrifterVault
 	- Impact railgun at sky factory.
@@ -130,7 +130,7 @@ Helpful info:
 
 Presets: Start with certain cloaks and upgrades depending on the preset. The current presets:
 - Streamlined: The recommended randomized experience. Random start. Random starting skill. Random starting outfit. Dungeon shuffle.
-- Nimble: Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks. Activate all pillars to open the abyss elevator.
+- Nimble: Speedrun-focused. Starts with chain dashing and the effects of white + purple + pink cloaks. Activate all pillars to open the abyss elevator. Random start. Dungeon shuffle.
 - Vagabond: Sword-focused fighting. Starts with all sword upgrades and the effects of blue + fuchsia + pink drifter cloaks (faster attacks, more ammo from sword slashes, faster stamina recharge)
 - Gunslinger: Gun-focused fighting. Starts with all guns, grenade, and the effects of fuchsia + yellow + orange cloaks (more ammo from sword slashes, faster movement, faster grenade recharge)
 - Seeker:  Starts with the sky blue companion that helps track secrets and yellow + ochre cloak effects (faster movement and +1 health).
@@ -155,6 +155,7 @@ If you are updating from a previous randomizer version, be sure to revert Hyper 
 
 # Tips
 - Skip the intro by pressing /skip or by holding all the face buttons and left+right trigger on controller.
+- Items can sometimes clip into walls and be hard to see. Be sure to check every check closely if you don't see an item there.
 
 ***
 
